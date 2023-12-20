@@ -1,0 +1,7 @@
+Run playback for https://www.youtube.com/watch?v=kHwmzef842g
+(<<) Collecting info about the video...
+Stream 'Webcam Zürich HB' is alive!
+error: Both audio and video format specs are ambiguous
+
+Found more than one formats matching a format spec.
+Please be more explicit, or try yt-dlp --live-from-start -F ... first

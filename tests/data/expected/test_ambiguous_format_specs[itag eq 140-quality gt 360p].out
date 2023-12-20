@@ -1,0 +1,9 @@
+Run playback for https://www.youtube.com/watch?v=kHwmzef842g
+(<<) Collecting info about the video...
+Stream 'Webcam Zürich HB' is alive!
+This representation will be downloaded:
+   - Audio: itag 140, mp4 (mp4a.40.2), 44100 Hz
+error: Video format spec is ambiguous
+
+Found more than one formats matching a format spec.
+Please be more explicit, or try yt-dlp --live-from-start -F ... first
