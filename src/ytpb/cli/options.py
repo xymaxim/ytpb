@@ -10,6 +10,7 @@ import click
 from ytpb.cli import parameters
 from ytpb.cli.common import EARLIEST_DATE_TIMEDELTA
 from ytpb.cli.custom import ConflictingOption, GlobalOption
+from ytpb.cli.parameters import RewindIntervalParamType
 
 from ytpb.utils.path import OUTPUT_PATH_PLACEHOLDER_RE, OutputPathTemplateContext
 
@@ -27,7 +28,9 @@ def validate_output_path(ctx: click.Context, param: click.Option, value: Path) -
     return value
 
 
-def validate_start_date_not_too_far(ctx: click.Context, param: click.Option, value: datetime | str) -> datetime | str:
+def validate_start_date_not_too_far(
+    ctx: click.Context, param: click.Option, value: datetime | str
+) -> datetime | str:
     if isinstance(value, datetime):
         now = datetime.now(timezone.utc).astimezone(value.tzinfo)
         earliest_date = now - EARLIEST_DATE_TIMEDELTA
@@ -35,52 +38,29 @@ def validate_start_date_not_too_far(ctx: click.Context, param: click.Option, val
             raise click.BadParameter(
                 "Start date is beyond the limit of 7 days. "
                 "The earliest date is {}.".format(
-                    earliest_date.isoformat(timespec='minutes')
+                    earliest_date.isoformat(timespec="minutes")
                 )
             )
     return value
-    
+
 
 def boundary_options(f):
-    """A set of options which defines rewind start and end."""
+    """A set of options which defines rewind interval."""
 
     f = click.option(
         "-p",
         "--preview",
-        cls=ConflictingOption,
-        conflicting_with=["end", "duration"],
-        help="Alias for short '--duration'.",
+        help="Run in preview mode.",
         is_flag=True,
     )(f)
 
     f = click.option(
-        "-d",
-        "--duration",
-        metavar="DURATION",
-        cls=ConflictingOption,
-        conflicting_with=["end", "preview"],
-        type=parameters.DurationParamType(),
-        help="Duration from start.",
-    )(f)
-
-    f = click.option(
-        "-e",
-        "--end",
-        metavar="DATE_OR_SEQNUM",
-        cls=ConflictingOption,
-        conflicting_with=["duration", "preview"],
-        type=parameters.PointInStreamParamType(end=True),
-        help="End date, sequence number, or 'now'.",
-    )(f)
-
-    f = click.option(
-        "-s",
-        "--start",
-        metavar="DATE_OR_SEQNUM",
-        type=parameters.PointInStreamParamType(),
-        help="Start date or sequence number.",
+        "-i",
+        "--interval",
+        metavar="INTERVAL",
+        type=parameters.RewindIntervalParamType(),
+        help="Time or segment interval to download.",
         required=True,
-        callback=validate_start_date_not_too_far,
     )(f)
 
     return f
@@ -129,7 +109,7 @@ def cache_options(f):
         help="Force to update cache.",
         is_flag=True,
     )(f)
-    
+
     f = click.option(
         "--no-cache",
         cls=ConflictingOption,
@@ -137,7 +117,7 @@ def cache_options(f):
         help="Do not use cache.",
         is_flag=True,
     )(f)
-    
+
     return f
 
 

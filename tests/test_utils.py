@@ -3,6 +3,7 @@ from pathlib import Path
 
 import pytest
 import responses
+
 from ytpb.config import DEFAULT_CONFIG
 from ytpb.exceptions import BadCommandArgument, YtpbError
 from ytpb.types import ConfigMap

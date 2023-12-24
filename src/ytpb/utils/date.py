@@ -5,7 +5,7 @@ import string
 import warnings
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
-from typing import Any, Literal
+from typing import Any, Literal, NamedTuple
 
 
 @dataclass
@@ -26,7 +26,7 @@ def ensure_date_aware(date: datetime) -> datetime:
     else:
         return date
 
-    
+
 def format_iso_datetime(
     date: datetime,
     style: ISO8601DateStyleParameters | None = None,
@@ -198,7 +198,9 @@ def express_timedelta_in_words(delta: timedelta) -> str:
     return output
 
 
-def build_style_parameters_from_spec(style_spec: str) -> ISO8601DateStyleParameters | None:
+def build_style_parameters_from_spec(
+    style_spec: str,
+) -> ISO8601DateStyleParameters | None:
     if not style_spec:
         return None
 

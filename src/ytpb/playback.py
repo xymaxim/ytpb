@@ -1,8 +1,8 @@
-import logging
+import operator
 import re
 import tempfile
 from dataclasses import asdict, dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import NamedTuple
 from urllib.parse import parse_qs, urlparse
@@ -23,14 +23,27 @@ from rich.progress import (
 from ytpb import download
 from ytpb.cache import read_from_cache, write_to_cache
 from ytpb.config import USER_AGENT
-from ytpb.exceptions import BaseUrlExpiredError, CachedItemNotFoundError, MaxRetryError, SequenceLocatingError
+from ytpb.exceptions import (
+    BaseUrlExpiredError,
+    CachedItemNotFoundError,
+    MaxRetryError,
+    SequenceLocatingError,
+)
 from ytpb.fetchers import InfoFetcher, YtpbInfoFetcher
 from ytpb.info import LEFT_NOT_FETCHED, LeftNotFetched, YouTubeVideoInfo
 from ytpb.locate import SequenceLocator
 from ytpb.merge import merge_segments
 from ytpb.mpd import extract_representations_info
+from ytpb.segment import Segment
 from ytpb.streams import SetOfStreams, Streams
-from ytpb.types import PointInStream, SequenceRange
+from ytpb.types import (
+    PointInStream,
+    RelativePointInStream,
+    RelativeSegmentSequence,
+    SegmentSequence,
+    SequenceRange,
+)
+from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.url import (
     build_video_url_from_base_url,
     check_base_url_is_expired,
@@ -42,6 +55,7 @@ from ytpb.utils.url import (
 SEGMENT_URL_PATTERN = r"https://.+\.googlevideo\.com/videoplayback/.+"
 
 logger = structlog.get_logger()
+
 
 @dataclass
 class ExcerptBoundaryDates:
@@ -261,39 +275,92 @@ class Playback:
     def _get_reference_base_url(self, itag: str) -> str:
         return self.streams.get_by_itag(itag).base_url
 
+    def get_downloaded_segment(self, sequence: int, base_url: str):
+        segment_filename = download.compose_default_segment_filename(sequence, base_url)
+        return Segment.from_file(self.get_temp_directory() / segment_filename)
+
     def locate_rewind_range(
-        self, start_point: PointInStream, end_point: PointInStream, itag: str | None = None
+        self,
+        start_point: PointInStream,
+        end_point: PointInStream,
+        itag: str | None = None,
     ) -> SequenceRange:
-        if isinstance(start_point, datetime) or isinstance(end_point, datetime):
+        # First, resolve relativity where it's possible, without locating:
+        start_point, end_point = resolve_relativity_in_interval(start_point, end_point)
+
+        if type(start_point) is type(end_point) is SegmentSequence:
+            return SequenceRange(start_point, end_point)
+        else:
             itag = itag or next(iter(self.streams)).itag
+            base_url = self._get_reference_base_url(itag)
             sl = SequenceLocator(
-                self._get_reference_base_url(itag),
-                session=self.session,
+                base_url,
                 temp_directory=self.get_temp_directory(),
+                session=self.session,
             )
 
-        match start_point:
-            case datetime():
-                logger.info(
-                    "Translating input start date into sequence",
-                    date=start_point.isoformat()
-                )
-                start_sequence = sl.find_sequence_by_time(start_point.timestamp())
-            case int() | float():
-                start_sequence = start_point
-
-        match end_point:
-            case datetime():
-                logger.info(
-                    "Translating input end date into sequence",
-                    date=end_point.isoformat()
-                )
-                end_sequence = sl.find_sequence_by_time(end_point.timestamp())
-            case int() | float():
+        # Then, locate end if start is relative:
+        if isinstance(start_point, RelativePointInStream):
+            if isinstance(end_point, SegmentSequence):
                 end_sequence = end_point
+            elif isinstance(end_point, datetime):
+                end_sequence = sl.find_sequence_by_time(end_point.timestamp(), end=True)
+        else:
+            end_sequence = None
+
+        # Finally, iterate over start and end points to locate sequences:
+        start_and_end_sequences: list[SegmentSequence | None] = [None, end_sequence]
+        for index, (point, is_start) in enumerate(
+            ((start_point, True), (end_point, False))
+        ):
+            if isinstance(point, RelativePointInStream):
+                start_sequence, end_sequence = start_and_end_sequences
+                # Given the current relative point as delta, the resulted point:
+                # start/end point = end/start point -/+ delta.
+                if is_start:
+                    contrary_sequence = end_sequence
+                    contrary_op = operator.sub
+                else:
+                    contrary_sequence = start_sequence
+                    contrary_op = operator.add
+
+                match point:
+                    case RelativeSegmentSequence() as sequence_delta:
+                        sequence = contrary_op(contrary_sequence, sequence_delta)
+                    case timedelta() as delta:
+                        try:
+                            contrary_segment = self.get_downloaded_segment(
+                                contrary_sequence, base_url
+                            )
+                        except FileNotFoundError:
+                            downloaded_path = download.download_segment(
+                                contrary_sequence,
+                                base_url,
+                                self.get_temp_directory(),
+                                session=self.session,
+                            )
+                            contrary_segment = Segment.from_file(downloaded_path)
+                            if is_start:
+                                contrary_date = contrary_segment.ingestion_end_date
+                            else:
+                                contrary_date = contrary_segment.ingestion_start_date
+                            target_date = contrary_op(contrary_date, delta)
+                            sequence = sl.find_sequence_by_time(
+                                target_date.timestamp(), end=not is_start
+                            )
+            else:
+                match point:
+                    case SegmentSequence():
+                        sequence = point
+                    case datetime() as date:
+                        sequence = sl.find_sequence_by_time(
+                            date.timestamp(), end=not is_start
+                        )
+
+            start_and_end_sequences[index] = sequence
 
         try:
-            resulted_range = SequenceRange(start_sequence, end_sequence)
+            resulted_range = SequenceRange(*start_and_end_sequences)
         except ValueError as exc:
             raise SequenceLocatingError(str(exc)) from exc
 

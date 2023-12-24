@@ -22,12 +22,14 @@ def test_compose_mpd(
     audio_formats,
     video_formats,
     ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
     fake_info_fetcher: MagicMock,
     stream_url: str,
     tmp_path: Path,
     expected_out,
 ) -> None:
+    add_responses_callback_for_reference_base_url()
     add_responses_callback_for_segment_urls(
         r"https://.+\.googlevideo\.com/videoplayback/.+/sq/\w+"
     )
@@ -38,10 +40,8 @@ def test_compose_mpd(
                 "mpd",
                 "compose",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 audio_formats,
                 "-vf",
@@ -72,10 +72,8 @@ def test_compose_mpd_with_no_streams(
                 "mpd",
                 "compose",
                 "--no-cache",
-                "-s",
-                "2023-03-25T23:33:55+00:00",
-                "-e",
-                "2023-03-25T23:33:58+00:00",
+                "--interval",
+                "2023-03-25T23:33:55+00:00/2023-03-25T23:33:58+00:00",
                 "-af",
                 "itag eq 0",
                 "-vf",
@@ -90,6 +88,7 @@ def test_compose_mpd_with_no_streams(
 
 def test_compose_mpd_using_yt_dlp(
     ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
     fake_info_fetcher: MagicMock,
     stream_url: str,
@@ -98,6 +97,7 @@ def test_compose_mpd_using_yt_dlp(
     video_base_url: str,
     tmp_path: Path,
 ) -> None:
+    add_responses_callback_for_reference_base_url()
     add_responses_callback_for_segment_urls(
         urljoin(audio_base_url, r"sq/\w+"),
     )
@@ -110,10 +110,8 @@ def test_compose_mpd_using_yt_dlp(
                 "compose",
                 "--yt-dlp",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -127,12 +125,14 @@ def test_compose_mpd_using_yt_dlp(
 
 def test_with_default_config(
     ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
     fake_info_fetcher: MagicMock,
     stream_url: str,
     tmp_path: Path,
 ) -> None:
     # Given:
+    add_responses_callback_for_reference_base_url()
     add_responses_callback_for_segment_urls(
         r"https://.+\.googlevideo\.com/videoplayback/.+/sq/\w+"
     )
@@ -141,7 +141,6 @@ def test_with_default_config(
         "options": {
             "mpd": {
                 "compose": {
-                    "end": "7959121",
                     "audio_formats": "NON-SENS",
                 }
             }
@@ -160,8 +159,8 @@ def test_with_default_config(
                 "mpd",
                 "compose",
                 "--no-cache",
-                "-s",
-                "7959120",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -176,11 +175,13 @@ def test_with_default_config(
 
 def test_compose_to_custom_output_path(
     ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
     fake_info_fetcher: MagicMock,
     stream_url: str,
     tmp_path: Path,
 ):
+    add_responses_callback_for_reference_base_url()
     add_responses_callback_for_segment_urls(
         r"https://.+\.googlevideo\.com/videoplayback/.+/sq/\w+"
     )
@@ -191,10 +192,8 @@ def test_compose_to_custom_output_path(
                 "mpd",
                 "compose",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -211,12 +210,14 @@ def test_compose_to_custom_output_path(
 
 def test_compose_to_custom_template_output_path(
     ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
     fake_info_fetcher: MagicMock,
     stream_url: str,
     video_id: str,
     tmp_path: Path,
 ):
+    add_responses_callback_for_reference_base_url()
     add_responses_callback_for_segment_urls(
         r"https://.+\.googlevideo\.com/videoplayback/.+/sq/\w+"
     )
@@ -227,10 +228,8 @@ def test_compose_to_custom_template_output_path(
                 "mpd",
                 "compose",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",

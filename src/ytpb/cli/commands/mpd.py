@@ -3,7 +3,6 @@ import sys
 from datetime import datetime, timedelta
 from pathlib import Path
 
-    
 import click
 from rich import box
 from rich.console import Console
@@ -12,19 +11,16 @@ from rich.table import Table
 from ytpb import types
 from ytpb.cli import parameters
 from ytpb.cli.common import (
-    check_end_options,
+    CONSOLE_TEXT_WIDTH,
     get_downloaded_segment,
     normalize_stream_url,
     print_summary_info,
     query_streams_or_exit,
-    CONSOLE_TEXT_WIDTH
+    raise_for_sequence_ahead_of_current,
+    raise_for_start_sequence_too_far,
 )
 from ytpb.cli.custom import OrderedGroup
-from ytpb.cli.options import (
-    boundary_options,
-    cache_options,
-    output_options,
-)
+from ytpb.cli.options import boundary_options, cache_options, output_options
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
 from ytpb.compose import compose_mpd, refresh_mpd
 from ytpb.download import download_segment
@@ -35,8 +31,9 @@ from ytpb.mpd import extract_representations_info
 from ytpb.playback import Playback
 from ytpb.segment import Segment
 from ytpb.streams import Streams
-from ytpb.types import SegmentSequence
+from ytpb.types import DateInterval, SegmentSequence
 from ytpb.utils.date import express_timedelta_in_words
+from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.path import (
     expand_template_output_path,
     OUTPUT_PATH_PLACEHOLDER_RE,
@@ -104,9 +101,7 @@ def mpd_group():
 @click.argument("stream_url", metavar="STREAM", callback=normalize_stream_url)
 def compose_command(
     ctx: click.Context,
-    start: types.PointInStream,
-    end: types.PointInStream | None,
-    duration: float | None,
+    interval: types.PointInStream,
     preview: bool,
     audio_formats: str,
     video_formats: str,
@@ -116,8 +111,6 @@ def compose_command(
     yt_dlp: bool,
     stream_url: str,
 ) -> int:
-    check_end_options(start, end, duration, preview)
-
     if not audio_formats and not video_formats:
         raise click.BadArgumentUsage(
             "At least --audio-formats or --video-formats must be specified."
@@ -198,69 +191,84 @@ def compose_command(
 
     reference_stream = (queried_video_streams or queried_audio_streams)[0]
     reference_base_url = reference_stream.base_url
+    head_sequence = request_reference_sequence(reference_base_url, playback.session)
 
-    input_start_date, input_start_sequence = (
-        start if isinstance(start, datetime) else None,
-        start if isinstance(start, SegmentSequence) else None,
-    )
+    requested_start, requested_end = resolve_relativity_in_interval(*interval)
 
-    if end == "now":
-        end = request_reference_sequence(reference_stream.base_url, playback.session)
-    input_end_date, input_end_sequence = (
-        end if isinstance(end, datetime) else None,
-        end if isinstance(end, SegmentSequence) else None,
-    )
+    if isinstance(requested_start, SegmentSequence):
+        raise_for_start_sequence_too_far(
+            requested_start, head_sequence, reference_base_url
+        )
+        raise_for_sequence_ahead_of_current(
+            requested_start, head_sequence, ctx, "start"
+        )
 
-    if duration or preview:
-        if preview:
-            preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
-            duration = parameters.DurationParamType().convert(
-                preview_duration_value, "preview", ctx
-            )
+    if isinstance(requested_end, SegmentSequence):
+        raise_for_sequence_ahead_of_current(requested_end, head_sequence, ctx, "end")
+    if requested_end == "now":
+        requested_end = head_sequence - 1
 
-        if not input_start_date:
-            segment_path = download_segment(
-                input_start_sequence,
-                reference_base_url,
-                output_directory=playback.get_temp_directory(),
-                session=playback.session,
-            )
-            input_start_date = Segment.from_file(segment_path).ingestion_start_date
-        input_end_date = input_start_date + timedelta(0, seconds=duration)
+    if preview:
+        assert False
+        segment_duration = ...
+        preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
+        number_of_segments = round(preview_duration_value / segment_duration)
+        requested_end = RelativeSequenceNumber(number_of_segments)
 
     click.echo("(<<) Locating start and end in the stream... ", nl=False)
     rewind_range = playback.locate_rewind_range(
-        input_start_date or input_start_sequence,
-        input_end_date or input_end_sequence,
+        requested_start,
+        requested_end,
         itag=reference_stream.itag,
     )
     click.echo("done.")
 
-    for sequence in [input_start_sequence, input_end_sequence]:
-        if sequence:
-            download_segment(
-                sequence,
-                reference_base_url,
-                output_directory=playback.get_temp_directory(),
-                session=playback.session,
-            )
+    for point in (requested_start, requested_end):
+        if type(point) is SegmentSequence:
+            sequence = point
+            try:
+                download_segment(
+                    sequence,
+                    reference_base_url,
+                    output_directory=playback.get_temp_directory(),
+                    session=playback.session,
+                    force_download=False,
+                )
+            except SegmentDownloadError as exc:
+                click.echo()
+                logger.error(exc, sequence=exc.sequence, exc_info=True)
+                sys.exit(1)
 
-    start_segment = get_downloaded_segment(
-        playback, rewind_range.start, reference_base_url
+    start_segment = playback.get_downloaded_segment(
+        rewind_range.start, reference_base_url
     )
-    end_segment = get_downloaded_segment(playback, rewind_range.end, reference_base_url)
+    end_segment = playback.get_downloaded_segment(rewind_range.end, reference_base_url)
 
-    if not input_start_date:
-        input_start_date = start_segment.ingestion_start_date
-    if not input_end_date:
-        input_end_date = start_segment.ingestion_end_date
+    requested_start_date: datetime
+    match requested_start:
+        case SegmentSequence():
+            requested_start_date = start_segment.ingestion_start_date
+        case datetime():
+            requested_start_date = requested_start
+        case timedelta() as delta:
+            requested_start_date = end_segment.ingestion_end_date - delta
 
-    input_date_interval = types.DateInterval(input_start_date, input_end_date)
-    actual_date_interval = types.DateInterval(
-        start_segment.ingestion_start_date, end_segment.ingestion_end_date
+    requested_end_date: datetime
+    match requested_end:
+        case SegmentSequence():
+            requested_end_date = end_segment.ingestion_end_date
+        case datetime():
+            requested_end_date = requested_end
+        case timedelta() as delta:
+            requested_end_date = start_segment.ingestion_start_date + delta
+
+    requested_date_interval = DateInterval(requested_start_date, requested_end_date)
+    actual_date_interval = DateInterval(
+        start_segment.ingestion_start_date,
+        end_segment.ingestion_end_date,
     )
 
-    print_summary_info(input_date_interval, actual_date_interval, rewind_range)
+    print_summary_info(requested_date_interval, actual_date_interval, rewind_range)
     click.echo()
 
     preliminary_path = output
@@ -271,8 +279,8 @@ def compose_command(
         template_context = OutputPathTemplateContext(
             playback.video_id,
             playback.info.title,
-            input_date_interval.start,
-            input_date_interval.end,
+            requested_date_interval.start,
+            requested_date_interval.end,
             actual_date_interval.start,
             actual_date_interval.end,
             actual_date_interval.end - actual_date_interval.start,
@@ -297,7 +305,7 @@ def compose_command(
         saved_to_path_value = f"{final_output_path.relative_to(Path.cwd())}"
     except ValueError:
         saved_to_path_value = final_output_path
-        
+
     click.echo(f"Success! Manifest saved to '{saved_to_path_value}'.")
     click.echo("~ Note that the manifest will expire in 6 hours.")
 

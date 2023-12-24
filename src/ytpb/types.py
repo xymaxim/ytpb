@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from datetime import datetime
+from datetime import datetime, timedelta
 from typing import Any, Protocol, TypeAlias
 
 from ytpb.config import AddressableChainMap
@@ -7,8 +7,17 @@ from ytpb.mpd import AudioRepresentationInfo, VideoRepresentationInfo
 
 
 Timestamp: TypeAlias = float
+
 SegmentSequence: TypeAlias = int
-PointInStream: TypeAlias = datetime | SegmentSequence
+
+
+class RelativeSegmentSequence(int):
+    ...
+
+
+AbsolutePointInStream: TypeAlias = datetime | SegmentSequence
+RelativePointInStream: TypeAlias = timedelta | RelativeSegmentSequence
+PointInStream: TypeAlias = AbsolutePointInStream | RelativePointInStream
 
 AudioStream: TypeAlias = AudioRepresentationInfo
 VideoStream: TypeAlias = VideoRepresentationInfo
@@ -35,7 +44,7 @@ class SequenceRange:
                 "Start sequence number is ahead of the end one: "
                 f"{self.start} > {self.end}"
             )
-        
+
     @property
     def length(self) -> int:
         return self.end - self.start + 1

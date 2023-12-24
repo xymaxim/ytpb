@@ -12,13 +12,13 @@ from requests.exceptions import HTTPError
 from ytpb import types
 from ytpb.cli import parameters
 from ytpb.cli.common import (
-    raise_for_start_sequence_too_far,
-    raise_for_sequence_ahead_of_current,
     check_end_options,
     check_streams_not_empty,
     get_downloaded_segment,
     normalize_stream_url,
     print_summary_info,
+    raise_for_sequence_ahead_of_current,
+    raise_for_start_sequence_too_far,
 )
 from ytpb.cli.options import (
     boundary_options,
@@ -26,15 +26,20 @@ from ytpb.cli.options import (
     logging_options,
     output_options,
 )
-from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
+from ytpb.cli.parameters import (
+    FormatSpecParamType,
+    FormatSpecType,
+    InputRewindInterval,
+    RewindIntervalParamType,
+)
 from ytpb.download import download_segment
 from ytpb.exceptions import (
     BaseUrlExpiredError,
     BroadcastStatusError,
     CachedItemNotFoundError,
-    SequenceLocatingError,
+    QueryError,
     SegmentDownloadError,
-    QueryError
+    SequenceLocatingError,
 )
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
@@ -42,6 +47,7 @@ from ytpb.merge import merge_segments
 from ytpb.playback import Playback
 from ytpb.segment import Segment
 from ytpb.types import DateInterval, SegmentSequence
+from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.path import (
     expand_template_output_path,
     OUTPUT_PATH_PLACEHOLDER_RE,
@@ -96,9 +102,7 @@ logger = structlog.get_logger(__name__)
 @click.pass_context
 def download_command(
     ctx: click.Context,
-    start: types.PointInStream,
-    end: types.PointInStream | Literal["now"] | None,
-    duration: float | None,
+    interval: InputRewindInterval,
     preview: bool,
     audio_format: str,
     video_format: str,
@@ -113,8 +117,6 @@ def download_command(
     no_cache: bool,
     stream_url: str,
 ) -> int:
-    check_end_options(start, end, duration, preview)
-
     if audio_format is None and video_format is None:
         raise click.UsageError(
             "At least --audio-format or --video-format must be specified."
@@ -217,7 +219,7 @@ def download_command(
             else:
                 logger.error(
                     "Too many queried audio streams",
-                    itags=[s.itag for s in queried_audio_streams]
+                    itags=[s.itag for s in queried_audio_streams],
                 )
                 click.echo("error: Audio format spec is ambiguous.\n", err=True)
                 click.echo(ambiguous_tip, err=True)
@@ -236,7 +238,7 @@ def download_command(
             else:
                 logger.error(
                     "Too many queried video streams",
-                    itags=[s.itag for s in queried_video_streams]
+                    itags=[s.itag for s in queried_video_streams],
                 )
                 click.echo("error: Video format spec is ambiguous.\n", err=True)
                 click.echo(ambiguous_tip, err=True)
@@ -253,55 +255,33 @@ def download_command(
     reference_stream = video_stream or audio_stream
     reference_base_url = reference_stream.base_url
     head_sequence = request_reference_sequence(reference_base_url, playback.session)
-    
-    input_start_date, input_start_sequence = (
-        start if isinstance(start, datetime) else None,
-        start if isinstance(start, SegmentSequence) else None,
-    )
-    if input_start_sequence:
-        raise_for_start_sequence_too_far(input_start_sequence, head_sequence, reference_base_url)
-        raise_for_sequence_ahead_of_current(input_start_sequence, head_sequence, ctx, "start")
-        
-    if end == "now":
-        end = head_sequence - 1
-    input_end_date, input_end_sequence = (
-        end if isinstance(end, datetime) else None,
-        end if isinstance(end, SegmentSequence) else None,
-    )
-    if input_end_sequence:
-        raise_for_sequence_ahead_of_current(input_end_sequence, head_sequence, ctx, "end")
 
-    if duration or preview:
-        if preview:
-            preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
-            duration = parameters.DurationParamType().convert(
-                f"{preview_duration_value:g}s", "preview", ctx
-            )
+    requested_start, requested_end = resolve_relativity_in_interval(*interval)
 
-        # TODO: This looks quite excessive and not very flexible. Even we can
-        # download metadata partially or skip the download step after sequence
-        # number locating (see below). It would be more practical to make start
-        # or end input point values accept relative values (*in both ways*).
-        if not input_start_date:
-            try:
-                segment_path = download_segment(
-                    input_start_sequence,
-                    reference_base_url,
-                    output_directory=playback.get_temp_directory(),
-                    session=playback.session,
-                )
-                input_start_date = Segment.from_file(segment_path).ingestion_start_date
-            except SegmentDownloadError as exc:
-                exc.add_note("error: Consider choosing a later start date")
-                click.echo()
-                raise
-            
-        input_end_date = input_start_date + timedelta(0, seconds=duration)
+    if isinstance(requested_start, SegmentSequence):
+        raise_for_start_sequence_too_far(
+            requested_start, head_sequence, reference_base_url
+        )
+        raise_for_sequence_ahead_of_current(
+            requested_start, head_sequence, ctx, "start"
+        )
+
+    if isinstance(requested_end, SegmentSequence):
+        raise_for_sequence_ahead_of_current(requested_end, head_sequence, ctx, "end")
+    if requested_end == "now":
+        requested_end = head_sequence - 1
+
+    if preview:
+        assert False
+        segment_duration = ...
+        preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
+        number_of_segments = round(preview_duration_value / segment_duration)
+        requested_end = RelativeSequenceNumber(number_of_segments)
 
     try:
         rewind_range = playback.locate_rewind_range(
-            input_start_sequence or input_start_date,
-            input_end_sequence or input_end_date,
+            requested_start,
+            requested_end,
             itag=reference_stream.itag,
         )
     except SequenceLocatingError as exc:
@@ -311,8 +291,9 @@ def download_command(
 
     click.echo("done.")
 
-    for sequence in (input_start_sequence, input_end_sequence):
-        if sequence:
+    for point in (requested_start, requested_end):
+        if type(point) is SegmentSequence:
+            sequence = point
             try:
                 download_segment(
                     sequence,
@@ -326,26 +307,39 @@ def download_command(
                 logger.error(exc, sequence=exc.sequence, exc_info=True)
                 sys.exit(1)
 
-    start_segment = get_downloaded_segment(
-        playback, rewind_range.start, reference_base_url
+    start_segment = playback.get_downloaded_segment(
+        rewind_range.start, reference_base_url
     )
-    end_segment = get_downloaded_segment(playback, rewind_range.end, reference_base_url)
+    end_segment = playback.get_downloaded_segment(rewind_range.end, reference_base_url)
 
-    if not input_start_date:
-        input_start_date = start_segment.ingestion_start_date
-    if not input_end_date:
-        input_end_date = end_segment.ingestion_end_date
+    requested_start_date: datetime
+    match requested_start:
+        case SegmentSequence():
+            requested_start_date = start_segment.ingestion_start_date
+        case datetime():
+            requested_start_date = requested_start
+        case timedelta() as delta:
+            requested_start_date = end_segment.ingestion_end_date - delta
 
-    input_date_interval = DateInterval(input_start_date, input_end_date)
+    requested_end_date: datetime
+    match requested_end:
+        case SegmentSequence():
+            requested_end_date = end_segment.ingestion_end_date
+        case datetime():
+            requested_end_date = requested_end
+        case timedelta() as delta:
+            requested_end_date = start_segment.ingestion_start_date + delta
+
+    requested_date_interval = DateInterval(requested_start_date, requested_end_date)
     actual_date_interval = DateInterval(
         start_segment.ingestion_start_date,
         end_segment.ingestion_end_date,
     )
-    
+
     if no_cut:
         cut_kwargs = {}
     else:
-        start_diff, end_diff = input_date_interval - actual_date_interval
+        start_diff, end_diff = requested_date_interval - actual_date_interval
         cut_at_start_s = start_diff if start_diff > 0 else 0
         cut_at_end_s = abs(end_diff) if end_diff < 0 else 0
         cut_kwargs = {
@@ -354,11 +348,11 @@ def download_command(
         }
         if not no_merge:
             actual_date_interval = DateInterval(
-                start=actual_date_interval.start + timedelta(0, seconds=cut_at_start_s),
-                end=actual_date_interval.end - timedelta(0, seconds=cut_at_end_s),
+                start=actual_date_interval.start + timedelta(seconds=cut_at_start_s),
+                end=actual_date_interval.end - timedelta(seconds=cut_at_end_s),
             )
 
-    print_summary_info(input_date_interval, actual_date_interval, rewind_range)
+    print_summary_info(requested_date_interval, actual_date_interval, rewind_range)
     click.echo()
 
     if dry_run:
@@ -369,12 +363,12 @@ def download_command(
             str(preliminary_path)
         )
         if output_path_contains_template:
-            input_timezone = input_date_interval.start.tzinfo
+            input_timezone = requested_date_interval.start.tzinfo
             template_context = OutputPathTemplateContext(
                 playback.video_id,
                 playback.info.title,
-                input_date_interval.start,
-                input_date_interval.end,
+                requested_date_interval.start,
+                requested_date_interval.end,
                 actual_date_interval.start.astimezone(input_timezone),
                 actual_date_interval.end.astimezone(input_timezone),
                 actual_date_interval.end - actual_date_interval.start,

@@ -17,18 +17,25 @@ from utils import assert_approx_duration
 
 
 @pytest.mark.parametrize(
-    "start,end,output_subpath",
+    "interval,output_subpath",
     [
-        ("2023-03-25T23:33:55+00", "2023-03-25T23:33:58+00", "233355+00.mp4"),
-        ("2023-03-25T23:33:55+00", "7959121", "233355+00.mp4"),
-        ("7959120", "2023-03-25T23:33:58+00", "233354+00.mp4"),
-        ("7959120", "7959121", "233354+00.mp4"),
+        # Segments and corresponding ingestion start dates:
+        #             7959120       21       22
+        #                  |        |        |
+        # 2023-03-25T23:33:54.491Z  56.490   58.492
+        ("7959120/7959121", "233354+00.mp4"),
+        ("7959120/2023-03-25T23:33:57+00", "233354+00.mp4"),
+        ("7959120/PT3S", "233354+00.mp4"),
+        ("2023-03-25T23:33:55+00/2023-03-25T23:33:57+00", "233355+00.mp4"),
+        ("2023-03-25T23:33:55+00/PT3S", "233355+00.mp4"),
+        ("2023-03-25T23:33:55+00/7959121", "233355+00.mp4"),
+        ("PT3S/7959121", "233355+00.mp4"),
+        ("PT3S/2023-03-25T23:33:58+00", "233355+00.mp4"),
     ],
 )
 @freeze_time("2023-03-26T00:00:00+00:00")
-def test_providing_start_and_end(
-    start: str,
-    end: str,
+def test_download_within_interval(
+    interval: str,
     output_subpath: str,
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
@@ -52,10 +59,8 @@ def test_providing_start_and_end(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "-s",
-                start,
-                "-e",
-                end,
+                "--interval",
+                interval,
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -85,7 +90,6 @@ def test_providing_start_and_end_equals_now(
     # In this test the reference segment refers to a segment (7959122) next to
     # the end one (7959121).
     add_responses_callback_for_reference_base_url(7959122)
-
     add_responses_callback_for_segment_urls(
         urljoin(audio_base_url, r"sq/\w+"),
     )
@@ -98,10 +102,8 @@ def test_providing_start_and_end_equals_now(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "now",  # should refer to segment 7959121
+                "--interval",
+                "7959120/now",  # 'now' should refer to segment 7959121
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -117,99 +119,26 @@ def test_providing_start_and_end_equals_now(
     assert_approx_duration(expected_path, 4.0)
 
 
-@pytest.mark.parametrize(
-    "start,duration,output_subpath",
-    [
-        ("2023-03-25T23:33:55+00", "2s", "233355+00.mp4"),
-        ("7959120", "2s", "233354+00.mp4"),
-    ],
-)
-@freeze_time("2023-03-26T00:00:00+00:00")
-def test_providing_start_and_duration(
-    start: str,
-    duration: str,
-    output_subpath: str,
-    ytpb_cli_invoke: Callable,
-    add_responses_callback_for_reference_base_url,
-    add_responses_callback_for_segment_urls: Callable,
-    fake_info_fetcher: MagicMock,
-    stream_url: str,
-    audio_base_url: str,
-    tmp_path: Path,
-) -> None:
-    # Given:
-    add_responses_callback_for_reference_base_url()
-    add_responses_callback_for_segment_urls(
-        urljoin(audio_base_url, r"sq/\w+"),
-    )
-
-    # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
-        mock_fetcher.return_value = fake_info_fetcher
-        result = ytpb_cli_invoke(
-            [
-                "--no-config",
-                "download",
-                "--no-cut",
-                "--no-cache",
-                "-s",
-                start,
-                "-d",
-                duration,
-                "-af",
-                "itag eq 140",
-                "-vf",
-                "none",
-                stream_url,
-            ],
-        )
-
-    # Then:
-    assert result.exit_code == 0
-    assert glob.glob(str(tmp_path / f"*{output_subpath}"))
-
-
-@freeze_time("2023-03-26T00:00:00+00:00")
-def test_providing_end_and_preview(ytpb_cli_invoke: Callable, stream_url: str):
-    with pytest.raises(click.UsageError) as exc_info:
-        result = ytpb_cli_invoke(
-            [
-                "--no-config",
-                "download",
-                "--no-cache",
-                "-s",
-                "2023-03-25T23:33:55+00:00",
-                "-e",
-                "2023-03-25T23:33:58+00:00",
-                "-p",
-                stream_url,
-            ],
-            catch_exceptions=False,
-            standalone_mode=False,
-        )
-    message = "Option '-e' / '--end' is conflicting with '-p' / '--preview'."
-    assert message == str(exc_info.value)
-
-    
-@freeze_time("2023-03-26T00:00:00+00:00")
-def test_providing_no_end_and_duration(ytpb_cli_invoke: Callable, stream_url: str):
-    with pytest.raises(click.UsageError):
-        result = ytpb_cli_invoke(
-            [
-                "--no-config",
-                "download",
-                "--no-cache",
-                "-s",
-                "2023-03-25T23:33:55+00:00",
-                "-af",
-                "itag eq 140",
-                "-vf",
-                "none",
-                stream_url,
-            ],
-            catch_exceptions=False,
-            standalone_mode=False,
-        )
+# @freeze_time("2023-03-26T00:00:00+00:00")
+# def test_providing_end_and_preview(ytpb_cli_invoke: Callable, stream_url: str):
+#     with pytest.raises(click.UsageError) as exc_info:
+#         result = ytpb_cli_invoke(
+#             [
+#                 "--no-config",
+#                 "download",
+#                 "--no-cache",
+#                 "-s",
+#                 "2023-03-25T23:33:55+00:00",
+#                 "-e",
+#                 "2023-03-25T23:33:58+00:00",
+#                 "-p",
+#                 stream_url,
+#             ],
+#             catch_exceptions=False,
+#             standalone_mode=False,
+#         )
+#     message = "Option '-e' / '--end' is conflicting with '-p' / '--preview'."
+#     assert message == str(exc_info.value)
 
 
 @pytest.mark.parametrize(
@@ -246,10 +175,8 @@ def test_download_audio_and_or_video(
                 "download",
                 "--no-cache",
                 "--no-cut",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 audio_format,
                 "-vf",
@@ -291,10 +218,8 @@ def test_download_to_custom_absolute_path(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -309,7 +234,7 @@ def test_download_to_custom_absolute_path(
     assert result.exit_code == 0
     assert os.path.exists(tmp_path / "test" / "merged.mp4")
 
-    
+
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_download_to_custom_relative_path(
     ytpb_cli_invoke: Callable,
@@ -334,10 +259,8 @@ def test_download_to_custom_relative_path(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -388,10 +311,8 @@ def test_download_to_template_output_path(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -432,10 +353,8 @@ def test_no_cleanup_option(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -450,7 +369,7 @@ def test_no_cleanup_option(
     assert os.path.exists(tmp_path / "kHwmzef842g_20230325T233354+00.mp4")
     assert os.path.exists(run_temp_directory / "7959120.i140.mp4")
 
-    
+
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_no_merge_option(
     ytpb_cli_invoke: Callable,
@@ -480,10 +399,8 @@ def test_no_merge_option(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -530,10 +447,8 @@ def test_dry_run_option(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -576,10 +491,8 @@ def test_no_cut_option(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "-s",
-                "2023-03-25T23:33:55+00:00",
-                "-e",
-                "2023-03-25T23:33:58+00:00",
+                "--interval",
+                "2023-03-25T23:33:55+00:00/2023-03-25T23:33:58+00:00",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -624,10 +537,8 @@ def test_from_cache(
                 "--no-config",
                 "download",
                 "--no-cut",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -640,7 +551,7 @@ def test_from_cache(
     assert result.exit_code == 0
     assert "Cache for the video doesn't exist" not in result.output
 
-    
+
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_from_empty_cache(
     ytpb_cli_invoke: Callable,
@@ -666,10 +577,8 @@ def test_from_empty_cache(
                 "--no-config",
                 "download",
                 "--no-cut",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -713,10 +622,8 @@ def test_ambiguous_format_specs(
                 "download",
                 "--no-cut",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 audio_format,
                 "-vf",
@@ -728,7 +635,7 @@ def test_ambiguous_format_specs(
     assert result.exit_code == 1
     # assert result.output == expected_out
 
-    
+
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_yt_dlp_option(
     ytpb_cli_invoke: Callable,
@@ -755,10 +662,8 @@ def test_yt_dlp_option(
                 "--yt-dlp",
                 "--no-cut",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -771,7 +676,7 @@ def test_yt_dlp_option(
     expected_path = tmp_path / "kHwmzef842g_20230325T233354+00.mp4"
     assert os.path.exists(expected_path)
 
-    
+
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_with_default_config_file(
     ytpb_cli_invoke: Callable,
@@ -798,7 +703,6 @@ def test_with_default_config_file(
     config = {
         "options": {
             "download": {
-                "end": "2023-03-25T23:33:58+00",
                 "audio_format": "NON-SENS",
             }
         }
@@ -815,8 +719,8 @@ def test_with_default_config_file(
             [
                 "download",
                 "--no-cache",
-                "-s",
-                "2023-03-25T23:33:55+00",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -828,7 +732,7 @@ def test_with_default_config_file(
     # Then:
     assert result.exit_code == 0
 
-    
+
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_with_config_via_option(
     ytpb_cli_invoke: Callable,
@@ -879,10 +783,8 @@ def test_with_config_via_option(
                 test_config_path,
                 "download",
                 "--no-cache",
-                "-s",
-                "2023-03-25T23:33:55+00",
-                "-e",
-                "2023-03-25T23:33:58+00",
+                "--interval",
+                "7959120/7959121",
                 "-vf",
                 "none",
                 stream_url,
@@ -928,10 +830,8 @@ def test_with_non_existent_config_file_via_option(
                     test_config_path,
                     "download",
                     "--no-cache",
-                    "-s",
-                    "2023-03-25T23:33:55+00",
-                    "-e",
-                    "2023-03-25T23:33:58+00",
+                    "--interval",
+                    "7959120/7959121",
                     "-vf",
                     "none",
                     stream_url,
@@ -953,13 +853,18 @@ def test_no_config_option(
     audio_base_url: str,
     tmp_path: Path,
 ) -> None:
-    """Tests the --no-config option. Any configuration files should be ignored."""
+    """Tests the --no-config option. Any configuration files should be ignored.
+
+    In this test, the required -i/--interval option is intentionally
+    omitted. Instead, it's defined in the created config file. Since the file
+    should be ignored, a click.MissingParameter exception should be raised.
+    """
 
     # Given:
     default_config = {
         "options": {
             "download": {
-                "start": "NON-SENS",
+                "interval": "7959120/7959121",
             }
         }
     }
@@ -977,9 +882,7 @@ def test_no_config_option(
                     "--no-config",
                     "download",
                     "--no-cache",
-                    # (The -s/--start option is intentionally omitted.)
-                    "-e",
-                    "2023-03-25T23:33:58+00",
+                    # (The required -i/--interval option is intentionally omitted.)
                     "-af",
                     "itag eq 140",
                     "-vf",
@@ -991,7 +894,7 @@ def test_no_config_option(
             )
 
     # Then:
-    assert "Missing parameter: start" in str(exc_info.value)
+    assert "Missing parameter: interval" in str(exc_info.value)
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
@@ -1008,7 +911,7 @@ def test_conflicting_config_and_no_config_options(
     default_config = {
         "options": {
             "download": {
-                "start": "NON-SENS",
+                "audio_format": "NON-SENS",
             }
         }
     }
@@ -1028,11 +931,6 @@ def test_conflicting_config_and_no_config_options(
                     default_config_path,
                     "download",
                     "--no-cache",
-                    # (The -s/--start option is intentionally omitted).
-                    "-e",
-                    "2023-03-25T23:33:58+00",
-                    "-af",
-                    "itag eq 140",
                     "-vf",
                     "none",
                     stream_url,
@@ -1070,10 +968,8 @@ def test_download_via_stream_id(
                 "download",
                 "--no-cache",
                 "--no-cut",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -1085,7 +981,7 @@ def test_download_via_stream_id(
     # Then:
     assert result.exit_code == 0
 
-    
+
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_download_via_invalid_stream_id(
     ytpb_cli_invoke: Callable,
@@ -1097,10 +993,8 @@ def test_download_via_invalid_stream_id(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "-s",
-                "7959120",
-                "-e",
-                "7959121",
+                "--interval",
+                "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",

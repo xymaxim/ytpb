@@ -1,15 +1,16 @@
 import logging
 import re
-from datetime import datetime
+from datetime import datetime, time
 from enum import auto, StrEnum
-from typing import Literal
+from typing import Literal, NamedTuple
 
 import click
+from timedelta_isoformat import timedelta
 
 from ytpb import types
 from ytpb.conditional import FORMAT_SPEC_RE
+from ytpb.types import SegmentSequence
 from ytpb.utils.date import ensure_date_aware
-
 
 logger = logging.getLogger(__name__)
 
@@ -90,6 +91,117 @@ class DurationParamType(click.ParamType):
             self.fail(message, param, ctx)
 
         return total_seconds
+
+
+class InputRewindInterval(NamedTuple):
+    start: SegmentSequence | datetime | timedelta
+    end: SegmentSequence | datetime | timedelta | Literal["now"]
+
+
+class RewindIntervalParamType(click.ParamType):
+    error_message_fmt = "Incorrectly formated interval: {}"
+
+    def _replace_datetime_components(self, date: datetime, value: str):
+        date_units = {"Y": "year", "M": "month", "D": "day"}
+        time_units = {"H": "hour", "M": "minute", "S": "second"}
+
+        components_to_replace = {}
+
+        for part, units in zip(value.split("T"), (date_units, time_units)):
+            if not part:
+                continue
+            previous = 0
+            for i, c in enumerate(part):
+                if c in units:
+                    components_to_replace[units[c]] = int(part[previous:i])
+                    previous = i + 1
+
+        return date.replace(**components_to_replace)
+
+    def _parse_interval_part(
+        self, part: str
+    ) -> int | str | Literal["now"] | datetime | timedelta:
+        match part:
+            # Sequence number
+            case x if x.isdecimal():
+                output = int(x)
+            # Duration
+            case x if x[0] == "P":
+                output = timedelta.fromisoformat(x)
+            # Replace components
+            case x if set(x) & set("DHMS"):
+                output = x
+            # Time of today
+            case x if x[0] == "T" or (":" in x and "-" not in x):
+                parsed_time = time.fromisoformat(x)
+                today = datetime.now()
+                output = today.replace(
+                    hour=parsed_time.hour,
+                    minute=parsed_time.minute,
+                    second=parsed_time.second,
+                    microsecond=parsed_time.microsecond,
+                )
+                output = output.astimezone(parsed_time.tzinfo)
+            # Date and time
+            case x if "T" in x:
+                output = datetime.fromisoformat(x)
+            case "now":
+                output = "now"
+            case _:
+                raise click.BadParameter(f"Incorrectly formatted part: {part}")
+
+        return output
+
+    def convert(
+        self, value: str, param: click.Parameter, ctx: click.Context
+    ) -> InputRewindInterval:
+        parts = value.split("/")
+        if len(parts) != 2:
+            raise click.BadParameter("Interval must be formatted as '<start>/<end>'")
+
+        start_part, end_part = parts
+
+        parsed_start = self._parse_interval_part(start_part)
+        parsed_end = self._parse_interval_part(end_part)
+
+        match parsed_start, parsed_end:
+            # Two durations
+            case [timedelta(), timedelta()]:
+                raise click.BadParameter("Two durations are ambiguous.")
+            case ["now", _]:
+                raise click.BadParameter(
+                    "'Now' keyword is only allowed for the end part."
+                )
+            # Anything compatible and 'now'
+            case ([int() | datetime() | timedelta(), "now"]):
+                start = parsed_start
+                end = parsed_end
+            # Replacement components and date and time
+            case ([str(), datetime()] | [datetime(), str()]):
+                if isinstance(parsed_start, str):
+                    end = parsed_end
+                    start = self._replace_datetime_components(end, parsed_start)
+                else:
+                    start = parsed_start
+                    end = self._replace_datetime_components(start, parsed_end)
+            # Replacement components and anything non-compatible
+            case ([str(), _] | [_, str()]):
+                raise click.BadParameter(
+                    "Replacement components is only compatible with date and time."
+                )
+            # Remaining and compatible
+            case [_, _]:
+                start = parsed_start
+                end = parsed_end
+
+        if type(start) == type(end) and start >= end:
+            raise click.BadParameter(
+                "Start is ahead or equal to end: {} >= {}".format(
+                    start.isoformat(), end.isoformat()
+                )
+            )
+
+        return start, end
 
 
 class FormatSpecType(StrEnum):

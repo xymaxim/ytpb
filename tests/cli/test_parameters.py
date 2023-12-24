@@ -1,13 +1,18 @@
-from datetime import datetime
+from datetime import datetime, timezone
 
 import click
 import pytest
+from dateutil.tz import tzlocal
+from freezegun import freeze_time
+from freezegun.api import FakeDatetime
+from timedelta_isoformat import timedelta
 
 from ytpb.cli.parameters import (
     DurationParamType,
     FormatSpecParamType,
     FormatSpecType,
     ISODateTimeParamType,
+    RewindIntervalParamType,
 )
 
 
@@ -105,3 +110,92 @@ def test_format_spec_with_function():
         "function(format eq mp4)", None, None
     )
     assert expected == actual
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        ("0/100", (0, 100)),
+        (
+            "0/20240102T102030+00",
+            (0, datetime(2024, 1, 2, 10, 20, 30, tzinfo=timezone.utc)),
+        ),
+        (
+            "20240102T102000+00/100",
+            (datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc), 100),
+        ),
+        ("0/P1DT30S", (0, timedelta(days=1, seconds=30))),
+        ("P1DT30S/100", (timedelta(days=1, seconds=30), 100)),
+        (
+            "20240102T102000+00/20240102T102030+00",
+            (
+                datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc),
+                datetime(2024, 1, 2, 10, 20, 30, tzinfo=timezone.utc),
+            ),
+        ),
+        (
+            "20240102T102000/20240102T102030",
+            (
+                datetime(2024, 1, 2, 10, 20),
+                datetime(2024, 1, 2, 10, 20, 30),
+            ),
+        ),
+        (
+            "20240102T102000+00/P1DT30S",
+            (
+                datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc),
+                timedelta(days=1, seconds=30),
+            ),
+        ),
+        (
+            "P1DT30S/20240102T102030+00",
+            (
+                timedelta(days=1, seconds=30),
+                datetime(2024, 1, 2, 10, 20, 30, tzinfo=timezone.utc),
+            ),
+        ),
+    ],
+)
+def test_input_rewind_interval(value: str, expected):
+    assert expected == RewindIntervalParamType().convert(value, None, None)
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (
+            "20240102T102000/T25M",
+            (datetime(2024, 1, 2, 10, 20), (datetime(2024, 1, 2, 10, 25))),
+        ),
+        (
+            "20240102T102000+00/T25M",
+            (
+                datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc),
+                (datetime(2024, 1, 2, 10, 25, tzinfo=timezone.utc)),
+            ),
+        ),
+        (
+            "2023Y12M31DT25M/20240102T102030",
+            (datetime(2023, 12, 31, 10, 25, 30), (datetime(2024, 1, 2, 10, 20, 30))),
+        ),
+    ],
+)
+def test_input_rewind_interval_with_lettered_end(value: str, expected):
+    assert expected == RewindIntervalParamType().convert(value, None, None)
+
+
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (
+            "10:25/10:35",
+            (
+                FakeDatetime(2024, 1, 2, 10, 25, tzinfo=tzlocal()),
+                FakeDatetime(2024, 1, 2, 10, 35, tzinfo=tzlocal()),
+            ),
+        ),
+    ],
+)
+@freeze_time("2024-01-02T10:20:30-01")
+def test_input_rewind_interval_with_time_of_today(value: str, expected):
+    assert expected == RewindIntervalParamType().convert(value, None, None)

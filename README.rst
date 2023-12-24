@@ -17,19 +17,16 @@ and download or play excerpts.
 - Makes use of `yt-dlp`_ to reliably extract information about videos
 
 .. _yt-dlp: https://github.com/yt-dlp/yt-dlp/
-  
+
 .. contents:: **Table of contents**
    :depth: 2
    :local:
 
 .. section-numbering::
    :depth: 2
-	   
-Introduction
-************
 
 What is Ytpb?
-=============
+*************
 
 YouTube allows viewers to pause, rewind, and continue playing live streams if
 the DVR feature is enabled by an uploader. The seek-back limit is up to 12
@@ -78,7 +75,7 @@ Quick start
 The Ytpb Command Line Interface (CLI) provides commands to download YouTube live
 stream excerpts and compose MPEG-DASH manifests to play excerpts later in
 different available qualities. Here are below basic examples demonstrating two
-main usage scenarios. 
+main usage scenarios.
 
 Download
 ========
@@ -87,8 +84,8 @@ Let's start with downloading a 30-second excerpt of audio and video by
 specifying start and end dates and stream URL or ID:
 
 .. code:: sh
-	  
-	  $ ytpb download -s 2023-01-02T03:04:00+00 -e 2023-01-02T03:04:30+00 <STREAM>
+
+	  $ ytpb download -i 2023-01-02T03:04:00+00/PT30S <STREAM>
 	  $ ls
 	  Stream-Title_20230102T0304+00.mp4
 
@@ -99,13 +96,13 @@ quality: 128k AAC audio and 1080p30 (or less) H.264 video. See the
 As for the start and end, they can be also defined in other ways (see the
 `Specifying rewind interval`_ subsection). For example, it would be handy to
 locate the desired moments first by previewing them and only after download a
-full excerpt. To run downloading in the `Preview mode`_, use the
-``-p/--preview`` option:
+full excerpt. To run downloading in the `preview mode <3. Preview mode>`_, use
+the ``-p/--preview`` option:
 
 .. code:: sh
-	  
-	  $ ytpb download -s 2023-01-02T03:04:00+00 -p <STREAM>
-	
+
+	  $ ytpb download -i 2023-01-02T03:04:00+00/.. -p <STREAM>
+
 Compose and play
 ================
 
@@ -115,7 +112,7 @@ streams:
 
 .. code:: sh
 
-	  $ ytpb mpd compose -s 2023-01-02T03:04:00+00 -e 2023-01-02T03:04:30+00 <STREAM>
+	  $ ytpb mpd compose -i 2023-01-02T03:04:00+00/PT30S <STREAM>
 	  $ ls
 	  Stream-Title_20230102T030400+00.mpd
 
@@ -126,7 +123,7 @@ Command line application
 ************************
 
 This section describes using the Ytpb CLI: from an overview of commands, showing
-their usage and configuration to advanced use cases. 
+their usage and configuration to advanced use cases.
 
 Overview
 ========
@@ -138,7 +135,7 @@ Commands
 ^^^^^^^^
 
 .. code:: ini
-	  
+
   Usage: python -m ytpb [OPTIONS] COMMAND [ARGS]...
 
   Options:
@@ -171,7 +168,7 @@ Getting help
 To show a list of available options, type ``--help`` after commands or subcommands:
 
 .. code:: sh
-	  
+
 	  $ ytpb --help
 	  $ ytpb download --help
 	  $ ytpb mpd compose --help
@@ -182,154 +179,191 @@ Usage
 Specifying rewind interval
 --------------------------
 
-The rewind interval can be specified with the ``--start`` and ``--end``
-options. There are several ways to do it.
+* ``--interval <start>/<end>``
 
-  *Note that the --start and --end options will be replaced with the
-  single --interval option in future versions.*
+The rewind interval can be specified with the ```-i/--interval`` option. The
+formatting of input interval and its parts is closely compliant with the
+ISO-8601 time interval formatting. The interval composes of start and end parts
+separated with the "/" symbol.
+
+These parts are a pair of points in a stream (absolute or relative ones) or some
+special literals. The absolute points are date and times (indirect) and sequence
+numbers of media segments (direct). One of interval parts can be relative to
+another one by a time duration or date and time replacing components.
 
 1. Using dates
 ^^^^^^^^^^^^^^
 
-Input dates providing via ``-s/--start`` and ``-e/--end`` options are ISO-8601
-formatted dates.
-
 Date and time of a day
 """"""""""""""""""""""
 
-* ``--start / --end <date-time>``,
-  
+* ``--interval <date-time>/<date-time>``
+
 where ``<date-time> = <date>"T"<time>"±"<shift>``:
 
 ``YYYY"-"MM"-"DD"T"hh":"mm":"ss"±"hh":"mm`` (I) or
 
 ``YYYYMMDD"T"hhmmss"±"hhmm`` (II).
 
-The extended (I) and basic (II) formats are supportable.
+The extended (I) and basic (II) formats are supported.
 
-For example, a interval with two complete date and time representations:
+For example, an interval with two complete date and time representations:
 
 .. code:: sh
 
 	  # Complete representations in extended format:
-	  $ ytpb download -s 2023-01-02T03:04:00+00 -e 2023-01-02T03:04:30+00 ...
-	  
-	  # Complete representations in basic format:
-	  $ ytpb download -s 20230102T030400+00 -e 20230102T030430+00 ...
+	  $ ytpb download -i 2024-01-02T10:20:00+00/2024-01-02T10:20:30+00 ...
 
-The time part can be also provided with a reduced precision, with some
+	  # Complete representations in basic format:
+	  $ ytpb download -i 20240102T102000+00/20240102T102030+00 ...
+
+The time part can be also provided with a reduced precision, with some low-order
 components omitted (the date part should be always complete):
 
 .. code:: sh
 
 	  # Representations with reduced precision in extended format:
-	  $ ytpb download -s 2023-01-02T0304+00 -e 2023-01-02T03:04:30+00 ...
+	  $ ytpb download -i 2024-01-02T1020+00/2024-01-02T10:20:30+00 ...
 
 	  # Representations with reduced precision in basic format:
-	  $ ytpb download -s 20230102T0304+00 -e 20230102T030430+00 ...
+	  $ ytpb download -i 20240102T1020+00/20230102T102030+00 ...
 
 **Zulu time**. Zulu time refers to the UTC time and denoted with the letter 'Z'
 used as a suffix instead of time shift. It's applicable for dates here and
 elsewhere, even if it's not stated. For example, the following date will be
 resolved to the same date as in the example above ::
 
-    $ ytpb download -s 20230102T0304Z -e 20230102T030430Z ...
+    $ ytpb download -i 20240102T1020Z/20240102T102030Z ...
 
 **Local time**. To represent a local time, the time shift part can be
 omitted. For example, if you're in the UTC+02 time zone, the above example
 can be represented as: ::
 
-  $ ytpb download -s 20230102T0504 -e 20230102T050430 ...
+  $ ytpb download -i 20240102T1220/20240102T122030 ...
 
 Time of today
 """""""""""""
 
-* ``--start / --end <time>±<shift>`` (I),
-  
-* ``--start / --end T<time>±<shift>`` (II),
+* ``-i/--interval <time>±<shift>/<time>±<shift>``
 
-To refer to the current day, the date part can be ommited: ::
-	  
-  $ ytpb download -s T03:04+00 -e T03:04:30+00 ...
+To refer to a current day, the date part can be ommited: ::
+
+  $ ytpb download -i 10:20+00/T102030+00 ...
+
+Date and time replacing components
+""""""""""""""""""""""""""""""""""
+
+This allows to replace particular date and time components in another part of an
+interval. The components to replace are referred explicitly by its one-letter
+designators.
+
+For example, the start part below: ::
+
+  $ ytpb download -i 2023Y12M31DT1H2M3S/2024-01-02T10:20:00+00 ...
+
+will be resolved as: ::
+
+  $ ytpb download -i 2023-12-31T01:02:03+00/2024-01-02T10:20:00+00 ...
+
+Note that the time part delimiter ("T") is necessary when only time components
+to change are supplied: ::
+
+  $ ytpb download -i 2024-01-02T10:20:00+00/T30S ...
 
 
 'Now' keyword
 """""""""""""
 
-* ``--end now``
+* ``-i/--interval <start>/now``
 
-To refer to the current moment, the ``--end`` option accepts the ``now``
-keyword: ::
-  
-  $ ytpb download -s 20230102T0304+00 -e now ...
+To refer to the current moment, the end part accepts the ``now`` keyword: ::
 
+  $ ytpb download -i 20240102T1020+00/now ...
+
+(To be exact, it refers to the last available media segment.)
 
 2. Using duration
 ^^^^^^^^^^^^^^^^^
 
-* ``--start <date-time>, --end <duration>`` or
+* ``-i/--interval <start>/<duration>`` or
 
-* ``--start <duration>, --end <date-time>``,
+* ``-i/--interval <duration>/<end>``,
 
-where ``<duration> = "P"DD"D""T""hh"H"mm"M"ss"S"``. 
+where ``<duration> = "P"DD"D""T""hh"H"mm"M"ss"S"``.
 
-Sometimes it would be more convenient to specify an interval with a duration.
+Sometimes it would be more convenient to specify an interval with a
+duration: (a) by a start and a duration and (b) by a duration and an end.
+
+The duration string is prepended with "P" symbol and used one-letter date and
+time component designators. The highest order of date components is days ("D").
 
 For example, here are below two examples representing the same 30-second
 interval:
 
 .. code:: sh
 
-	  # Specified by start and duration.
-	  $ ytpb download -s 2023-01-02T03:04:00+00 -e PT30S ...
+	  # Specified by a start and a duration.
+	  $ ytpb download -i 2024-01-02T10:20:00+00/PT30S ...
 
-	  # Specified by duration and end.
-	  $ ytpb download -s PT30S -e 2023-01-02T03:04:30+00 ...
+	  # Specified by a duration and an end.
+	  $ ytpb download -i PT30S/2024-01-02T10:20:30+00 ...
 
-Preview mode
-""""""""""""
+
+3. Preview mode
+^^^^^^^^^^^^^^^
 
 If you only need to preview a moment in a stream, which you can refer later, the
 ``-p/--preview`` option exists: ::
 
-  $ ytpb download -s 2023-01-02T03:04:00+00 -p ...
+  $ ytpb download -i 2024-01-02T10:20:00+00/.. -p ...
 
-It's basically an alias for the short ``--end`` duration value (defaults to
-``PT10S``). The preview duration can be changed via the
-``general.preview_duration`` field in the ``config.toml`` file.
-
-Date time arithmetic
-""""""""""""""""""""
-
-* ``--start / --end '<date-time> ± <duration>'``
-
-The rewind date can be expressed as a duration value added or substracted from a
-time.
-
-For example, a 30-second interval beginning at 03:04 AM one day ago: ::
-
-  $ ytpb download -s 'T03:04+00 - P1D' -e PT30S ...
+   ..
+      It's basically an alias for the short ``--end`` duration value (defaults to
+      ``PT10S``). The preview duration can be changed via the
+      ``general.preview_duration`` field in the ``config.toml`` file.
 
 
-3. Using sequence numbers
+4. Using sequence numbers
 ^^^^^^^^^^^^^^^^^^^^^^^^^
 
-* ``--start / --end <number>``
-  
-Besides dates, you can specify the sequence number (starting from 0) of a
+* ``-i/--interval <sequence-number>/<sequence-number>``
+
+Besides dates, you can specify the sequence number (positive, starting from 0) of a
 MPEG-DASH `media segment
 <https://dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#media-segment/>`_
 to refer to a specific point in a live stream. Usually sequence numbers are
 used when a segment has already been previously determined.
 
 For example, an interval from the beginning to segment 100: ::
-  
-  $ ytpb download -s 0 -e 100 ...
 
-Sequence numbers can be also combined with dates or durations: ::
+  $ ytpb download -i 0/100 ...
 
-  $ ytpb download -s 0 -e 2023-01-02T03:04:30+00 ...
-  $ ytpb download -s 0 -e PT30S ...
+Sequence numbers can be also combined with other types: ::
+
+  $ ytpb download -i 0/2024-01-02T10:20:30+00 ...
+  $ ytpb download -i 0/PT30S ...
+  $ ytpb download -i 0/now ...
+
+Compatibility table
+^^^^^^^^^^^^^^^^^^^
+
+.. table:: **Table:** Interval parts compatibility
+
+   +----------------------+---------------+------+----------+----------------------+-----------------+-------------+
+   |                      | Date and time | Time | Duration | Replacing components | Sequence number | 'Now', '..' |
+   +======================+===============+======+==========+======================+=================+=============+
+   | Date and time        |       Y       |  Y   |    Y     |          Y           |        Y        |      Y      |
+   +----------------------+---------------+------+----------+----------------------+-----------------+-------------+
+   | Time                 |       Y       |  Y   |    Y     |         *N*          |        Y        |      Y      |
+   +----------------------+---------------+------+----------+----------------------+-----------------+-------------+
+   | Duration             |       Y       |  Y   |   *N*    |         *N*          |        Y        |     *N*     |
+   +----------------------+---------------+------+----------+----------------------+-----------------+-------------+
+   | Replacing components |       Y       | *N*  |   *N*    |         *N*          |       *N*       |     *N*     |
+   +----------------------+---------------+------+----------+----------------------+-----------------+-------------+
+   | Sequence number      |       Y       |  Y   |    Y     |         *N*          |        Y        |      Y      |
+   +----------------------+---------------+------+----------+----------------------+-----------------+-------------+
+   | 'Now', '..'          |       Y       |  Y   |   *N*    |         *N*          |        Y        |     *N*     |
+   +----------------------+---------------+------+----------+----------------------+-----------------+-------------+
 
 Specifying formats
 ------------------
@@ -360,14 +394,14 @@ below gives us a very specific audio stream: ::
   $ ytpb download -af 'itag eq 140' ...
 
 Or, with the following logical condition, one of two video streams: ::
-	  
+
   $ ytpb download -vf 'itag eq 271 or itag eq 248' ...
 
 The specific audio and video ``itag`` values for a live stream can be seen in
 the *Stats for nerds* popup in the browser. To show all available DASH-specific
 formats, running the `yt-dlp <https://github.com/yt-dlp/yt-dlp/>`_ program is
 helpful: ::
-  
+
   $ yt-dlp --live-from-start -F <STREAM>
 
 Here are some other examples of format specs with lookup attributes (see the
@@ -376,7 +410,7 @@ Here are some other examples of format specs with lookup attributes (see the
   $ ytpb download -vf 'best(format eq mp4 and [frame_rate eq 60 or frame_rate eq 30])' ...
   $ ytpb mpd compose -vf 'format eq webm and height le 1080 and frame_rate eq 30' ...
 
-	  
+
 Note that the ``download`` command requires the query result to be
 non-ambiguous, with one representation per query.
 
@@ -390,7 +424,7 @@ Using aliases
 
 `Aliases`_ allow to define a part or whole format spec for different cases and
 make expressions much shorter. For example: ::
-	  
+
   $ ytpb download -vf 'best(@mp4 and @30fps)' ...
 
 .. _Default format values:
@@ -429,20 +463,20 @@ will be automatically determined during the merging stage. ::
   $ Stream-Title_20230102T030400+00_PT30S.mp4
 
 See the `Output name context`_ subsection for the available template variables.
- 
+
 The date formatting can be changed via the ``output.date.styles`` field in the
 ``config.toml`` file. The default styles (``"basic,reduced,hh"``) correspond to
 the basic representation with the reduced precision. Some examples:
 
 .. code:: TOML
-	  
+
 	  [output.date]
 	  # 2023-01-02T03:04:00+00:00
 	  # styles = "extended,complete,hhmm"
 
 	  # 20230102T030400+00
 	  # styles = "basic,complete,hh"
-	  
+
 	  # 20230102T0304Z
 	  # styles = "basic,reduced,z"
 
@@ -489,7 +523,7 @@ By default, after merging downloaded segment files to produce an excerpt, the
 segments will be deleted. Do you want to keep them? There are two options here.
 
 *First*, download only segment files without merging them (it also implies another option, ``--no-cleanup``): ::
-  
+
   $ ytpb download ... --no-merge
   ...
   Success! Segments saved to /tmp/.../segments/.
@@ -521,11 +555,11 @@ For example, just to locate the start and end segments, use: ::
   (<<) Locating start and end in the stream... done.
   Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
   Actual end: 25 Mar 2023 23:33:58 +0000, seq. 7959121
-  
+
   notice: This is a dry run. Skip downloading and exit.
 
 It can be combined with the ``--no-cleanup`` option as well: ::
-   
+
   $ ytpb download ... --dry-run --no-cleanup
 
 Using cache
@@ -545,7 +579,7 @@ update.
 
    TODO
 
-	  
+
 Python package
 **************
 
@@ -571,27 +605,27 @@ The parsing of conditional expressions is done using `pycond`_ package.
 The expressions have the following grammar:
 
 .. code:: EBNF
-                  
-    expression : condition 
+
+    expression : condition
                | function '(' condition ')'
 	       | 'none' ;
-               
+
     condition : atom (('and' | 'or' | ...) (atom | condition))*
               | '[' condition ']'
 	      | alias
               | ellipsis ;
-    
-    atom : attribute operator value ;     
+
+    atom : attribute operator value ;
 
     alias : '@' alias-name ;
-    
+
     ellipsis : '...' ;
-    
-  
+
+
 where ``condition`` is in the form:
 
 .. code:: text
-   
+
     [ < atom1 > < and | or | and not ... > <atom2 > ] ... .
 
 The *operators* are text-style operators and refer to the Python's standard
@@ -637,7 +671,7 @@ Audio only
 
 .. table::
    :widths: 20 20 60
-	     
+
    +-------------------------+------------+------------------------------------+
    | Attribute               | Type       | Description                        |
    +=========================+============+====================================+
@@ -776,7 +810,7 @@ Two styles are available: ``original`` and ``custom``.
 An original title with unallowed symbols replaced. Allows Unicode characters.
 
 .. code:: TOML
-	  
+
 	  [output.title]
 	  style = "original"
 
@@ -799,7 +833,7 @@ word boundaries) and keep Unicode characters, the following settings:
 
 	  [output.title]
 	  style = "custom"
-	  
+
 	  [output.title.custom]
 	  max_length = 30
 	  characters = "unicode"
@@ -812,10 +846,10 @@ will produce:
 *Converting to ASCII-only*. To convert all characters to ASCII-only, the following:
 
 .. code:: TOML
-	  
+
 	  [output.title.custom]
 	  characters = "ascii"
-	  
+
 will produce:
 
 1. ``FRANCE 24 -- EN DIRECT -- Info et actualites internationales en continu 24h-24``
@@ -839,7 +873,7 @@ will produce:
 
 Contributing
 ************
- 
+
 If you are willing to contribute, you are very welcome. Do you have any ideas or
 suggestions? Or have you experienced a problem? Please `open
 <https://github.com/xymaxim/ytpb/issues/>`_ an issue on GitHub. If you a

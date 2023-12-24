@@ -10,7 +10,7 @@ These 2 representations will be in the manifest:
 
 (<<) Locating start and end in the stream... done.
 Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
-  Actual end: 25 Mar 2023 23:33:58 +0000 (+00:02), seq. 7959121
+  Actual end: 25 Mar 2023 23:33:58 +0000, seq. 7959121
 
 (<<) Composing MPEG-DASH manifest...
 Success! Manifest saved to 'kHwmzef842g_20230325T233354+00.mpd'.

@@ -1,7 +1,7 @@
 import json
 import os
 from dataclasses import asdict
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable
 from urllib.parse import urljoin
@@ -12,32 +12,46 @@ import responses
 from conftest import TEST_DATA_PATH
 from freezegun import freeze_time
 
-from ytpb.exceptions import BaseUrlExpiredError, CachedItemNotFoundError
+from ytpb.exceptions import (
+    BaseUrlExpiredError,
+    CachedItemNotFoundError,
+    SequenceLocatingError,
+)
 from ytpb.fetchers import YtpbInfoFetcher
 from ytpb.info import YouTubeVideoInfo
 from ytpb.playback import Playback, SequenceRange
 from ytpb.streams import AudioOrVideoStream
+from ytpb.types import RelativeSegmentSequence
 
 
 @pytest.mark.parametrize(
-    "input_dates",
+    "start,end",
     [
         # Segments and corresponding ingestion start dates:
-        # Segment 7959120: 2023-03-25T23:33:54.491Z,
-        # Segment 7959121: 2023-03-25T23:33:56.490Z,
-        # Segment 7959122: 2023-03-25T23:33:58.492Z.
-        ("2023-03-25T20:33:55-03:00", "2023-03-25T20:33:57-03:00"),
-        ("2023-03-25T20:33:55-03", "2023-03-25T20:33:57-03"),
-        ("2023-03-25T23:33:55Z", "2023-03-25T23:33:57Z"),
-        ("2023-03-25T23:33:55.001Z", "2023-03-25T23:33:57.001Z"),
-        ("2023-03-25T23:33:55,001Z", "2023-03-25T23:33:57,001Z"),
-        ("20230325T203355-0300", "20230325T203357-0300"),
-        ("20230325T203355-03", "20230325T203357-03"),
-        ("20230325T233355Z", "20230325T233357Z"),
+        #             7959120       21       22
+        #                  |        |        |
+        # 2023-03-25T23:33:54.491Z  56.490   58.492
+        (7959120, 7959121),
+        (7959120, datetime.fromisoformat("2023-03-25T23:33:57Z")),
+        (7959120, timedelta(seconds=3)),  # segment duration (2 s) + 1 s
+        (7959120, RelativeSegmentSequence(1)),
+        (datetime.fromisoformat("2023-03-25T23:33:55Z"), 7959121),
+        (
+            datetime.fromisoformat("2023-03-25T23:33:55Z"),
+            datetime.fromisoformat("2023-03-25T23:33:57Z"),
+        ),
+        (datetime.fromisoformat("2023-03-25T23:33:55Z"), timedelta(seconds=2)),
+        (datetime.fromisoformat("2023-03-25T23:33:55Z"), RelativeSegmentSequence(1)),
+        (timedelta(seconds=3), 7959121),  # segment duration (2 s) + 1 s
+        (timedelta(seconds=2), datetime.fromisoformat("2023-03-25T23:33:57Z")),
+        (RelativeSegmentSequence(1), 7959121),
+        (RelativeSegmentSequence(1), datetime.fromisoformat("2023-03-25T23:33:57Z")),
+        (RelativeSegmentSequence(1), 7959121),
     ],
 )
 def test_locate_rewind_range(
-    input_dates: tuple[str, str],
+    start,
+    end,
     fake_info_fetcher: "FakeInfoFetcher",
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -48,21 +62,83 @@ def test_locate_rewind_range(
     tmp_path: Path,
 ) -> None:
     # Given:
-    add_responses_callback_for_reference_base_url()
-    add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
+    if not (isinstance(start, int) and isinstance(end, int)):
+        add_responses_callback_for_reference_base_url()
+        add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
+
+    # When:
+    playback = Playback(stream_url, fetcher=fake_info_fetcher)
+    playback.fetch_and_set_essential()
+    sequences = playback.locate_rewind_range(start, end, itag="140")
+
+    # Then:
+    assert sequences == SequenceRange(7959120, 7959121)
+
+
+@pytest.mark.parametrize(
+    "start,end",
+    [
+        (timedelta(seconds=2), timedelta(seconds=2)),
+        (RelativeSegmentSequence(1), RelativeSegmentSequence(1)),
+        (timedelta(seconds=2), RelativeSegmentSequence(1)),
+        (RelativeSegmentSequence(1), timedelta(seconds=2)),
+    ],
+)
+def test_local_rewind_range_with_relative_start_and_end(
+    start: timedelta | RelativeSegmentSequence,
+    end: timedelta | RelativeSegmentSequence,
+    stream_url: str,
+    fake_info_fetcher: "FakeInfoFetcher",
+    tmp_path: Path,
+):
+    playback = Playback(stream_url, fetcher=fake_info_fetcher)
+    playback.fetch_and_set_essential()
+
+    with pytest.raises(ValueError):
+        sequences = playback.locate_rewind_range(start, end, itag="140")
+
+
+@pytest.mark.parametrize(
+    "start,end",
+    [
+        # Segments and corresponding ingestion start dates:
+        #             7959120       21       22
+        #                  |        |        |
+        # 2023-03-25T23:33:54.491Z  56.490   58.492
+        (7959122, 7959121),
+        (7959121, datetime.fromisoformat("2023-03-25T23:33:55Z")),
+        (datetime.fromisoformat("2023-03-25T23:33:57Z"), 7959120),
+        (
+            datetime.fromisoformat("2023-03-25T23:33:57Z"),
+            datetime.fromisoformat("2023-03-25T23:33:55Z"),
+        ),
+        (datetime.fromisoformat("2023-03-25T23:33:57Z"), RelativeSegmentSequence(-1)),
+    ],
+)
+def test_locate_rewind_range_with_swapped_start_and_end(
+    start,
+    end,
+    fake_info_fetcher: "FakeInfoFetcher",
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    stream_url: str,
+    active_live_video_info: YouTubeVideoInfo,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    # Given:
+    if not (isinstance(start, int) and isinstance(end, int)):
+        add_responses_callback_for_reference_base_url()
+        add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
 
     # When:
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
 
-    sequences = playback.locate_rewind_range(
-        datetime.fromisoformat(input_dates[0]),
-        datetime.fromisoformat(input_dates[1]),
-        itag="140",
-    )
-
     # Then:
-    assert sequences == SequenceRange(7959120, 7959121)
+    with pytest.raises((ValueError, SequenceLocatingError)):
+        sequences = playback.locate_rewind_range(start, end, itag="140")
 
 
 def test_download_excerpt_between_sequences_without_merging(
