@@ -228,7 +228,7 @@ components omitted (the date part should be always complete):
 	  # Representations with reduced precision in basic format:
 	  $ ytpb download -i 20240102T1020+00/20230102T102030+00 ...
 
-**Zulu time**. Zulu time refers to the UTC time and denoted with the letter 'Z'
+**Zulu time**. Zulu time refers to the UTC time and denoted with the letter "Z"
 used as a suffix instead of time shift. It's applicable for dates here and
 elsewhere, even if it's not stated. For example, the following date will be
 resolved to the same date as in the example above ::
@@ -316,11 +316,6 @@ If you only need to preview a moment in a stream, which you can refer later, the
 ``-p/--preview`` option exists: ::
 
   $ ytpb download -i 2024-01-02T10:20:00+00/.. -p ...
-
-   ..
-      It's basically an alias for the short ``--end`` duration value (defaults to
-      ``PT10S``). The preview duration can be changed via the
-      ``general.preview_duration`` field in the ``config.toml`` file.
 
 
 4. Using sequence numbers
