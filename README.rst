@@ -259,16 +259,16 @@ designators.
 
 For example, the start part below: ::
 
-  $ ytpb download -i 2023Y12M31DT1H2M3S/2024-01-02T10:20:00+00 ...
+  $ ytpb download -i 2023Y12M31DT1H/2024-01-02T10:20:00+00 ...
 
 will be resolved as: ::
 
-  $ ytpb download -i 2023-12-31T01:02:03+00/2024-01-02T10:20:00+00 ...
+  $ ytpb download -i 2023-12-31T01:20:00+00/2024-01-02T10:20:00+00 ...
 
 Note that the time part delimiter ("T") is necessary when only time components
 to change are supplied: ::
 
-  $ ytpb download -i 2024-01-02T10:20:00+00/T30S ...
+  $ ytpb download -i 2024-01-02T10:20:00+00/T25M30S ...
 
 
 'Now' keyword
