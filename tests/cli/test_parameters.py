@@ -154,6 +154,20 @@ def test_format_spec_with_function():
                 datetime(2024, 1, 2, 10, 20, 30, tzinfo=timezone.utc),
             ),
         ),
+        (
+            "20240102T102000+00/now",
+            (
+                datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc),
+                "now"
+            ),
+        ),
+        (
+            "20240102T102000+00/..",
+            (
+                datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc),
+                ".."
+            ),
+        ),
     ],
 )
 def test_input_rewind_interval(value: str, expected):

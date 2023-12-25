@@ -12,13 +12,13 @@ from requests.exceptions import HTTPError
 from ytpb import types
 from ytpb.cli import parameters
 from ytpb.cli.common import (
+    raise_for_start_sequence_too_far,
+    raise_for_sequence_ahead_of_current,
     check_end_options,
     check_streams_not_empty,
     get_downloaded_segment,
     normalize_stream_url,
     print_summary_info,
-    raise_for_sequence_ahead_of_current,
-    raise_for_start_sequence_too_far,
 )
 from ytpb.cli.options import (
     boundary_options,
@@ -29,31 +29,32 @@ from ytpb.cli.options import (
 from ytpb.cli.parameters import (
     FormatSpecParamType,
     FormatSpecType,
-    InputRewindInterval,
     RewindIntervalParamType,
+    InputRewindInterval,
 )
 from ytpb.download import download_segment
 from ytpb.exceptions import (
     BaseUrlExpiredError,
     BroadcastStatusError,
     CachedItemNotFoundError,
-    QueryError,
-    SegmentDownloadError,
     SequenceLocatingError,
+    SegmentDownloadError,
+    QueryError,
 )
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
 from ytpb.merge import merge_segments
 from ytpb.playback import Playback
 from ytpb.segment import Segment
-from ytpb.types import DateInterval, SegmentSequence
-from ytpb.utils.other import resolve_relativity_in_interval
+from ytpb.types import DateInterval, SegmentSequence, RelativeSegmentSequence
+from ytpb.utils.url import extract_parameter_from_url
 from ytpb.utils.path import (
     expand_template_output_path,
     OUTPUT_PATH_PLACEHOLDER_RE,
     OutputPathTemplateContext,
 )
 from ytpb.utils.remote import request_reference_sequence
+from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.units import S_TO_MS
 
 logger = structlog.get_logger(__name__)
@@ -266,24 +267,29 @@ def download_command(
             requested_start, head_sequence, ctx, "start"
         )
 
-    if isinstance(requested_end, SegmentSequence):
-        raise_for_sequence_ahead_of_current(requested_end, head_sequence, ctx, "end")
-    if requested_end == "now":
-        requested_end = head_sequence - 1
+    match requested_end:
+        case SegmentSequence() as x:
+            raise_for_sequence_ahead_of_current(x, head_sequence, ctx, "end")
+        case "now":
+            requested_end = head_sequence - 1
+        case "..":
+            if not preview:
+                raise click.BadParameter(
+                    "Open interval is only valid in the preview mode", param=interval
+                )
 
-    if preview:
-        assert False
-        segment_duration = ...
+    if preview:            
         preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
+        segment_duration = float(extract_parameter_from_url("dur", reference_base_url))
         number_of_segments = round(preview_duration_value / segment_duration)
-        requested_end = RelativeSequenceNumber(number_of_segments)
+        requested_end = RelativeSegmentSequence(number_of_segments)
 
     try:
         rewind_range = playback.locate_rewind_range(
             requested_start,
             requested_end,
             itag=reference_stream.itag,
-        )
+        )            
     except SequenceLocatingError as exc:
         message = "\nerror: An error occured during segment locating, exit."
         click.echo(message, err=True)
@@ -291,6 +297,9 @@ def download_command(
 
     click.echo("done.")
 
+    if preview and interval[1] != "..":
+        click.echo("info: The preview mode is enabled, interval end is ignored.")
+    
     for point in (requested_start, requested_end):
         if type(point) is SegmentSequence:
             sequence = point
@@ -310,8 +319,17 @@ def download_command(
     start_segment = playback.get_downloaded_segment(
         rewind_range.start, reference_base_url
     )
-    end_segment = playback.get_downloaded_segment(rewind_range.end, reference_base_url)
-
+    try:
+        end_segment = playback.get_downloaded_segment(rewind_range.end, reference_base_url)
+    except FileNotFoundError:
+        downloaded_path = download_segment(
+            rewind_range.end,
+            reference_base_url,
+            playback.get_temp_directory(),
+            session=playback.session,
+        )
+        end_segment = Segment.from_file(downloaded_path)
+        
     requested_start_date: datetime
     match requested_start:
         case SegmentSequence():
@@ -341,7 +359,10 @@ def download_command(
     else:
         start_diff, end_diff = requested_date_interval - actual_date_interval
         cut_at_start_s = start_diff if start_diff > 0 else 0
-        cut_at_end_s = abs(end_diff) if end_diff < 0 else 0
+        if preview:
+            cut_at_end_s = 0
+        else:
+            cut_at_end_s = abs(end_diff) if end_diff < 0 else 0
         cut_kwargs = {
             "cut_at_start": round(cut_at_start_s * int(S_TO_MS)),
             "cut_at_end": round(cut_at_end_s * int(S_TO_MS)),

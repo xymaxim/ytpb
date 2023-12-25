@@ -308,15 +308,30 @@ interval:
 	  # Specified by a duration and an end.
 	  $ ytpb download -i PT30S/2024-01-02T10:20:30+00 ...
 
-
 3. Preview mode
 ^^^^^^^^^^^^^^^
 
+* ``--interval <start>/.. --preview``
+* ``--interval <start>/<end> --preview``
+
 If you only need to preview a moment in a stream, which you can refer later, the
-``-p/--preview`` option exists: ::
+``-p/--preview`` option exists. It's basically an alias for the short end
+duration.
+
+In the above, the closed intervals were used, while for the preview mode, you
+can define (not necessarily, though) intervals with an open end designated with
+the ".." literal ::
 
   $ ytpb download -i 2024-01-02T10:20:00+00/.. -p ...
 
+(In case of a closed interval, an end part will be ignored and you'll see a note
+in the output that the preview mode is enabled.)
+
+By default, the output preview duration varies from 10 to 10 + one segment
+duration seconds. The imprecision is due to the reliance on the full-length,
+uncut end segment (to reduce merging time). The minimal preview duration value
+can be changed via the ``general.preview_duration`` field in the ``config.toml``
+file.
 
 4. Using sequence numbers
 ^^^^^^^^^^^^^^^^^^^^^^^^^

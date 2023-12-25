@@ -15,6 +15,8 @@ from freezegun import freeze_time
 
 from utils import assert_approx_duration
 
+from ytpb.config import DEFAULT_CONFIG
+
 
 @pytest.mark.parametrize(
     "interval,output_subpath",
@@ -119,28 +121,101 @@ def test_providing_start_and_end_equals_now(
     assert_approx_duration(expected_path, 4.0)
 
 
-# @freeze_time("2023-03-26T00:00:00+00:00")
-# def test_providing_end_and_preview(ytpb_cli_invoke: Callable, stream_url: str):
-#     with pytest.raises(click.UsageError) as exc_info:
-#         result = ytpb_cli_invoke(
-#             [
-#                 "--no-config",
-#                 "download",
-#                 "--no-cache",
-#                 "-s",
-#                 "2023-03-25T23:33:55+00:00",
-#                 "-e",
-#                 "2023-03-25T23:33:58+00:00",
-#                 "-p",
-#                 stream_url,
-#             ],
-#             catch_exceptions=False,
-#             standalone_mode=False,
-#         )
-#     message = "Option '-e' / '--end' is conflicting with '-p' / '--preview'."
-#     assert message == str(exc_info.value)
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_preview_option_with_open_interval(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # We only have three test segments of 2 second duration.
+    DEFAULT_CONFIG["general"]["preview_duration"] = 4
+    
+    # When:
+    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                "2023-03-25T23:33:55+00/..",
+                "--preview",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                stream_url,
+            ],
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    expected_path = tmp_path / "kHwmzef842g_20230325T233355+00.mp4"
+    assert os.path.exists(expected_path)
+    assert_approx_duration(expected_path, 5.5)
 
 
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_preview_option_with_closed_interval(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # We only have three test segments of 2 second duration.
+    DEFAULT_CONFIG["general"]["preview_duration"] = 4
+    
+    # When:
+    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                "2023-03-25T23:33:55+00/2023-03-25T23:33:57:00+00",
+                "--preview",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                stream_url,
+            ],
+            catch_exceptions=False
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    
+    expected_path = tmp_path / "kHwmzef842g_20230325T233355+00.mp4"
+    assert os.path.exists(expected_path)
+    assert_approx_duration(expected_path, 5.5)
+
+    expected = "info: The preview mode is enabled, interval end is ignored."
+    assert expected in result.output
+
+    
 @pytest.mark.parametrize(
     "audio_format,video_format",
     [("itag eq 140", "itag eq 244"), ("itag eq 140", "none"), ("none", "itag eq 244")],
@@ -492,7 +567,7 @@ def test_no_cut_option(
                 "download",
                 "--no-cache",
                 "--interval",
-                "2023-03-25T23:33:55+00:00/2023-03-25T23:33:58+00:00",
+                "2023-03-25T23:33:55+00/2023-03-25T23:33:58+00",
                 "-af",
                 "itag eq 140",
                 "-vf",

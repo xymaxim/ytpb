@@ -119,8 +119,8 @@ class RewindIntervalParamType(click.ParamType):
         return date.replace(**components_to_replace)
 
     def _parse_interval_part(
-        self, part: str
-    ) -> int | str | Literal["now"] | datetime | timedelta:
+        self, part: str, end: bool = False,
+    ) -> int | str | Literal["now", ".."] | datetime | timedelta:
         match part:
             # Sequence number
             case x if x.isdecimal():
@@ -145,8 +145,8 @@ class RewindIntervalParamType(click.ParamType):
             # Date and time
             case x if "T" in x:
                 output = datetime.fromisoformat(x)
-            case "now":
-                output = "now"
+            case "now" | ".." as x:
+                output = x
             case _:
                 raise click.BadParameter(f"Incorrectly formatted part: {part}")
 
@@ -168,12 +168,15 @@ class RewindIntervalParamType(click.ParamType):
             # Two durations
             case [timedelta(), timedelta()]:
                 raise click.BadParameter("Two durations are ambiguous.")
-            case ["now", _]:
+            case "now" | ".." as x, _:
                 raise click.BadParameter(
-                    "'Now' keyword is only allowed for the end part."
+                    f"Keyword '{x}' is only allowed for the end part."
                 )
-            # Anything compatible and 'now'
-            case ([int() | datetime() | timedelta(), "now"]):
+            # Relative and 'now' or '..'
+            case timedelta(), "now" | ".." as x:
+                raise click.BadParameter(f"Keyword '{x}' not compatible with relative.")
+            # Anything compatible and 'now' or '..'
+            case ([int() | datetime() | timedelta(), "now" | ".."]):
                 start = parsed_start
                 end = parsed_end
             # Replacement components and date and time
