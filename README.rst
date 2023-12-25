@@ -320,7 +320,7 @@ duration.
 
 In the above, the closed intervals were used, while for the preview mode, you
 can define (not necessarily, though) intervals with an open end designated with
-the ".." literal ::
+the ".." literal: ::
 
   $ ytpb download -i 2024-01-02T10:20:00+00/.. -p ...
 
@@ -803,16 +803,17 @@ variables as ``<variable>``. The available template variables are:
 Formatting titles
 -----------------
 
+Let's consider the following titles here and below:
+
 1. FRANCE 24 – EN DIRECT – Info et actualités internationales en continu 24h/24
 2. 【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG
-
-See the corresponding ``[output.title]`` section in ``config.toml``.
 
 Availables styles
 ^^^^^^^^^^^^^^^^^
 
 Two styles are available: ``original`` and ``custom``.
 
+See the corresponding ``[output.title]`` section in ``config.toml``.
 
 ``original``
 """"""""""""
@@ -823,8 +824,6 @@ An original title with unallowed symbols replaced. Allows Unicode characters.
 
 	  [output.title]
 	  style = "original"
-
-Let's consider the following titles here and below:
 
 1. ``FRANCE 24 – EN DIRECT – Info et actualités internationales en continu 24h-24``
 2. ``【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG``
