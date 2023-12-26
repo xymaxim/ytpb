@@ -16,27 +16,55 @@ logger = logging.getLogger(__name__)
 
 
 class PointInStreamParamType(click.ParamType):
-    def __init__(self, end: bool = False):
-        self.end = end
+    def __init__(self, allowed_literals: list[str] = None):
+        if allowed_literals:
+            self.allowed_literals = allowed_literals
+        else:
+            self.allowed_literals = []
 
-    def convert(self, value: str, param, ctx) -> types.PointInStream | Literal["now"]:
+    def convert(self, value: str, param, ctx) -> types.AbsolutePointInStream | str:
         match value:
-            case "now":
-                if self.end:
-                    output = value
-                else:
-                    self.fail("Option does not accept 'now' keyword.")
-            case value if value.isdecimal():
-                output = int(value)
-            case _:
+            # Allowed literals
+            case literal if value in self.allowed_literals:
+                output = literal
+            # Time of today
+            case x if x[0] == "T" or (":" in x and "-" not in x):
+                parsed_time = time.fromisoformat(x)
+                today = datetime.now()
+                output = today.replace(
+                    hour=parsed_time.hour,
+                    minute=parsed_time.minute,
+                    second=parsed_time.second,
+                    microsecond=parsed_time.microsecond,
+                )
+                output = output.astimezone(parsed_time.tzinfo)
+            # Segment sequence
+            case sequence if value.isdecimal():
+                output = SegmentSequence(sequence)
+            # Seems like a date and time
+            case potential_date if value[:4].isdecimal():
                 try:
                     output = ensure_date_aware(datetime.fromisoformat(value))
                 except ValueError:
                     message = f"'{value}' does not match ISO 8601 date format."
                     self.fail(message, param, ctx)
+            case _:
+                self.fail("Option doesn't allow '{}' value", param, ctx)
+                
         return output
 
 
+class MomentParamType(click.ParamType):
+    name = "moment"
+
+    def convert(self, value: str, param, ctx) -> SegmentSequence | datetime | Literal["now"]:
+        if value == "now":
+            output = value
+        else:
+            output = PointInStreamParamType().convert(value, None, None)
+        return output
+    
+    
 class ISODateTimeParamType(click.ParamType):
     name = "date"
 

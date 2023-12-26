@@ -91,6 +91,10 @@ DEFAULT_CONFIG = AddressableDict(
                 ),
                 "output": DEFAULT_OUTPUT_PATH,
             },
+            "capture": {
+                "video_format": "best(format eq mp4 and frame_rate eq 30)",
+                "output": f"{DEFAULT_OUTPUT_PATH}.jpg",
+            },
             "mpd": {
                 "compose": {
                     "audio_formats": "itag eq 140",

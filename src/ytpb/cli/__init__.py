@@ -7,6 +7,7 @@ import toml
 import structlog
 
 from ytpb.cli.commands.download import download_command
+from ytpb.cli.commands.capture import capture_command
 from ytpb.cli.commands.mpd import mpd_group
 from ytpb.cli.custom import OrderedGroup
 from ytpb.cli.options import config_options, logging_options
@@ -77,4 +78,5 @@ def cli(ctx: click.Context, config_path: Path, no_config: bool, debug: bool) -> 
 
 
 cli.add_command(download_command)
+cli.add_command(capture_command)
 cli.add_command(mpd_group)

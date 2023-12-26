@@ -74,8 +74,8 @@ Quick start
 
 The Ytpb Command Line Interface (CLI) provides commands to download YouTube live
 stream excerpts and compose MPEG-DASH manifests to play excerpts later in
-different available qualities. Here are below basic examples demonstrating two
-main usage scenarios.
+different available qualities. Here are below basic examples demonstrating usage
+scenarios.
 
 Download
 ========
@@ -119,6 +119,17 @@ streams:
 By default, a manifest will contain all available audio tracks and VP9 video
 channels.
 
+Capture
+=======
+
+You can capture a frame (screenshot) of a moment you want to see without making
+a video. For example, let's take a picture of the moment happening right now:
+
+.. code:: sh
+
+	  $ ytpb capture --moment now <STREAM>
+	  # Stream-Title_20231227T012954+00.jpg
+
 Command line application
 ************************
 
@@ -135,7 +146,7 @@ Commands
 ^^^^^^^^
 
 .. code:: ini
-
+	  
   Usage: python -m ytpb [OPTIONS] COMMAND [ARGS]...
 
   Options:
@@ -143,6 +154,7 @@ Commands
 
   Commands:
     download  Download stream excerpt.
+    capture   Take video frame capture.
     mpd       Compose and play DASH manifests.
 
 Subcommands
