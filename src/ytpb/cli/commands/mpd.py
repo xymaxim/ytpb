@@ -18,7 +18,7 @@ from ytpb.cli.common import (
     print_summary_info,
     query_streams_or_exit,
     raise_for_sequence_ahead_of_current,
-    raise_for_start_sequence_too_far,
+    raise_for_too_far_sequence,
 )
 from ytpb.cli.custom import OrderedGroup
 from ytpb.cli.options import boundary_options, cache_options, output_options
@@ -164,15 +164,17 @@ def compose_command(
     requested_start, requested_end = resolve_relativity_in_interval(*interval)
 
     if isinstance(requested_start, SegmentSequence):
-        raise_for_start_sequence_too_far(
-            requested_start, head_sequence, reference_base_url
+        raise_for_too_far_sequence(
+            requested_start, head_sequence, reference_base_url, ctx, "interval"
         )
         raise_for_sequence_ahead_of_current(
-            requested_start, head_sequence, ctx, "start"
+            requested_start, head_sequence, ctx, "interval"
         )
 
     if isinstance(requested_end, SegmentSequence):
-        raise_for_sequence_ahead_of_current(requested_end, head_sequence, ctx, "end")
+        raise_for_sequence_ahead_of_current(
+            requested_end, head_sequence, ctx, "interval"
+        )
     if requested_end == "now":
         requested_end = head_sequence - 1
 

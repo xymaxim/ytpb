@@ -19,8 +19,9 @@ from ytpb.cli.common import (
     normalize_stream_url,
     print_summary_info,
     raise_for_sequence_ahead_of_current,
-    raise_for_start_sequence_too_far,
+    raise_for_too_far_sequence,
 )
+from ytpb.cli.custom import get_parameter_by_name
 from ytpb.cli.options import (
     boundary_options,
     cache_options,
@@ -221,22 +222,23 @@ def download_command(
     requested_start, requested_end = resolve_relativity_in_interval(*interval)
 
     if isinstance(requested_start, SegmentSequence):
-        raise_for_start_sequence_too_far(
-            requested_start, head_sequence, reference_base_url
+        raise_for_too_far_sequence(
+            requested_start, head_sequence, reference_base_url, ctx, "interval"
         )
         raise_for_sequence_ahead_of_current(
-            requested_start, head_sequence, ctx, "start"
+            requested_start, head_sequence, ctx, "interval"
         )
 
     match requested_end:
         case SegmentSequence() as x:
-            raise_for_sequence_ahead_of_current(x, head_sequence, ctx, "end")
+            raise_for_sequence_ahead_of_current(x, head_sequence, ctx, "interval")
         case "now":
             requested_end = head_sequence - 1
         case "..":
             if not preview:
                 raise click.BadParameter(
-                    "Open interval is only valid in the preview mode", param=interval
+                    "Open interval is only valid in the preview mode",
+                    param=get_parameter_by_name("interval", ctx),
                 )
 
     if preview:

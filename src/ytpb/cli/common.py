@@ -201,8 +201,12 @@ def query_streams_or_exit(
     return queried_streams
 
 
-def raise_for_start_sequence_too_far(
-    sequence: int, current_sequence: int, base_url: str
+def raise_for_too_far_sequence(
+    sequence: int,
+    current_sequence: int,
+    base_url: str,
+    ctx: click.Context,
+    param_name: str,
 ) -> None:
     segment_duration = int(float(extract_parameter_from_url("dur", base_url)))
     earliest_sequence = (
@@ -210,8 +214,10 @@ def raise_for_start_sequence_too_far(
     )
     if sequence <= earliest_sequence:
         click.echo("\n")
-        message = "Start sequence number is beyond the limit of 7 days."
-        raise click.BadParameter(message, param_hint="'-s' / '--start'")
+        raise click.BadParameter(
+            f"Sequence number is beyond the limit of 7 days: {sequence}",
+            param=get_parameter_by_name(param_name, ctx),
+        )
 
 
 def raise_for_sequence_ahead_of_current(

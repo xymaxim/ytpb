@@ -15,7 +15,7 @@ from ytpb.cli.common import (
     normalize_stream_url,
     prepare_line_for_summary_info,
     raise_for_sequence_ahead_of_current,
-    raise_for_start_sequence_too_far,
+    raise_for_too_far_sequence,
 )
 from ytpb.cli.options import cache_options, output_options, validate_output_path
 from ytpb.cli.parameters import (
@@ -141,8 +141,8 @@ def capture_command(
 
     match moment:
         case SegmentSequence() as sequence:
-            raise_for_start_sequence_too_far(
-                sequence, head_sequence, reference_base_url
+            raise_for_too_far_sequence(
+                sequence, head_sequence, reference_base_url, ctx, "moment"
             )
             raise_for_sequence_ahead_of_current(sequence, head_sequence, ctx, "moment")
             moment_sequence = sequence
