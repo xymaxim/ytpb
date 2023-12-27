@@ -85,9 +85,9 @@ specifying start and end dates and stream URL or ID:
 
 .. code:: sh
 
-	  $ ytpb download -i 2023-01-02T03:04:00+00/PT30S <STREAM>
+	  $ ytpb download -i 2024-01-02T10:20:00+00/PT30S <STREAM>
 	  $ ls
-	  Stream-Title_20230102T0304+00.mp4
+	  Stream-Title_20240102T102000+00.mp4
 
 By default, it will download an excerpt in the best `pre-defined <Default format values>`_
 quality: 128k AAC audio and 1080p30 (or less) H.264 video. See the
@@ -101,7 +101,7 @@ the ``-p/--preview`` option:
 
 .. code:: sh
 
-	  $ ytpb download -i 2023-01-02T03:04:00+00/.. -p <STREAM>
+	  $ ytpb download -i 2024-01-02T10:20:00+00/.. -p <STREAM>
 
 Compose and play
 ================
@@ -112,9 +112,9 @@ streams:
 
 .. code:: sh
 
-	  $ ytpb mpd compose -i 2023-01-02T03:04:00+00/PT30S <STREAM>
+	  $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT30S <STREAM>
 	  $ ls
-	  Stream-Title_20230102T030400+00.mpd
+	  Stream-Title_20240102T102000+00.mpd
 
 By default, a manifest will contain all available audio tracks and VP9 video
 channels.
@@ -128,7 +128,8 @@ a video. For example, let's take a picture of the moment happening right now:
 .. code:: sh
 
 	  $ ytpb capture --moment now <STREAM>
-	  # Stream-Title_20231227T012954+00.jpg
+	  $ ls
+	  Stream-Title_20231227T012954+00.jpg
 
 Command line application
 ************************
@@ -146,7 +147,7 @@ Commands
 ^^^^^^^^
 
 .. code:: ini
-	  
+
   Usage: python -m ytpb [OPTIONS] COMMAND [ARGS]...
 
   Options:
@@ -238,7 +239,7 @@ components omitted (the date part should be always complete):
 	  $ ytpb download -i 2024-01-02T1020+00/2024-01-02T10:20:30+00 ...
 
 	  # Representations with reduced precision in basic format:
-	  $ ytpb download -i 20240102T1020+00/20230102T102030+00 ...
+	  $ ytpb download -i 20240102T1020+00/20240102T102030+00 ...
 
 **Zulu time**. Zulu time refers to the UTC time and denoted with the letter "Z"
 used as a suffix instead of time shift. It's applicable for dates here and
@@ -482,7 +483,7 @@ will be automatically determined during the merging stage. ::
 
   $ ytpb download -o '<title>_<input_start_date>_<duration>' ...
   $ ls
-  $ Stream-Title_20230102T030400+00_PT30S.mp4
+  $ Stream-Title_20240102T102000+00_PT30S.mp4
 
 See the `Output name context`_ subsection for the available template variables.
 
@@ -493,13 +494,13 @@ the basic representation with the reduced precision. Some examples:
 .. code:: TOML
 
 	  [output.date]
-	  # 2023-01-02T03:04:00+00:00
+	  # 2024-01-02T10:20:00+00:00
 	  # styles = "extended,complete,hhmm"
 
-	  # 20230102T030400+00
+	  # 20240102T102000+00
 	  # styles = "basic,complete,hh"
 
-	  # 20230102T0304Z
+	  # 20240102T1020Z
 	  # styles = "basic,reduced,z"
 
 Configuring
