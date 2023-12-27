@@ -90,6 +90,11 @@ def normalize_stream_url(ctx: click.Context, param: click.Argument, value: str) 
         raise click.BadParameter(str(e))
 
 
+stream_argument = click.argument(
+    "stream_url", metavar="STREAM", callback=normalize_stream_url
+)
+
+
 def check_end_options(start, end, duration, preview):
     if not (end or duration or preview):
         raise click.UsageError(

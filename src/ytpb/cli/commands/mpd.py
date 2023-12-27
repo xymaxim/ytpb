@@ -14,14 +14,19 @@ from ytpb.cli.common import (
     CONSOLE_TEXT_WIDTH,
     create_playback,
     get_downloaded_segment,
-    normalize_stream_url,
     print_summary_info,
     query_streams_or_exit,
     raise_for_sequence_ahead_of_current,
     raise_for_too_far_sequence,
+    stream_argument,
 )
 from ytpb.cli.custom import OrderedGroup
-from ytpb.cli.options import boundary_options, cache_options, output_options
+from ytpb.cli.options import (
+    boundary_options,
+    cache_options,
+    output_options,
+    yt_dlp_option,
+)
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
 from ytpb.compose import compose_mpd, refresh_mpd
 from ytpb.download import download_segment
@@ -97,9 +102,9 @@ def mpd_group():
     help="Video format(s) to include.",
 )
 @output_options
-@click.option("-Y", "--yt-dlp", is_flag=True, help="Use yt-dlp to extract info.")
+@yt_dlp_option
 @cache_options
-@click.argument("stream_url", metavar="STREAM", callback=normalize_stream_url)
+@stream_argument
 def compose_command(
     ctx: click.Context,
     interval: types.PointInStream,
@@ -285,7 +290,7 @@ def compose_command(
     short_help="Refresh composed MPEG-DASH manifest.",
     help="Refresh composed MPEG-DASH manifest for stream excerpt.",
 )
-@click.option("-Y", "--yt-dlp", is_flag=True, help="Use yt-dlp to extract info.")
+@yt_dlp_option
 @click.argument("manifest")
 def refresh_command(
     yt_dlp: bool,

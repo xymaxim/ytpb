@@ -16,17 +16,19 @@ from ytpb.cli.common import (
     check_streams_not_empty,
     create_playback,
     get_downloaded_segment,
-    normalize_stream_url,
     print_summary_info,
     raise_for_sequence_ahead_of_current,
     raise_for_too_far_sequence,
+    stream_argument,
 )
 from ytpb.cli.custom import get_parameter_by_name
 from ytpb.cli.options import (
     boundary_options,
     cache_options,
     logging_options,
+    no_cleanup_option,
     output_options,
+    yt_dlp_option,
 )
 from ytpb.cli.parameters import (
     FormatSpecParamType,
@@ -92,16 +94,16 @@ logger = structlog.get_logger(__name__)
     is_flag=True,
     help=("Run without downloading."),
 )
-@click.option("-Y", "--yt-dlp", is_flag=True, help="Use yt-dlp to extract info.")
+@yt_dlp_option
 @click.option("--no-cut", is_flag=True, help="Do not perform excerpt cutting.")
 @click.option(
     "--no-merge",
     is_flag=True,
     help=("Only download segments, without merging. This implies '--no-cleanup'."),
 )
-@click.option("--no-cleanup", is_flag=True, help="Do not clean up temporary files.")
+@no_cleanup_option
 @cache_options
-@click.argument("stream_url", metavar="STREAM", callback=normalize_stream_url)
+@stream_argument
 @click.pass_context
 def download_command(
     ctx: click.Context,

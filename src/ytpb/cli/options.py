@@ -131,3 +131,13 @@ def logging_options(f):
         is_eager=True,
     )(f)
     return f
+
+
+yt_dlp_option = click.option(
+    "-Y", "--yt-dlp", is_flag=True, help="Use yt-dlp to extract info."
+)
+
+
+no_cleanup_option = click.option(
+    "--no-cleanup", is_flag=True, help="Do not clean up temporary files."
+)

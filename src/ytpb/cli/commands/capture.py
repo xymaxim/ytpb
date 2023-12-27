@@ -12,12 +12,18 @@ from PIL import Image
 
 from ytpb.cli.common import (
     create_playback,
-    normalize_stream_url,
     prepare_line_for_summary_info,
     raise_for_sequence_ahead_of_current,
     raise_for_too_far_sequence,
+    stream_argument,
 )
-from ytpb.cli.options import cache_options, output_options, validate_output_path
+from ytpb.cli.options import (
+    cache_options,
+    no_cleanup_option,
+    output_options,
+    validate_output_path,
+    yt_dlp_option,
+)
 from ytpb.cli.parameters import (
     FormatSpecParamType,
     FormatSpecType,
@@ -103,10 +109,10 @@ def save_frame_as_image(video_path: Path, target_time: float, output_path: Path)
     default="<id>_<input_start_date>.jpg",
     callback=validate_image_output_path,
 )
-@click.option("-Y", "--yt-dlp", is_flag=True, help="Use yt-dlp to extract info.")
-@click.option("--no-cleanup", is_flag=True, help="Do not clean up temporary files.")
+@yt_dlp_option
+@no_cleanup_option
 @cache_options
-@click.argument("stream_url", metavar="STREAM", callback=normalize_stream_url)
+@stream_argument
 @click.pass_context
 def capture_command(
     ctx: click.Context,
