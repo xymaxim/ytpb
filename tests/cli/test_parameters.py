@@ -156,17 +156,12 @@ def test_format_spec_with_function():
         ),
         (
             "20240102T102000+00/now",
-            (
-                datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc),
-                "now"
-            ),
+            (datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc), "now"),
         ),
+        ("PT30S/now", (timedelta(seconds=30), "now")),
         (
             "20240102T102000+00/..",
-            (
-                datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc),
-                ".."
-            ),
+            (datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc), ".."),
         ),
     ],
 )
@@ -194,7 +189,7 @@ def test_input_rewind_interval(value: str, expected):
         ),
     ],
 )
-def test_input_rewind_interval_with_lettered_end(value: str, expected):
+def test_input_rewind_interval_with_replacing_components(value: str, expected):
     assert expected == RewindIntervalParamType().convert(value, None, None)
 
 
@@ -202,7 +197,7 @@ def test_input_rewind_interval_with_lettered_end(value: str, expected):
     "value,expected",
     [
         (
-            "10:25/10:35",
+            "10:25/T1035",
             (
                 FakeDatetime(2024, 1, 2, 10, 25, tzinfo=tzlocal()),
                 FakeDatetime(2024, 1, 2, 10, 35, tzinfo=tzlocal()),
