@@ -111,7 +111,7 @@ DEFAULT_CONFIG = AddressableDict(
             "user_agent": USER_AGENT,
         },
         "output": {
-            "date": {"styles": "basic,reduced,hh"},
+            "date": {"styles": "basic,complete,hh"},
             "title": {
                 "style": "custom",
                 "custom": {
@@ -146,7 +146,7 @@ def setup_logging(level: int) -> None:
     logging.getLogger("urllib3").setLevel(logging.WARNING)
     logging.getLogger("urllib3").propagate = False
 
-    
+
 def get_default_config_path() -> Path:
     return user_config_path("ytpb") / "config.toml"
 
