@@ -50,21 +50,23 @@ class PointInStreamParamType(click.ParamType):
                     self.fail(message, param, ctx)
             case _:
                 self.fail("Option doesn't allow '{}' value", param, ctx)
-                
+
         return output
 
 
 class MomentParamType(click.ParamType):
     name = "moment"
 
-    def convert(self, value: str, param, ctx) -> SegmentSequence | datetime | Literal["now"]:
+    def convert(
+        self, value: str, param, ctx
+    ) -> SegmentSequence | datetime | Literal["now"]:
         if value == "now":
             output = value
         else:
             output = PointInStreamParamType().convert(value, None, None)
         return output
-    
-    
+
+
 class ISODateTimeParamType(click.ParamType):
     name = "date"
 
@@ -147,7 +149,9 @@ class RewindIntervalParamType(click.ParamType):
         return date.replace(**components_to_replace)
 
     def _parse_interval_part(
-        self, part: str, end: bool = False,
+        self,
+        part: str,
+        end: bool = False,
     ) -> int | str | Literal["now", ".."] | datetime | timedelta:
         match part:
             # Sequence number
@@ -156,7 +160,7 @@ class RewindIntervalParamType(click.ParamType):
             # Duration
             case x if x[0] == "P":
                 output = timedelta.fromisoformat(x)
-            # Replace components
+            # Replacing components
             case x if set(x) & set("DHMS"):
                 output = x
             # Time of today
@@ -196,27 +200,27 @@ class RewindIntervalParamType(click.ParamType):
             # Two durations
             case [timedelta(), timedelta()]:
                 raise click.BadParameter("Two durations are ambiguous.")
-            case "now" | ".." as x, _:
+            case ["now" | ".." as x, _]:
                 raise click.BadParameter(
                     f"Keyword '{x}' is only allowed for the end part."
                 )
-            # Relative and 'now' or '..'
-            case timedelta(), "now" | ".." as x:
-                raise click.BadParameter(f"Keyword '{x}' not compatible with relative.")
+            # Duration and '..'
+            case [timedelta(), ".."]:
+                raise click.BadParameter(f"Keyword '..' not compatible with duration.")
             # Anything compatible and 'now' or '..'
-            case ([int() | datetime() | timedelta(), "now" | ".."]):
+            case [int() | datetime() | timedelta(), "now" | ".."]:
                 start = parsed_start
                 end = parsed_end
-            # Replacement components and date and time
-            case ([str(), datetime()] | [datetime(), str()]):
+            # Replacing components and date and time
+            case (str(), datetime()) | (datetime(), str()):
                 if isinstance(parsed_start, str):
                     end = parsed_end
                     start = self._replace_datetime_components(end, parsed_start)
                 else:
                     start = parsed_start
                     end = self._replace_datetime_components(start, parsed_end)
-            # Replacement components and anything non-compatible
-            case ([str(), _] | [_, str()]):
+            # Replacing components and anything remaining, non-compatible
+            case (str(), _) | (_, str()):
                 raise click.BadParameter(
                     "Replacement components is only compatible with date and time."
                 )
@@ -227,9 +231,7 @@ class RewindIntervalParamType(click.ParamType):
 
         if type(start) == type(end) and start >= end:
             raise click.BadParameter(
-                "Start is ahead or equal to end: {} >= {}".format(
-                    start.isoformat(), end.isoformat()
-                )
+                f"Start is ahead or equal to end: {start} >= {end}"
             )
 
         return start, end
