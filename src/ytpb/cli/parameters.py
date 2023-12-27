@@ -50,77 +50,7 @@ class PointInStreamParamType(click.ParamType):
                     self.fail(message, param, ctx)
             case _:
                 self.fail("Option doesn't allow '{}' value", param, ctx)
-
         return output
-
-
-class MomentParamType(click.ParamType):
-    name = "moment"
-
-    def convert(
-        self, value: str, param, ctx
-    ) -> SegmentSequence | datetime | Literal["now"]:
-        if value == "now":
-            output = value
-        else:
-            output = PointInStreamParamType().convert(value, None, None)
-        return output
-
-
-class ISODateTimeParamType(click.ParamType):
-    name = "date"
-
-    def convert(self, value: str, param, ctx) -> datetime | Literal["now"]:
-        if value == "now":
-            output = value
-        else:
-            try:
-                output = datetime.fromisoformat(value)
-            except ValueError:
-                self.fail(f"'{value}' does not match ISO 8601 date format.", param, ctx)
-        return output
-
-
-class DurationParamType(click.ParamType):
-    def convert(self, value: str, param, ctx) -> float:
-        """Converts a duration value into a float of total seconds. The
-        acceptable syntax: '[%Hh][%Mm][%S[.%f]s]', where '%H', '%M', '%S' are
-        integer number of hours, minutes, and seconds; '%f' expresses the
-        fractional part of the seconds. Each part is optional but at least one
-        part should be provided.
-
-        >>> d = Duration()
-        >>> d.convert("1.123s", None, None)
-        1.123
-        >>> d.convert("1h2m3s", None, None)
-        3723
-        >>> d.convert("120m", None, None)
-        7200
-        """
-        duration_re = re.compile(
-            (
-                "(?:(?P<hh>[0-9]+)h)?"
-                "(?:(?P<mm>[0-9]+)m)?"
-                r"(?:(?P<ss>[0-9]+(?:\.[0-9]+)?)s)?"
-            ),
-            re.IGNORECASE,
-        )
-
-        matched = duration_re.match(value)
-        # This assumes that the matched object is always non-None since the
-        # expression consists of optional parts.
-        is_nothing_extra = len(value) == matched.span()[1] - matched.span()[0]
-        if any(matched.groups()) and is_nothing_extra:
-            hh, mm, ss = matched.groups()
-            total_seconds = 0
-            for k, x in enumerate((ss, mm, hh)):
-                if x:
-                    total_seconds += float(x) * 60**k
-        else:
-            message = "Duration should be expressed as '[%Hh][%Mm][%S[.%f]s]'."
-            self.fail(message, param, ctx)
-
-        return total_seconds
 
 
 class InputRewindInterval(NamedTuple):
