@@ -7,9 +7,19 @@ from datetime import datetime, timedelta
 import click
 import requests
 
+from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
+from ytpb.info import BroadcastStatus
 from ytpb.download import compose_default_segment_filename
-from ytpb.exceptions import BadCommandArgument, QueryError
+from ytpb.exceptions import (
+    BadCommandArgument,
+    QueryError,
+    BroadcastStatusError,
+    CachedItemNotFoundError,
+    SegmentDownloadError,
+    SequenceLocatingError,
+)
 from ytpb.segment import Segment
+from ytpb.playback import Playback
 from ytpb.types import DateInterval, SequenceRange, SetOfStreams
 from ytpb.cli.custom import get_parameter_by_name
 from ytpb.utils.date import format_timedelta, round_date
@@ -21,6 +31,47 @@ logger = logging.getLogger(__name__)
 
 CONSOLE_TEXT_WIDTH = 80
 EARLIEST_DATE_TIMEDELTA = timedelta(days=6, hours=23)
+
+
+def create_playback(ctx: click.Context) -> Playback:
+    stream_url = ctx.params["stream_url"]
+
+    if ctx.params["yt_dlp"]:
+        fetcher = YoutubeDLInfoFetcher(stream_url)
+    else:
+        fetcher = YtpbInfoFetcher(stream_url)
+
+    try:
+        click.echo(f"Run playback for {stream_url}")
+        click.echo("(<<) Collecting info about the video...")
+
+        if ctx.params["no_cache"]:
+            playback = Playback.from_url(
+                stream_url, fetcher=fetcher, write_to_cache=False
+            )
+        elif ctx.params["force_update_cache"]:
+            playback = Playback.from_url(
+                stream_url, fetcher=fetcher, write_to_cache=True
+            )
+        else:
+            try:
+                playback = Playback.from_cache(stream_url, fetcher=fetcher)
+            except CachedItemNotFoundError:
+                logger.debug("Couldn't find unexpired cached item for the video")
+                playback = Playback.from_url(
+                    stream_url, fetcher=fetcher, write_to_cache=True
+                )
+    except BroadcastStatusError as e:
+        match e.status:
+            case BroadcastStatus.NONE:
+                click.echo("It's seems that the video is not a live stream", err=True)
+            case BroadcastStatus.COMPLETED:
+                click.echo("Stream was live, but now it's finished", err=True)
+        sys.exit(1)
+
+    click.echo(f"Stream '{playback.info.title}' is alive!")
+
+    return playback
 
 
 def normalize_stream_url(ctx: click.Context, param: click.Argument, value: str) -> str:

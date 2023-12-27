@@ -54,7 +54,7 @@ def test_capture_by_sequence_number(
         urljoin(video_base_url, r"sq/\w+"),
     )
 
-    with patch("ytpb.cli.commands.capture.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -92,7 +92,7 @@ def test_capture_by_date(
     add_responses_callback_for_segment_urls(
         urljoin(video_base_url, r"sq/\w+"),
     )
-    with patch("ytpb.cli.commands.capture.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [

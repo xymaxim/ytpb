@@ -10,6 +10,7 @@ import structlog
 from ytpb.cli.common import (
     normalize_stream_url,
     raise_for_sequence_ahead_of_current,
+    create_playback
 )
 from ytpb.cli.options import (
     cache_options,
@@ -98,40 +99,7 @@ def capture_command(
     no_cache: bool,
     stream_url: str,
 ):
-    if yt_dlp:
-        fetcher = YoutubeDLInfoFetcher(stream_url)
-    else:
-        fetcher = YtpbInfoFetcher(stream_url)
-
-    try:
-        click.echo(f"Run playback for {stream_url}")
-        click.echo("(<<) Collecting info about the video...")
-
-        if no_cache:
-            playback = Playback.from_url(
-                stream_url, fetcher=fetcher, write_to_cache=False
-            )
-        elif force_update_cache:
-            playback = Playback.from_url(
-                stream_url, fetcher=fetcher, write_to_cache=True
-            )
-        else:
-            try:
-                playback = Playback.from_cache(stream_url, fetcher=fetcher)
-            except CachedItemNotFoundError:
-                logger.debug("Couldn't find unexpired cached item for the video")
-                playback = Playback.from_url(
-                    stream_url, fetcher=fetcher, write_to_cache=True
-                )
-    except BroadcastStatusError as e:
-        match e.status:
-            case BroadcastStatus.NONE:
-                click.echo("It's seems that the video is not a live stream", err=True)
-            case BroadcastStatus.COMPLETED:
-                click.echo("Stream was live, but now it's finished", err=True)
-        sys.exit(1)
-
-    click.echo(f"Stream '{playback.info.title}' is alive!")
+    playback = create_playback(ctx)
 
     if video_format:
         logger.debug("Query video stream by format spec", spec=video_format)
