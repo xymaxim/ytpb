@@ -2,11 +2,13 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
+from textwrap import fill
 from typing import Literal
 
 import av
 import click
 import structlog
+from PIL import Image
 
 from ytpb.cli.common import (
     create_playback,
@@ -14,7 +16,7 @@ from ytpb.cli.common import (
     prepare_line_for_summary_info,
     raise_for_sequence_ahead_of_current,
 )
-from ytpb.cli.options import cache_options, output_options
+from ytpb.cli.options import cache_options, output_options, validate_output_path
 from ytpb.cli.parameters import (
     FormatSpecParamType,
     FormatSpecType,
@@ -42,6 +44,21 @@ from ytpb.utils.path import (
 from ytpb.utils.remote import request_reference_sequence
 
 logger = structlog.get_logger(__name__)
+
+
+def validate_image_output_path(
+    ctx: click.Context, param: click.Option, value: Path
+) -> Path:
+    if not value.suffix:
+        raise click.BadParameter(f"File extension must be provided.")
+
+    extensions = Image.registered_extensions()
+    supported_extensions = {ext for ext, f in extensions.items() if f in Image.SAVE}
+    if value.suffix not in supported_extensions:
+        tip = fill("Choose one of: {}".format(", ".join(sorted(supported_extensions))))
+        raise click.BadParameter(f"Format '{value.suffix}' is not supported.\n\n{tip}")
+
+    return validate_output_path(ctx, param, value)
 
 
 def save_video_frame_as_image(video_path: Path, target_time: float, output_path: Path):
@@ -77,7 +94,14 @@ def save_video_frame_as_image(video_path: Path, target_time: float, output_path:
     type=FormatSpecParamType(FormatSpecType.VIDEO),
     help="Video format to capture.",
 )
-@output_options
+@click.option(
+    "-o",
+    "--output",
+    type=click.Path(path_type=Path),
+    help="Output image path (with extension).",
+    default="<id>_<input_start_date>.jpg",
+    callback=validate_image_output_path,
+)
 @click.option("-Y", "--yt-dlp", is_flag=True, help="Use yt-dlp to extract info.")
 @click.option("--no-cleanup", is_flag=True, help="Do not clean up temporary files.")
 @cache_options

@@ -6,9 +6,12 @@ from unittest.mock import MagicMock, patch
 from urllib.parse import urljoin
 
 import av
-from PIL import Image
+import click
+import pytest
 
+from conftest import TEST_DATA_PATH
 from freezegun import freeze_time
+from PIL import Image
 
 IMAGE_SAVE_SETTINGS = {"format": "jpeg", "quality": 80}
 
@@ -73,7 +76,7 @@ def test_capture_by_sequence_number(
     actual_image_path = tmp_path / "kHwmzef842g_20230325T233354+00.jpg"
     assert os.path.exists(actual_image_path)
 
-    segment_path = run_temp_directory / "7959120.i244.webm"
+    segment_path = TEST_DATA_PATH / "segments" / "7959120.i244.webm"
     assert_two_images(actual_image_path, segment_path, expected_frame=0)
 
 
@@ -110,5 +113,47 @@ def test_capture_by_date(
     actual_image_path = tmp_path / "kHwmzef842g_20230325T233355+00.jpg"
     assert os.path.exists(actual_image_path)
 
-    segment_path = run_temp_directory / "7959120.i244.webm"
+    segment_path = TEST_DATA_PATH / "segments" / "7959120.i244.webm"
     assert_two_images(actual_image_path, segment_path, expected_frame=15)
+
+
+def test_unsupported_output_extension(
+    ytpb_cli_invoke: Callable,
+    stream_url: str,
+) -> None:
+    with pytest.raises(click.BadParameter) as exc_info:
+        ytpb_cli_invoke(
+            [
+                "--no-config",
+                "capture",
+                "--moment",
+                "2023-03-25T23:33:55+00",
+                "--output",
+                "test.unsupported",
+                stream_url,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+    assert "Format '.unsupported' is not supported" in str(exc_info)
+
+
+def test_not_provided_output_extension(
+    ytpb_cli_invoke: Callable,
+    stream_url: str,
+) -> None:
+    with pytest.raises(click.BadParameter) as exc_info:
+        ytpb_cli_invoke(
+            [
+                "--no-config",
+                "capture",
+                "--moment",
+                "2023-03-25T23:33:55+00",
+                "--output",
+                "test",
+                stream_url,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+    assert "File extension must be provided" in str(exc_info)
