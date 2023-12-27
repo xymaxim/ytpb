@@ -12,13 +12,14 @@ from requests.exceptions import HTTPError
 from ytpb import types
 from ytpb.cli import parameters
 from ytpb.cli.common import (
-    raise_for_start_sequence_too_far,
-    raise_for_sequence_ahead_of_current,
     check_end_options,
     check_streams_not_empty,
+    create_playback,
     get_downloaded_segment,
     normalize_stream_url,
     print_summary_info,
+    raise_for_sequence_ahead_of_current,
+    raise_for_start_sequence_too_far,
 )
 from ytpb.cli.options import (
     boundary_options,
@@ -29,33 +30,33 @@ from ytpb.cli.options import (
 from ytpb.cli.parameters import (
     FormatSpecParamType,
     FormatSpecType,
-    RewindIntervalParamType,
     InputRewindInterval,
+    RewindIntervalParamType,
 )
 from ytpb.download import download_segment
 from ytpb.exceptions import (
     BaseUrlExpiredError,
     BroadcastStatusError,
     CachedItemNotFoundError,
-    SequenceLocatingError,
-    SegmentDownloadError,
     QueryError,
+    SegmentDownloadError,
+    SequenceLocatingError,
 )
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
 from ytpb.merge import merge_segments
 from ytpb.playback import Playback
 from ytpb.segment import Segment
-from ytpb.types import DateInterval, SegmentSequence, RelativeSegmentSequence
-from ytpb.utils.url import extract_parameter_from_url
+from ytpb.types import DateInterval, RelativeSegmentSequence, SegmentSequence
+from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.path import (
     expand_template_output_path,
     OUTPUT_PATH_PLACEHOLDER_RE,
     OutputPathTemplateContext,
 )
 from ytpb.utils.remote import request_reference_sequence
-from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.units import S_TO_MS
+from ytpb.utils.url import extract_parameter_from_url
 
 logger = structlog.get_logger(__name__)
 
@@ -123,50 +124,10 @@ def download_command(
             "At least --audio-format or --video-format must be specified."
         )
 
-    if yt_dlp:
-        fetcher = YoutubeDLInfoFetcher(stream_url)
-    else:
-        fetcher = YtpbInfoFetcher(stream_url)
-
     if no_merge:
         no_cleanup = True
-    try:
-        if from_manifest:
-            try:
-                click.echo("Run playback from manifest file")
-                playback = Playback.from_manifest(from_manifest, fetcher=fetcher)
-            except BaseUrlExpiredError:
-                click.echo("Oh no, manifest is expired at ...", err=True)
-                sys.exit(1)
-        else:
-            click.echo(f"Run playback for {stream_url}")
-            click.echo("(<<) Collecting info about the video...")
 
-            if no_cache:
-                playback = Playback.from_url(
-                    stream_url, fetcher=fetcher, write_to_cache=False
-                )
-            elif force_update_cache:
-                playback = Playback.from_url(
-                    stream_url, fetcher=fetcher, write_to_cache=True
-                )
-            else:
-                try:
-                    playback = Playback.from_cache(stream_url, fetcher=fetcher)
-                except CachedItemNotFoundError:
-                    logger.debug("Couldn't find unexpired cached item for the video")
-                    playback = Playback.from_url(
-                        stream_url, fetcher=fetcher, write_to_cache=True
-                    )
-    except BroadcastStatusError as e:
-        match e.status:
-            case BroadcastStatus.NONE:
-                click.echo("It's seems that the video is not a live stream", err=True)
-            case BroadcastStatus.COMPLETED:
-                click.echo("Stream was live, but now it's finished", err=True)
-        sys.exit(1)
-
-    click.echo(f"Stream '{playback.info.title}' is alive!")
+    playback = create_playback(ctx)
 
     if audio_format:
         logger.debug("Query audio stream by format spec", spec=audio_format)
@@ -278,7 +239,7 @@ def download_command(
                     "Open interval is only valid in the preview mode", param=interval
                 )
 
-    if preview:            
+    if preview:
         preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
         segment_duration = float(extract_parameter_from_url("dur", reference_base_url))
         number_of_segments = round(preview_duration_value / segment_duration)
@@ -289,7 +250,7 @@ def download_command(
             requested_start,
             requested_end,
             itag=reference_stream.itag,
-        )            
+        )
     except SequenceLocatingError as exc:
         message = "\nerror: An error occured during segment locating, exit."
         click.echo(message, err=True)
@@ -299,7 +260,7 @@ def download_command(
 
     if preview and interval[1] != "..":
         click.echo("info: The preview mode is enabled, interval end is ignored.")
-    
+
     for point in (requested_start, requested_end):
         if type(point) is SegmentSequence:
             sequence = point
@@ -320,7 +281,9 @@ def download_command(
         rewind_range.start, reference_base_url
     )
     try:
-        end_segment = playback.get_downloaded_segment(rewind_range.end, reference_base_url)
+        end_segment = playback.get_downloaded_segment(
+            rewind_range.end, reference_base_url
+        )
     except FileNotFoundError:
         downloaded_path = download_segment(
             rewind_range.end,
@@ -329,7 +292,7 @@ def download_command(
             session=playback.session,
         )
         end_segment = Segment.from_file(downloaded_path)
-        
+
     requested_start_date: datetime
     match requested_start:
         case SegmentSequence():

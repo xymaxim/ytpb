@@ -54,7 +54,7 @@ def test_download_within_interval(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -97,7 +97,7 @@ def test_providing_start_and_end_equals_now(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -139,9 +139,9 @@ def test_preview_option_with_open_interval(
 
     # We only have three test segments of 2 second duration.
     DEFAULT_CONFIG["general"]["preview_duration"] = 4
-    
+
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -184,9 +184,9 @@ def test_preview_option_with_closed_interval(
 
     # We only have three test segments of 2 second duration.
     DEFAULT_CONFIG["general"]["preview_duration"] = 4
-    
+
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -202,12 +202,12 @@ def test_preview_option_with_closed_interval(
                 "none",
                 stream_url,
             ],
-            catch_exceptions=False
+            catch_exceptions=False,
         )
 
     # Then:
     assert result.exit_code == 0
-    
+
     expected_path = tmp_path / "kHwmzef842g_20230325T233355+00.mp4"
     assert os.path.exists(expected_path)
     assert_approx_duration(expected_path, 5.5)
@@ -215,7 +215,7 @@ def test_preview_option_with_closed_interval(
     expected = "info: The preview mode is enabled, interval end is ignored."
     assert expected in result.output
 
-    
+
 @pytest.mark.parametrize(
     "audio_format,video_format",
     [("itag eq 140", "itag eq 244"), ("itag eq 140", "none"), ("none", "itag eq 244")],
@@ -242,7 +242,7 @@ def test_download_audio_and_or_video(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -286,7 +286,7 @@ def test_download_to_custom_absolute_path(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -327,7 +327,7 @@ def test_download_to_custom_relative_path(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -379,7 +379,7 @@ def test_download_to_template_output_path(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -421,7 +421,7 @@ def test_no_cleanup_option(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -467,7 +467,7 @@ def test_no_merge_option(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -515,7 +515,7 @@ def test_dry_run_option(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -559,7 +559,7 @@ def test_no_cut_option(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -605,7 +605,7 @@ def test_from_cache(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -645,7 +645,7 @@ def test_from_empty_cache(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -689,7 +689,7 @@ def test_ambiguous_format_specs(
     tmp_path: Path,
     # expected_out,
 ) -> None:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -728,7 +728,7 @@ def test_yt_dlp_option(
         urljoin(audio_base_url, r"sq/\w+"),
     )
 
-    with patch("ytpb.cli.commands.download.YoutubeDLInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YoutubeDLInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -788,7 +788,7 @@ def test_with_default_config_file(
         toml.dump(config, f)
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -850,7 +850,7 @@ def test_with_config_via_option(
         toml.dump(test_config, f)
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -896,7 +896,7 @@ def test_with_non_existent_config_file_via_option(
     test_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "test-config.toml"
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         with pytest.raises(click.FileError) as exc_info:
             result = ytpb_cli_invoke(
@@ -949,7 +949,7 @@ def test_no_config_option(
         toml.dump(default_config, f)
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         with pytest.raises(click.MissingParameter) as exc_info:
             result = ytpb_cli_invoke(
@@ -996,7 +996,7 @@ def test_conflicting_config_and_no_config_options(
         toml.dump(default_config, f)
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         with pytest.raises(click.UsageError) as exc_info:
             result = ytpb_cli_invoke(
@@ -1035,7 +1035,7 @@ def test_download_via_stream_id(
     )
 
     # When:
-    with patch("ytpb.cli.commands.download.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [

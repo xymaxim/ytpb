@@ -7,24 +7,25 @@ from datetime import datetime, timedelta
 import click
 import requests
 
-from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
-from ytpb.info import BroadcastStatus
+from ytpb.cli.custom import get_parameter_by_name
 from ytpb.download import compose_default_segment_filename
 from ytpb.exceptions import (
     BadCommandArgument,
-    QueryError,
     BroadcastStatusError,
     CachedItemNotFoundError,
+    QueryError,
     SegmentDownloadError,
     SequenceLocatingError,
 )
-from ytpb.segment import Segment
+
+from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
+from ytpb.info import BroadcastStatus
 from ytpb.playback import Playback
+from ytpb.segment import Segment
 from ytpb.types import DateInterval, SequenceRange, SetOfStreams
-from ytpb.cli.custom import get_parameter_by_name
 from ytpb.utils.date import format_timedelta, round_date
-from ytpb.utils.url import normalize_video_url, extract_parameter_from_url
 from ytpb.utils.remote import request_reference_sequence
+from ytpb.utils.url import extract_parameter_from_url, normalize_video_url
 
 logger = logging.getLogger(__name__)
 
@@ -42,24 +43,30 @@ def create_playback(ctx: click.Context) -> Playback:
         fetcher = YtpbInfoFetcher(stream_url)
 
     try:
-        click.echo(f"Run playback for {stream_url}")
-        click.echo("(<<) Collecting info about the video...")
-
-        if ctx.params["no_cache"]:
-            playback = Playback.from_url(
-                stream_url, fetcher=fetcher, write_to_cache=False
-            )
-        elif ctx.params["force_update_cache"]:
-            playback = Playback.from_url(
-                stream_url, fetcher=fetcher, write_to_cache=True
-            )
-        else:
+        if from_manifest := ctx.params.get("from_manifest"):
             try:
-                playback = Playback.from_cache(stream_url, fetcher=fetcher)
-            except CachedItemNotFoundError:
-                logger.debug("Couldn't find unexpired cached item for the video")
+                click.echo("Run playback from manifest file")
+                playback = Playback.from_manifest(from_manifest, fetcher=fetcher)
+            except BaseUrlExpiredError:
+                click.echo("Oh no, the manifest has been expired, exit.", err=True)
+                sys.exit(1)
+        else:
+            click.echo(f"Run playback for {stream_url}")
+            click.echo("(<<) Collecting info about the video...")
+
+            force_update_cache = ctx.params.get("force_update_cache", False)
+            use_cache = not (ctx.params.get("no_cache", True) or force_update_cache)
+            if use_cache:
+                try:
+                    playback = Playback.from_cache(stream_url, fetcher=fetcher)
+                except CachedItemNotFoundError:
+                    logger.debug("Couldn't find unexpired cached item for the video")
+                    playback = Playback.from_url(
+                        stream_url, fetcher=fetcher, write_to_cache=True
+                    )
+            else:
                 playback = Playback.from_url(
-                    stream_url, fetcher=fetcher, write_to_cache=True
+                    stream_url, fetcher=fetcher, write_to_cache=False
                 )
     except BroadcastStatusError as e:
         match e.status:
@@ -91,7 +98,7 @@ def check_end_options(start, end, duration, preview):
         if end <= start:
             raise click.BadParameter(
                 "End date is ahead or equal to the start date.",
-                param_hint="'-e' / '--end'"
+                param_hint="'-e' / '--end'",
             )
 
 
@@ -192,7 +199,9 @@ def query_streams_or_exit(
     return queried_streams
 
 
-def raise_for_start_sequence_too_far(sequence: int, current_sequence: int, base_url: str) -> None:
+def raise_for_start_sequence_too_far(
+    sequence: int, current_sequence: int, base_url: str
+) -> None:
     segment_duration = int(float(extract_parameter_from_url("dur", base_url)))
     earliest_sequence = (
         current_sequence - EARLIEST_DATE_TIMEDELTA.total_seconds() // segment_duration
@@ -202,8 +211,10 @@ def raise_for_start_sequence_too_far(sequence: int, current_sequence: int, base_
         message = "Start sequence number is beyond the limit of 7 days."
         raise click.BadParameter(message, param_hint="'-s' / '--start'")
 
-    
-def raise_for_sequence_ahead_of_current(sequence, current_sequence: int, ctx: click.Context, param_name: str) -> None:
+
+def raise_for_sequence_ahead_of_current(
+    sequence, current_sequence: int, ctx: click.Context, param_name: str
+) -> None:
     if sequence >= current_sequence:
         click.echo("\n")
         message = (

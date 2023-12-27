@@ -12,6 +12,7 @@ from ytpb import types
 from ytpb.cli import parameters
 from ytpb.cli.common import (
     CONSOLE_TEXT_WIDTH,
+    create_playback,
     get_downloaded_segment,
     normalize_stream_url,
     print_summary_info,
@@ -118,40 +119,7 @@ def compose_command(
 
     console = Console(width=CONSOLE_TEXT_WIDTH)
 
-    if yt_dlp:
-        fetcher = YoutubeDLInfoFetcher(stream_url)
-    else:
-        fetcher = YtpbInfoFetcher(stream_url)
-
-    click.echo(f"Run playback for {stream_url}")
-    click.echo("(<<) Collecting info about the video...")
-
-    try:
-        if no_cache:
-            playback = Playback.from_url(
-                stream_url, fetcher=fetcher, write_to_cache=False
-            )
-        elif force_update_cache:
-            playback = Playback.from_url(
-                stream_url, fetcher=fetcher, write_to_cache=True
-            )
-        else:
-            try:
-                playback = Playback.from_cache(stream_url, fetcher=fetcher)
-            except CachedItemNotFoundError:
-                logger.debug("Couldn't find unexpired cached item for the video")
-                playback = Playback.from_url(
-                    stream_url, fetcher=fetcher, write_to_cache=True
-                )
-    except BroadcastStatusError as e:
-        match e.status:
-            case BroadcastStatus.NONE:
-                click.echo("It's seems that the video is not a live stream", err=True)
-            case BroadcastStatus.COMPLETED:
-                click.echo("Stream was live, but now it's finished", err=True)
-        sys.exit(1)
-
-    click.echo(f"Stream '{playback.info.title}' is alive!")
+    playback = create_playback(ctx)
 
     if audio_formats:
         queried_audio_streams = query_streams_or_exit(
