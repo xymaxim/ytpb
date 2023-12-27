@@ -1,3 +1,4 @@
+import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -8,14 +9,12 @@ import click
 import structlog
 
 from ytpb.cli.common import (
+    create_playback,
     normalize_stream_url,
+    prepare_line_for_summary_info,
     raise_for_sequence_ahead_of_current,
-    create_playback
 )
-from ytpb.cli.options import (
-    cache_options,
-    output_options,
-)
+from ytpb.cli.options import cache_options, output_options
 from ytpb.cli.parameters import (
     FormatSpecParamType,
     FormatSpecType,
@@ -34,10 +33,7 @@ from ytpb.info import BroadcastStatus
 from ytpb.locate import SequenceLocator
 from ytpb.playback import Playback
 from ytpb.segment import Segment
-from ytpb.types import (
-    AbsolutePointInStream,
-    SegmentSequence,
-)
+from ytpb.types import AbsolutePointInStream, SegmentSequence
 from ytpb.utils.path import (
     expand_template_output_path,
     OUTPUT_PATH_PLACEHOLDER_RE,
@@ -59,14 +55,13 @@ def save_video_frame_as_image(video_path: Path, target_time: float, output_path:
             previous_frame = current_frame
         else:
             logger.debug(
-                "Target time is out of the video, use the last frame",
-                time=target_time
+                "Target time is out of the video, use the last frame", time=target_time
             )
     target_frame = previous_frame or current_frame
     image = target_frame.to_image()
     image.save(output_path, quality=80)
 
-    
+
 @click.command("capture", help="Take video frame capture.")
 @click.option(
     "-m",
@@ -90,7 +85,7 @@ def save_video_frame_as_image(video_path: Path, target_time: float, output_path:
 @click.pass_context
 def capture_command(
     ctx: click.Context,
-    moment:  AbsolutePointInStream | Literal["now"],
+    moment: AbsolutePointInStream | Literal["now"],
     video_format: str,
     output: Path,
     yt_dlp: bool,
@@ -110,13 +105,13 @@ def capture_command(
             sys.exit(1)
     else:
         queried_video_streams = []
-        
+
     click.echo()
-    click.echo("(<<) Locating start and end in the stream... ", nl=False)
+    click.echo("(<<) Locating a moment in the stream... ", nl=False)
 
     reference_stream = queried_video_streams[0]
     reference_base_url = reference_stream.base_url
-    
+
     head_sequence = request_reference_sequence(reference_base_url, playback.session)
 
     match moment:
@@ -140,7 +135,6 @@ def capture_command(
 
     click.echo("done.")
 
-
     try:
         downloaded_path = download_segment(
             moment_sequence,
@@ -162,10 +156,20 @@ def capture_command(
             requested_moment_date = moment_segment.ingestion_start_date
         case datetime() as date:
             requested_moment_date = date
-            
+
+    # TODO: This should be expanded to take into account a case when a requested
+    # date fall into a gap.
     actual_moment_date = requested_moment_date
 
-    click.echo()
+    actual_moment_info_line = prepare_line_for_summary_info(
+        actual_moment_date, actual_moment_date - requested_moment_date
+    )
+
+    click.echo(
+        "Actual moment: {}, seq. {}".format(
+            actual_moment_info_line, moment_segment.sequence
+        )
+    )
 
     preliminary_path = output
     output_path_contains_template = OUTPUT_PATH_PLACEHOLDER_RE.search(
@@ -180,7 +184,7 @@ def capture_command(
             None,
             actual_moment_date,
             None,
-            None
+            None,
         )
         preliminary_path = expand_template_output_path(
             preliminary_path, template_context, ctx.obj.config
@@ -191,11 +195,24 @@ def capture_command(
     final_output_path = Path(preliminary_path).resolve()
     Path.mkdir(final_output_path.parent, parents=True, exist_ok=True)
 
-    requested_frame_offset = (
-        requested_moment_date - moment_segment.ingestion_start_date
-    )
+    requested_frame_offset = requested_moment_date - moment_segment.ingestion_start_date
     save_video_frame_as_image(
-        downloaded_path,
-        requested_frame_offset.total_seconds(),
-        final_output_path
+        downloaded_path, requested_frame_offset.total_seconds(), final_output_path
     )
+
+    try:
+        saved_to_path_value = f"{final_output_path.relative_to(Path.cwd())}"
+    except ValueError:
+        saved_to_path_value = saved_to_path
+    click.echo(f"\nSuccess! Image saved to '{saved_to_path_value}'.")
+
+    run_temp_directory = playback.get_temp_directory()
+    if no_cleanup:
+        click.echo(f"notice: No cleanup enabled, check {run_temp_directory}/")
+    else:
+        try:
+            shutil.rmtree(run_temp_directory)
+        except OSError:
+            logger.warning(
+                "Failed to remove %s temporary directory", run_temp_directory
+            )

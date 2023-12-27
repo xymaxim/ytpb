@@ -108,7 +108,7 @@ def get_downloaded_segment(playback, sequence, base_url):
     return segment
 
 
-def _prepare_line_for_summary_info(
+def prepare_line_for_summary_info(
     date: datetime,
     input_actual_timedelta: timedelta,
     use_ms_precision: bool = False,
@@ -139,14 +139,14 @@ def print_summary_info(
 ) -> None:
     input_tzinfo = input_date_interval.start.tzinfo
 
-    start_time_info_line = _prepare_line_for_summary_info(
+    start_time_info_line = prepare_line_for_summary_info(
         actual_date_interval.start.astimezone(input_tzinfo),
         actual_date_interval.start - input_date_interval.start,
         use_ms_precision,
     )
     click.echo(f"Actual start: {start_time_info_line}, seq. {rewind_range.start}")
 
-    end_time_info_line = _prepare_line_for_summary_info(
+    end_time_info_line = prepare_line_for_summary_info(
         actual_date_interval.end.astimezone(input_tzinfo),
         actual_date_interval.end - input_date_interval.end,
         use_ms_precision,
