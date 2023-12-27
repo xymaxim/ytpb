@@ -1,11 +1,11 @@
 import email
-import logging
 import sys
 import textwrap
 from datetime import datetime, timedelta
 
 import click
 import requests
+import structlog
 
 from ytpb.cli.custom import get_parameter_by_name
 from ytpb.download import compose_default_segment_filename
@@ -27,7 +27,7 @@ from ytpb.utils.date import format_timedelta, round_date
 from ytpb.utils.remote import request_reference_sequence
 from ytpb.utils.url import extract_parameter_from_url, normalize_video_url
 
-logger = logging.getLogger(__name__)
+logger = structlog.getLogger(__name__)
 
 
 CONSOLE_TEXT_WIDTH = 80
@@ -55,18 +55,20 @@ def create_playback(ctx: click.Context) -> Playback:
             click.echo("(<<) Collecting info about the video...")
 
             force_update_cache = ctx.params.get("force_update_cache", False)
-            use_cache = not (ctx.params.get("no_cache", True) or force_update_cache)
-            if use_cache:
+            need_read_cache = not (
+                ctx.params.get("no_cache", True) or force_update_cache
+            )
+            if need_read_cache:
                 try:
                     playback = Playback.from_cache(stream_url, fetcher=fetcher)
                 except CachedItemNotFoundError:
-                    logger.debug("Couldn't find unexpired cached item for the video")
+                    logger.debug("Could not find unexpired cached item for the video")
                     playback = Playback.from_url(
                         stream_url, fetcher=fetcher, write_to_cache=True
                     )
             else:
                 playback = Playback.from_url(
-                    stream_url, fetcher=fetcher, write_to_cache=False
+                    stream_url, fetcher=fetcher, write_to_cache=force_update_cache
                 )
     except BroadcastStatusError as e:
         match e.status:

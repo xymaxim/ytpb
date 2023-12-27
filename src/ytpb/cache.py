@@ -5,6 +5,10 @@ import time
 from pathlib import Path
 from typing import Iterable
 
+import structlog
+
+logger = structlog.get_logger(__name__)
+
 
 def _find_cached_item_paths(key: str, cache_directory: Path) -> Iterable[Path]:
     return cache_directory.glob(f"*~{key}")
@@ -26,12 +30,14 @@ def read_from_cache(key: str, cache_directory: Path) -> dict | None:
         for path in earlier_item_paths:
             path.unlink()
 
-        if not _check_item_is_expired(latest_item_path.name):
+        if _check_item_is_expired(latest_item_path.name):
+            logger.debug("Found expired cached item: %s", latest_item_path)
+            latest_item_path.unlink()
+            item = None
+        else:
             with open(latest_item_path) as f:
                 item = json.load(f)
-        else:
-            item = None
-            latest_item_path.unlink()
+            logger.debug("Found unexpired cached item: %s", latest_item_path)
 
     return item
 
@@ -48,6 +54,7 @@ def write_to_cache(
     new_item_path = cache_directory / f"{expires_at}~{key}"
     with open(new_item_path, "w") as f:
         json.dump(item, f)
+    logger.debug("New cache item has been created: %s", new_item_path)
 
 
 def remove_expired_cache_items(cache_directory: Path) -> None:
