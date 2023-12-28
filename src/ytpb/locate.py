@@ -4,12 +4,13 @@ import math
 import tempfile
 from pathlib import Path
 
-import structlog
 import requests
+
+import structlog
 from requests.exceptions import HTTPError
 
 from ytpb.download import compose_default_segment_filename, download_segment
-from ytpb.exceptions import YtpbError, SequenceLocatingError, SegmentDownloadError
+from ytpb.exceptions import SegmentDownloadError, SequenceLocatingError, YtpbError
 from ytpb.segment import Segment, SegmentMetadata
 from ytpb.types import SegmentSequence, Timestamp
 from ytpb.utils.remote import request_reference_sequence
@@ -98,6 +99,15 @@ class SequenceLocator:
             self._temp_directory = tempfile.mkdtemp()
         return self._temp_directory
 
+    def _download_full_segment(self, sequence: SegmentSequence) -> Path:
+        downloaded_path = download_segment(
+            self.candidate.sequence,
+            self.base_url,
+            output_directory=self.get_temp_directory(),
+            session=self.session,
+        )
+        return downloaded_path
+
     def _find_time_diff(
         self, candidate: SequenceMetadataPair, desired_time: Timestamp
     ) -> float:
@@ -116,7 +126,6 @@ class SequenceLocator:
 
         # The jump length value could be negative or positive.
         jump_length_in_seq = int(initial_diff_in_s // self.segment_duration)
-
         logger.debug(
             "Initial time difference: %+f s, %d segments",
             initial_diff_in_s,
@@ -124,6 +133,14 @@ class SequenceLocator:
             seq=self.candidate.sequence,
             time=self.candidate.metadata.ingestion_walltime,
         )
+
+        # TODO: This should be reworked to make sure that the desired time is
+        # actually in a segment of some duration and not a constant duration
+        # used in the estimation step. But before that, we have to deal with a
+        # false gap detection issue.
+        if jump_length_in_seq == 0:
+            self._download_full_segment(self.candidate.sequence)
+            return self.candidate.sequence
 
         self.candidate.sequence += jump_length_in_seq
         current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
@@ -169,13 +186,8 @@ class SequenceLocator:
 
             candidate_diff_in_s = self._find_time_diff(self.candidate, desired_time)
 
-            # Download a complete candidate segment and check its duration:
-            downloaded_path = download_segment(
-                self.candidate.sequence,
-                self.base_url,
-                output_directory=self.get_temp_directory(),
-                session=self.session,
-            )
+            # Download a full candidate segment and check its duration:
+            downloaded_path = self._download_full_segment(self.candidate.sequence)
             candidate_segment = Segment.from_file(downloaded_path)
             candidate_duration = candidate_segment.get_actual_duration()
 
@@ -205,7 +217,7 @@ class SequenceLocator:
     ) -> SegmentSequence:
         """Find sequence number of a segment by the given timestamp."""
         logger.info("Locating segment with the given timestamp", time=desired_time)
-        
+
         # Step 1. Make a trial jump to the desired sequence based on the
         # constant segment duration.
         diff_in_seq = find_time_diff_in_sequences(
@@ -215,7 +227,7 @@ class SequenceLocator:
         )
         estimated_sequence = self.reference.sequence - diff_in_seq
         logger.debug(f"Segment intially estimated as {estimated_sequence}")
-        
+
         # Step 2. Refine the previously estimated sequence.
         try:
             refined_sequence = self._refine_sequence(
