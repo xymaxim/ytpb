@@ -334,6 +334,50 @@ def test_adjust_title_for_filename_with_ascii_and_separator(title, expected):
     )
 
 
+@pytest.mark.parametrize(
+    "title,expected,separator",
+    [
+        (
+            "Jackman Maine - Newton Field Airport - Cam Left",
+            "Jackman-Maine-Newton-Field-Airport-Cam-Left",
+            "-",
+        ),
+        (
+            "Jackman Maine -  Newton Field Airport  -  Cam Left",
+            "Jackman-Maine-Newton-Field-Airport-Cam-Left",
+            "-",
+        ),
+        (
+            "Jackman Maine —  Newton Field Airport - Cam Left",
+            "Jackman-Maine--Newton-Field-Airport-Cam-Left",
+            "-",
+        ),
+        (
+            "Jackman Maine - Newton Field Airport - Cam Left",
+            "Jackman_Maine-Newton_Field_Airport-Cam_Left",
+            "_",
+        ),
+        (
+            "Jackman Maine -  Newton Field Airport  -  Cam Left",
+            "Jackman_Maine-Newton_Field_Airport-Cam_Left",
+            "_",
+        ),
+        (
+            "Jackman Maine —  Newton Field Airport - Cam Left",
+            "Jackman_Maine--Newton_Field_Airport-Cam_Left",
+            "_",
+        ),
+    ],
+)
+def test_corner_cases_of_adjust_title_for_filename(title, expected, separator):
+    assert expected == adjust_title_for_filename(
+        title, separator=separator, characters=TitleAllowedCharacters.ASCII
+    )
+    assert expected == adjust_title_for_filename(
+        title, separator=separator, characters=TitleAllowedCharacters.POSIX
+    )
+
+
 def test_adjust_title_for_filename_with_posix():
     title = "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN | TBS NEWS DIG"
 

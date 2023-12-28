@@ -157,12 +157,19 @@ def adjust_title_for_filename(
     characters: TitleAllowedCharacters = TitleAllowedCharacters.UNICODE,
 ) -> str:
     fallback_separator = "-"
-    dashes_pattern = r"[\s+]?([" + "".join(DASHES) + r"]+)[\s+]?"
+    dashes_pattern = r"(?:\s+)?([{0}]+)(?:\s+)?".format("".join(DASHES))
+
+    if separator:
+        # For visual appeal, replace dashes and surrounding spaces with
+        # dashes. Compare, e.g.: 'A_B_-_C_D' and 'A_B-C_D' (we prefer this one).
+        title = re.sub(dashes_pattern, r"\1", title)
 
     if characters == TitleAllowedCharacters.POSIX:
         output = posixify_filename(title, separator or fallback_separator)
     else:
         output = sanitize_filename(title)
+
+        actual_separator: str
 
         match characters:
             case TitleAllowedCharacters.UNICODE:
@@ -171,15 +178,9 @@ def adjust_title_for_filename(
                 actual_separator = separator and unidecode.unidecode(
                     separator, "replace", fallback_separator
                 )
-
-        if characters == TitleAllowedCharacters.ASCII:
-            output = unidecode.unidecode(output, "replace", " ")
-            # Strip the space if a title started with a non-converted character.
-            output = output.lstrip()
-
-        if separator:
-            # Replace dashes and surrounding spaces with dashes.
-            output = re.sub(dashes_pattern, r"\1", output)
+                output = unidecode.unidecode(output, "replace", " ")
+                # Strip the space if a title started with a non-converted character.
+                output = output.lstrip()
 
         # Replace multiple consecutive spaces with a single space. This can be
         # in an original title, as well as after converting a title using ASCII
@@ -191,6 +192,8 @@ def adjust_title_for_filename(
         output = re.sub(dashes_pattern + "$", "", output)
 
     if separator and characters != TitleAllowedCharacters.POSIX:
+        # For the POSIX case, the output is already with spaces replaced after
+        # the posixify_filename() function.
         output = re.sub(r"\s", actual_separator, output)
 
     return output
