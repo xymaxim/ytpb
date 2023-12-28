@@ -7,6 +7,7 @@ from typing import Literal
 
 import av
 import click
+import cloup
 import structlog
 from PIL import Image
 
@@ -86,20 +87,23 @@ def save_frame_as_image(video_path: Path, target_time: float, output_path: Path)
     image.save(output_path, quality=80)
 
 
-@click.command("capture", help="Take video frame capture.")
-@click.option(
-    "-m",
-    "--moment",
-    metavar="MOMENT",
-    type=PointInStreamParamType(allowed_literals=["now"]),
-    help="Moment to capture.",
-)
-@click.option(
-    "-vf",
-    "--video-format",
-    metavar="SPEC",
-    type=FormatSpecParamType(FormatSpecType.VIDEO),
-    help="Video format to capture.",
+@cloup.command("capture", help="Take video frame capture.")
+@cloup.option_group(
+    "Input options",
+    cloup.option(
+        "-m",
+        "--moment",
+        metavar="MOMENT",
+        type=PointInStreamParamType(allowed_literals=["now"]),
+        help="Moment to capture.",
+    ),
+    cloup.option(
+        "-vf",
+        "--video-format",
+        metavar="SPEC",
+        type=FormatSpecParamType(FormatSpecType.VIDEO),
+        help="Video format to capture.",
+    ),
 )
 @click.option(
     "-o",

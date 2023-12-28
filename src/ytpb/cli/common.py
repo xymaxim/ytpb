@@ -4,6 +4,7 @@ import textwrap
 from datetime import datetime, timedelta
 
 import click
+import cloup
 import requests
 import structlog
 
@@ -90,8 +91,11 @@ def normalize_stream_url(ctx: click.Context, param: click.Argument, value: str) 
         raise click.BadParameter(str(e))
 
 
-stream_argument = click.argument(
-    "stream_url", metavar="STREAM", callback=normalize_stream_url
+stream_argument = cloup.argument(
+    "stream_url",
+    metavar="STREAM",
+    help="Stream URL or video ID.",
+    callback=normalize_stream_url,
 )
 
 

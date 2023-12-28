@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from pathlib import Path
 
 import click
+import cloup
 from rich import box
 from rich.console import Console
 from rich.table import Table
@@ -75,7 +76,7 @@ def print_video_table(console, streams, **table_kwargs):
     console.print(table)
 
 
-@click.group("mpd", cls=OrderedGroup, short_help="Compose and play MPEG-DASH manifest.")
+@cloup.group("mpd", short_help="Compose and play MPEG-DASH manifests.")
 def mpd_group():
     pass
 
@@ -85,22 +86,25 @@ def mpd_group():
     short_help="Compose MPEG-DASH manifest.",
     help="Compose MPEG-DASH manifest for stream excerpt.",
 )
+@cloup.option_group(
+    "Input options",
+    boundary_options,
+    cloup.option(
+        "-af",
+        "--audio-formats",
+        metavar="SPEC",
+        type=FormatSpecParamType(FormatSpecType.AUDIO),
+        help="Audio format(s) to include.",
+    ),
+    cloup.option(
+        "-vf",
+        "--video-formats",
+        metavar="SPEC",
+        type=FormatSpecParamType(FormatSpecType.VIDEO),
+        help="Video format(s) to include.",
+    ),
+)
 @click.pass_context
-@boundary_options
-@click.option(
-    "-af",
-    "--audio-formats",
-    metavar="SPEC",
-    type=FormatSpecParamType(FormatSpecType.AUDIO),
-    help="Audio format(s) to include.",
-)
-@click.option(
-    "-vf",
-    "--video-formats",
-    metavar="SPEC",
-    type=FormatSpecParamType(FormatSpecType.VIDEO),
-    help="Video format(s) to include.",
-)
 @output_options
 @yt_dlp_option
 @cache_options
@@ -291,7 +295,7 @@ def compose_command(
     help="Refresh composed MPEG-DASH manifest for stream excerpt.",
 )
 @yt_dlp_option
-@click.argument("manifest")
+@cloup.argument("manifest", help="Manifest file to refresh.")
 def refresh_command(
     yt_dlp: bool,
     manifest: str,

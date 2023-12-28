@@ -3,11 +3,13 @@ from dataclasses import dataclass
 from pathlib import Path
 
 import click
-import toml
+import cloup
 import structlog
+import toml
+
+from ytpb.cli.commands.capture import capture_command
 
 from ytpb.cli.commands.download import download_command
-from ytpb.cli.commands.capture import capture_command
 from ytpb.cli.commands.mpd import mpd_group
 from ytpb.cli.custom import OrderedGroup
 from ytpb.cli.options import config_options, logging_options
@@ -52,9 +54,12 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
     ctx.default_map = update_nested_dict(ctx.default_map, default_map_from_config)
 
 
-@click.group(cls=OrderedGroup, invoke_without_command=True)
-@config_options
-@logging_options
+@cloup.group(invoke_without_command=True)
+@cloup.option_group(
+    "Global options",
+    config_options,
+    logging_options,
+)
 @click.pass_context
 def cli(ctx: click.Context, config_path: Path, no_config: bool, debug: bool) -> None:
     """This is a main entry point of the CLI."""
@@ -77,6 +82,4 @@ def cli(ctx: click.Context, config_path: Path, no_config: bool, debug: bool) -> 
             raise click.UsageError("Conflicting --config and --no-config options given")
 
 
-cli.add_command(download_command)
-cli.add_command(capture_command)
-cli.add_command(mpd_group)
+cli.section("Top-level commands", capture_command, download_command, mpd_group)

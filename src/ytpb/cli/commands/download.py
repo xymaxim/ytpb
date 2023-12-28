@@ -6,6 +6,7 @@ from pathlib import Path
 from typing import Literal
 
 import click
+import cloup
 import structlog
 from requests.exceptions import HTTPError
 
@@ -64,21 +65,24 @@ from ytpb.utils.url import extract_parameter_from_url
 logger = structlog.get_logger(__name__)
 
 
-@click.command("download", help="Download stream excerpt.")
-@boundary_options
-@click.option(
-    "-af",
-    "--audio-format",
-    metavar="SPEC",
-    type=FormatSpecParamType(FormatSpecType.AUDIO),
-    help="Audio format to download.",
-)
-@click.option(
-    "-vf",
-    "--video-format",
-    metavar="SPEC",
-    type=FormatSpecParamType(FormatSpecType.VIDEO),
-    help="Video format to download.",
+@cloup.command("download", help="Download stream excerpt.")
+@cloup.option_group(
+    "Input options",
+    boundary_options,
+    cloup.option(
+        "-af",
+        "--audio-format",
+        metavar="SPEC",
+        type=FormatSpecParamType(FormatSpecType.AUDIO),
+        help="Audio format to download.",
+    ),
+    cloup.option(
+        "-vf",
+        "--video-format",
+        metavar="SPEC",
+        type=FormatSpecParamType(FormatSpecType.VIDEO),
+        help="Video format to download.",
+    ),
 )
 @output_options
 @click.option(
