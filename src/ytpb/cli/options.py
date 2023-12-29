@@ -59,7 +59,7 @@ def boundary_options(f):
         "--interval",
         metavar="INTERVAL",
         type=parameters.RewindIntervalParamType(),
-        help="Time or segment interval to download.",
+        help="Time or segment interval.",
         required=True,
     )(f)
 

@@ -8,9 +8,9 @@ import structlog
 import toml
 
 from ytpb.cli.commands.capture import capture_command
-
 from ytpb.cli.commands.download import download_command
 from ytpb.cli.commands.mpd import mpd_group
+from ytpb.cli.commands.timelapse import timelapse_command
 from ytpb.cli.custom import OrderedGroup
 from ytpb.cli.options import config_options, logging_options
 
@@ -82,4 +82,10 @@ def cli(ctx: click.Context, config_path: Path, no_config: bool, debug: bool) -> 
             raise click.UsageError("Conflicting --config and --no-config options given")
 
 
-cli.section("Top-level commands", capture_command, download_command, mpd_group)
+cli.section(
+    "Top-level commands",
+    capture_command,
+    download_command,
+    mpd_group,
+    timelapse_command,
+)
