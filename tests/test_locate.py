@@ -111,6 +111,9 @@ class TestGapCase1(BaseGapCase):
     def test_S2(self):
         assert self.ssl.find_sequence_by_time(1679788196.600287) == 7959600
 
+    def test_S3(self):
+        assert self.ssl.find_sequence_by_time(1679788198.599000) == 7959601
+
 
 class TestGapCase2(BaseGapCase):
     fixture_data_path = f"{TEST_DATA_PATH}/gap-cases/gap-case-2-fixture.csv"
