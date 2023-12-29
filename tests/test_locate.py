@@ -39,25 +39,25 @@ def gap_case_fixture_factory(
     request: pytest.FixtureRequest, monkeyclass: pytest.MonkeyPatch
 ) -> None:
     request.cls.fixture_data = read_gap_case_fixture_data(request.cls.fixture_data_path)
-    
+
     def _create_segment_metadata(sequence: SegmentSequence) -> SegmentMetadata:
         fake_required_fields = {
             "ingestion_uncertainty": 0,
             "stream_duration": 0,
             "max_dvr_duration": 0,
             "first_frame_time": 0,
-            "first_frame_uncertainty": 0
+            "first_frame_uncertainty": 0,
         }
         return SegmentMetadata(
             sequence_number=sequence,
             ingestion_walltime=request.cls.fixture_data[sequence][0],
             target_duration=2.0,
-            **fake_required_fields
+            **fake_required_fields,
         )
 
     def mock_download_segment(sequence: SegmentSequence, *args, **kwargs) -> Path:
         return Path(str(sequence))
-        
+
     def mock_create_segment(sequence_as_path: Path) -> Segment:
         segment = Segment()
         segment.sequence = int(str(sequence_as_path))
@@ -109,7 +109,7 @@ class TestGapCase1(BaseGapCase):
 
     @pytest.mark.xfail
     def test_S2(self):
-        assert self.ssl.find_sequence_by_time(1679788196.602383) == 7959600
+        assert self.ssl.find_sequence_by_time(1679788196.600287) == 7959600
 
 
 class TestGapCase2(BaseGapCase):
