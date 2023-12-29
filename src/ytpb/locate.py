@@ -63,6 +63,7 @@ class SequenceMetadataPair:
             output_filename=output_filename,
             size=PARTIAL_SEGMENT_SIZE_BYTES,
             session=self.locator.session,
+            force_download=False,
         )
         with open(downloaded_path, "rb") as f:
             metadata = Segment.parse_youtube_metadata(f.read())
@@ -216,7 +217,11 @@ class SequenceLocator:
         self, desired_time: Timestamp, end: bool = False
     ) -> SegmentSequence:
         """Find sequence number of a segment by the given timestamp."""
-        logger.info("Locating segment with the given timestamp", time=desired_time)
+        logger.info(
+            "Locating segment with a timestamp",
+            target=desired_time,
+            reference=self.reference.sequence,
+        )
 
         # Step 1. Make a trial jump to the desired sequence based on the
         # constant segment duration.
