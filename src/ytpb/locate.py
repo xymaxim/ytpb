@@ -130,7 +130,7 @@ class SequenceLocator:
         logger.debug(
             "Initial time difference: %+f s, %d segments",
             initial_diff_in_s,
-            jump_length_in_seq,
+            abs(jump_length_in_seq),
             seq=self.candidate.sequence,
             time=self.candidate.metadata.ingestion_walltime,
         )
