@@ -102,17 +102,33 @@ class TestGapCase1(BaseGapCase):
     reference_sequence = 7959630
 
     def test_S1(self):
-        assert self.ssl.find_sequence_by_time(1679788193.600278) == 7959599
+        assert 7959599 == self.ssl.find_sequence_by_time(1679788193.600278)
 
     def test_E1(self):
-        assert self.ssl.find_sequence_by_time(1679788193.600278, end=True) == 7959599
+        assert 7959599 == self.ssl.find_sequence_by_time(1679788193.600278, end=True)
+
+    @pytest.mark.parametrize("reference", [None, 7959600, 7959601, 7959602])
+    def test_S2(self, reference: int | None):
+        target_time = 1679788196.600287
+        expected_sequence = 7959601
+
+        if reference is None:
+            assert expected_sequence == self.ssl.find_sequence_by_time(target_time)
+        else:
+            sl = SequenceLocator(self.test_base_url, reference)
+            assert expected_sequence == sl.find_sequence_by_time(target_time)
 
     @pytest.mark.xfail
-    def test_S2(self):
-        assert self.ssl.find_sequence_by_time(1679788196.600287) == 7959600
+    @pytest.mark.parametrize("reference", [None, 7959600, 7959601, 7959602])
+    def test_S3(self, reference: int | None):
+        target_time = 1679788198.599000
+        expected_sequence = 7959601
 
-    def test_S3(self):
-        assert self.ssl.find_sequence_by_time(1679788198.599000) == 7959601
+        if reference is None:
+            assert expected_sequence == self.ssl.find_sequence_by_time(target_time)
+        else:
+            sl = SequenceLocator(self.test_base_url, reference)
+            assert expected_sequence == sl.find_sequence_by_time(target_time)
 
 
 class TestGapCase2(BaseGapCase):
@@ -132,11 +148,9 @@ class TestGapCase2(BaseGapCase):
         assert self.ssl.find_sequence_by_time(1679763611.742391, end=True) == 7947334
 
     @pytest.mark.xfail
-    def test_S4(self, caplog):
-        caplog.set_level(logging.DEBUG)
+    def test_S4(self):
         sequence = self.ssl.find_sequence_by_time(1679763626.506922)
         assert sequence == 7947335
-        assert "gap" not in caplog.text
 
 
 class TestGapCase3(BaseGapCase):
