@@ -285,9 +285,18 @@ def download_command(
                 logger.error(exc, sequence=exc.sequence, exc_info=True)
                 sys.exit(1)
 
-    start_segment = playback.get_downloaded_segment(
-        rewind_range.start, reference_base_url
-    )
+    try:
+        start_segment = playback.get_downloaded_segment(
+            rewind_range.start, reference_base_url
+        )
+    except FileNotFoundError:
+        downloaded_path = download_segment(
+            rewind_range.start,
+            reference_base_url,
+            playback.get_temp_directory(),
+            session=playback.session,
+        )
+        start_segment = Segment.from_file(downloaded_path)
     try:
         end_segment = playback.get_downloaded_segment(
             rewind_range.end, reference_base_url
