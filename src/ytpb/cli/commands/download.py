@@ -51,18 +51,41 @@ from ytpb.info import BroadcastStatus
 from ytpb.merge import merge_segments
 from ytpb.playback import Playback
 from ytpb.segment import Segment
-from ytpb.types import DateInterval, RelativeSegmentSequence, SegmentSequence
+from ytpb.types import (
+    AddressableMappingProtocol,
+    DateInterval,
+    RelativeSegmentSequence,
+    SegmentSequence,
+)
 from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.path import (
     expand_template_output_path,
+    IntervalOutputPathContext,
+    MinimalOutputPathContext,
     OUTPUT_PATH_PLACEHOLDER_RE,
-    OutputPathTemplateContext,
+    render_interval_output_path_context,
+    render_minimal_output_path_context,
 )
 from ytpb.utils.remote import request_reference_sequence
 from ytpb.utils.units import S_TO_MS
 from ytpb.utils.url import extract_parameter_from_url
 
 logger = structlog.get_logger(__name__)
+
+
+class DownloadOutputPathContext(MinimalOutputPathContext, IntervalOutputPathContext):
+    ...
+
+
+def render_download_output_path_context(
+    path: Path,
+    context: DownloadOutputPathContext,
+    config_settings: AddressableMappingProtocol,
+) -> DownloadOutputPathContext:
+    output = context
+    output |= render_minimal_output_path_context(context, config_settings)
+    output |= render_interval_output_path_context(context, config_settings)
+    return output
 
 
 @cloup.command("download", help="Download stream excerpt.")
@@ -365,17 +388,22 @@ def download_command(
         )
         if output_path_contains_template:
             input_timezone = requested_date_interval.start.tzinfo
-            template_context = OutputPathTemplateContext(
-                playback.video_id,
-                playback.info.title,
-                requested_date_interval.start,
-                requested_date_interval.end,
-                actual_date_interval.start.astimezone(input_timezone),
-                actual_date_interval.end.astimezone(input_timezone),
-                actual_date_interval.end - actual_date_interval.start,
-            )
+            template_context: DownloadOutputPathContext = {
+                "id": playback.video_id,
+                "title": playback.info.title,
+                "input_start_date": requested_date_interval.start,
+                "input_end_date": requested_date_interval.end,
+                "actual_start_date": actual_date_interval.start.astimezone(
+                    input_timezone
+                ),
+                "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
+                "duration": requested_end_date - requested_start_date,
+            }
             preliminary_path = expand_template_output_path(
-                preliminary_path, template_context, ctx.obj.config
+                preliminary_path,
+                template_context,
+                render_download_output_path_context,
+                ctx.obj.config,
             )
             preliminary_path = preliminary_path.expanduser()
 
