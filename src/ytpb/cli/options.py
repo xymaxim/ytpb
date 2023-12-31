@@ -73,7 +73,7 @@ def output_options(f):
         "--output",
         type=click.Path(path_type=Path),
         help="Output file path (without extension).",
-        default="<id>_<input_start_date>",
+        default="<title>_<input_start_date>",
         callback=validate_output_path,
     )(f)
 

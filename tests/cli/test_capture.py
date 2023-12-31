@@ -73,7 +73,7 @@ def test_capture_by_sequence_number(
         )
 
     assert result.exit_code == 0
-    actual_image_path = tmp_path / "kHwmzef842g_20230325T233354+00.jpg"
+    actual_image_path = tmp_path / "Webcam-Zurich-HB_20230325T233354+00.jpg"
     assert os.path.exists(actual_image_path)
 
     segment_path = TEST_DATA_PATH / "segments" / "7959120.i244.webm"
@@ -110,7 +110,7 @@ def test_capture_by_date(
             ],
         )
     assert result.exit_code == 0
-    actual_image_path = tmp_path / "kHwmzef842g_20230325T233355+00.jpg"
+    actual_image_path = tmp_path / "Webcam-Zurich-HB_20230325T233355+00.jpg"
     assert os.path.exists(actual_image_path)
 
     segment_path = TEST_DATA_PATH / "segments" / "7959120.i244.webm"

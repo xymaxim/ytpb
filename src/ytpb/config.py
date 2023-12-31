@@ -78,7 +78,7 @@ BUILT_IN_ALIASES = {
     **FRAME_PER_SECOND_ALIASES,
 }
 
-DEFAULT_OUTPUT_PATH = "<id>_<input_start_date>"
+DEFAULT_OUTPUT_PATH = "<title>_<input_start_date>"
 
 DEFAULT_CONFIG = AddressableDict(
     {
@@ -93,7 +93,7 @@ DEFAULT_CONFIG = AddressableDict(
             },
             "capture": {
                 "video_format": "best(format eq mp4 and frame_rate eq 30)",
-                "output": f"<id>_<moment_date>.jpg",
+                "output": f"<title>_<moment_date>.jpg",
             },
             "mpd": {
                 "compose": {
