@@ -78,13 +78,12 @@ class DownloadOutputPathContext(MinimalOutputPathContext, IntervalOutputPathCont
 
 
 def render_download_output_path_context(
-    path: Path,
     context: DownloadOutputPathContext,
     config_settings: AddressableMappingProtocol,
 ) -> DownloadOutputPathContext:
     output = context
-    output |= render_minimal_output_path_context(context, config_settings)
-    output |= render_interval_output_path_context(context, config_settings)
+    output.update(render_minimal_output_path_context(context, config_settings))
+    output.update(render_interval_output_path_context(context, config_settings))
     return output
 
 

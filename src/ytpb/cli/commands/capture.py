@@ -66,7 +66,6 @@ class CaptureOutputPathContext(MinimalOutputPathContext):
 
 
 def render_capture_output_path_context(
-    path: Path,
     context: CaptureOutputPathContext,
     config_settings: AddressableMappingProtocol,
 ) -> CaptureOutputPathContext:
@@ -78,10 +77,8 @@ def render_capture_output_path_context(
                 output[x] = OutputPathContextRenderer.render_date(
                     context[x], date_formatter, config_settings
                 )
-            case _ as x:
-                output[x] = context[x]
 
-    output |= render_minimal_output_path_context(context, config_settings)
+    output.update(render_minimal_output_path_context(context, config_settings))
 
     return output
 

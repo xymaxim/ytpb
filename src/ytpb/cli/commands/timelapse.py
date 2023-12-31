@@ -9,13 +9,15 @@ import structlog
 from PIL import Image
 from timedelta_isoformat import timedelta
 
+from ytpb.cli.commands.capture import save_frame_as_image
+from ytpb.cli.commands.download import render_download_output_path_context
+
 from ytpb.cli.common import (
     create_playback,
     raise_for_sequence_ahead_of_current,
     raise_for_too_far_sequence,
     stream_argument,
 )
-
 from ytpb.cli.custom import get_parameter_by_name
 from ytpb.cli.options import (
     boundary_options,
@@ -29,12 +31,38 @@ from ytpb.download import download_segment
 from ytpb.exceptions import QueryError, SegmentDownloadError, SequenceLocatingError
 from ytpb.locate import SequenceLocator
 from ytpb.segment import Segment
-from ytpb.types import DateInterval, SegmentSequence
+from ytpb.types import AddressableMappingProtocol, DateInterval, SegmentSequence
 from ytpb.utils.other import resolve_relativity_in_interval
+from ytpb.utils.path import (
+    expand_template_output_path,
+    IntervalOutputPathContext,
+    MinimalOutputPathContext,
+    OUTPUT_PATH_PLACEHOLDER_RE,
+)
 from ytpb.utils.remote import request_reference_sequence
 from ytpb.utils.units import S_TO_MS
 
 logger = structlog.get_logger(__name__)
+
+
+class TimelapseOutputPathContext(MinimalOutputPathContext, IntervalOutputPathContext):
+    every: timedelta
+
+
+def render_timelapse_output_path_context(
+    path: Path,
+    context: TimelapseOutputPathContext,
+    config_settings: AddressableMappingProtocol,
+) -> TimelapseOutputPathContext:
+    output = context
+    for variable in TimelapseOutputPathContext.__annotations__.keys():
+        match variable:
+            case "every" as x:
+                output[x] = context[x].isoformat().replace("P", "E")
+
+    output.update(render_download_output_path_context(context, config_settings))
+
+    return output
 
 
 def convert_every_option_to_timedelta(
@@ -280,3 +308,47 @@ def timelapse_command(
         found_sequence = sl.find_sequence_by_time(date.timestamp(), end=is_end)
         sequences_to_download.append(found_sequence)
         previous_sequence = found_sequence
+
+    preliminary_path = output
+    output_path_contains_template = OUTPUT_PATH_PLACEHOLDER_RE.search(
+        str(preliminary_path)
+    )
+    if output_path_contains_template:
+        input_timezone = requested_date_interval.start.tzinfo
+        template_context: TimelapseOutputPathContext = {
+            "id": playback.video_id,
+            "title": playback.info.title,
+            "input_start_date": requested_date_interval.start,
+            "input_end_date": requested_date_interval.end,
+            "actual_start_date": actual_date_interval.start.astimezone(input_timezone),
+            "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
+            "duration": requested_end_date - requested_start_date,
+            "every": every,
+        }
+        preliminary_path = expand_template_output_path(
+            preliminary_path,
+            template_context,
+            render_timelapse_output_path_context,
+            ctx.obj.config,
+        )
+        preliminary_path = preliminary_path.expanduser()
+
+    # Full absolute excerpt output path without extension.
+    final_output_path = Path(preliminary_path).resolve()
+    final_output_path.parent.mkdir(parents=True, exist_ok=True)
+
+    for i, (sequence, date) in enumerate(zip(sequences_to_download, dates_to_capture)):
+        try:
+            segment = playback.get_downloaded_segment(sequence, reference_base_url)
+        except FileNotFoundError:
+            downloaded_path = download_segment(
+                sequence,
+                reference_base_url,
+                playback.get_temp_directory(),
+                session=playback.session,
+            )
+            segment = Segment.from_file(downloaded_path)
+        target_time_offset = (date - segment.ingestion_start_date).total_seconds()
+        image_output_name = final_output_path.name % i
+        image_output_path = final_output_path.with_name(image_output_name)
+        save_frame_as_image(segment.local_path, target_time_offset, image_output_path)

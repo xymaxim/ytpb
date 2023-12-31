@@ -157,7 +157,7 @@ def render_interval_output_path_context(
 def expand_template_output_path(
     path: Path,
     template_context: dict,
-    render_function: Callable[[str, dict, AddressableMappingProtocol], dict],
+    render_function: Callable[[dict, AddressableMappingProtocol], dict],
     config_settings: AddressableMappingProtocol | None = None,
 ) -> Path:
     if config_settings is None:
@@ -170,7 +170,7 @@ def expand_template_output_path(
     if unknown_variables := set(matched_variables) - known_variables:
         warnings.warn(f"Unknown variables: {unknown_variables}")
 
-    rendered_context = render_function(path_string, template_context, config_settings)
+    rendered_context = render_function(template_context, config_settings)
     output = ChevronTemplate(path_string).substitute(rendered_context)
 
     return Path(output)
