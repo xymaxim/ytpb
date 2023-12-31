@@ -11,6 +11,10 @@ from rich.table import Table
 
 from ytpb import types
 from ytpb.cli import parameters
+from ytpb.cli.commands.download import (
+    DownloadOutputPathContext,
+    render_download_output_path_context,
+)
 from ytpb.cli.common import (
     CONSOLE_TEXT_WIDTH,
     create_playback,
@@ -41,15 +45,15 @@ from ytpb.streams import Streams
 from ytpb.types import DateInterval, SegmentSequence
 from ytpb.utils.date import express_timedelta_in_words
 from ytpb.utils.other import resolve_relativity_in_interval
-from ytpb.utils.path import (
-    expand_template_output_path,
-    OUTPUT_PATH_PLACEHOLDER_RE,
-    OutputPathTemplateContext,
-)
+from ytpb.utils.path import expand_template_output_path, OUTPUT_PATH_PLACEHOLDER_RE
 from ytpb.utils.remote import request_reference_sequence
 from ytpb.utils.url import build_video_url_from_base_url, extract_parameter_from_url
 
 logger = logging.getLogger(__name__)
+
+
+MpdOutputPathContext = DownloadOutputPathContext
+render_mpd_output_path_context = render_download_output_path_context
 
 
 def print_audio_table(console, streams, **table_kwargs):
@@ -255,17 +259,21 @@ def compose_command(
         str(preliminary_path)
     )
     if output_path_contains_template:
-        template_context = OutputPathTemplateContext(
-            playback.video_id,
-            playback.info.title,
-            requested_date_interval.start,
-            requested_date_interval.end,
-            actual_date_interval.start,
-            actual_date_interval.end,
-            actual_date_interval.end - actual_date_interval.start,
-        )
+        input_timezone = requested_date_interval.start.tzinfo
+        template_context: MpdOutputPathContext = {
+            "id": playback.video_id,
+            "title": playback.info.title,
+            "input_start_date": requested_date_interval.start,
+            "input_end_date": requested_date_interval.end,
+            "actual_start_date": actual_date_interval.start.astimezone(input_timezone),
+            "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
+            "duration": requested_end_date - requested_start_date,
+        }
         preliminary_path = expand_template_output_path(
-            preliminary_path, template_context
+            preliminary_path,
+            template_context,
+            render_mpd_output_path_context,
+            ctx.obj.config,
         )
         preliminary_path = preliminary_path.expanduser()
 

@@ -1,6 +1,7 @@
 """Provides locating segments by the desired time."""
 
 import math
+import sys
 import tempfile
 from pathlib import Path
 
@@ -114,46 +115,19 @@ class SequenceLocator:
     ) -> float:
         return desired_time - candidate.metadata.ingestion_walltime
 
-    def _refine_sequence(
-        self, initial_sequence: SegmentSequence, desired_time: Timestamp, end: bool
+    def _refine_candidate_sequence(
+        self, desired_time: Timestamp, end: bool
     ) -> SegmentSequence:
         """Refine the initial, pre-estimated sequence number using a combination
         of jump and linear search. This contains Step 2 and 3 of the algorithm.
         """
-        self.candidate = SequenceMetadataPair(initial_sequence, self)
-        initial_diff_in_s = self._find_time_diff(self.candidate, desired_time)
-        if initial_diff_in_s == 0:
-            return self.candidate.sequence
-
-        # The jump length value could be negative or positive.
-        jump_length_in_seq = int(initial_diff_in_s // self.segment_duration)
-        logger.debug(
-            "Initial time difference: %+f s, %d segments",
-            initial_diff_in_s,
-            jump_length_in_seq,
-            seq=self.candidate.sequence,
-            time=self.candidate.metadata.ingestion_walltime,
-        )
-
-        # TODO: This should be reworked to make sure that the desired time is
-        # actually in a segment of some duration and not a constant duration
-        # used in the estimation step. But before that, we have to deal with a
-        # false gap detection issue.
-        if jump_length_in_seq == 0:
-            self._download_full_segment(self.candidate.sequence)
-            return self.candidate.sequence
-
-        self.candidate.sequence += jump_length_in_seq
         current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
         logger.debug(
-            "Make a jump to segment, time difference: %+f s",
+            "Made a jump to segment, time difference: %+f s",
             current_diff_in_s,
             seq=self.candidate.sequence,
             time=self.candidate.metadata.ingestion_walltime,
         )
-
-        if current_diff_in_s == 0:
-            return self.candidate.sequence
 
         # The direction of iteration: to the right (1) or left (-1).
         direction = int(math.copysign(1, current_diff_in_s))
@@ -224,21 +198,44 @@ class SequenceLocator:
         )
 
         # Step 1. Make a trial jump to the desired sequence based on the
-        # constant segment duration.
+        # constant segment duration to find an initial candidate segment.
         diff_in_seq = find_time_diff_in_sequences(
             desired_time,
             self.reference.metadata.ingestion_walltime,
             self.segment_duration,
         )
         estimated_sequence = self.reference.sequence - diff_in_seq
-        logger.debug(f"Segment intially estimated as {estimated_sequence}")
+        logger.debug("Initial candidate segment estimated as %d", estimated_sequence)
 
-        # Step 2. Refine the previously estimated sequence.
-        try:
-            refined_sequence = self._refine_sequence(
-                estimated_sequence, desired_time, end
-            )
-            logger.info("Segment has been finally refined as %d", refined_sequence)
-            return refined_sequence
-        except SegmentDownloadError as exc:
-            raise SequenceLocatingError(exc) from exc
+        self.candidate = SequenceMetadataPair(estimated_sequence, self)
+        initial_diff_in_s = self._find_time_diff(self.candidate, desired_time)
+
+        # The jump length value could be negative or positive.
+        jump_length_in_seq = int(initial_diff_in_s // self.segment_duration)
+
+        logger.debug(
+            "Initial time difference: %+f s, %d segments",
+            initial_diff_in_s,
+            abs(jump_length_in_seq),
+            seq=self.candidate.sequence,
+            time=self.candidate.metadata.ingestion_walltime,
+        )
+
+        # Step 2. Refine the previously estimated sequence if needed.
+        need_to_refine = True
+
+        if jump_length_in_seq == 0:
+            need_to_refine = False
+
+        if need_to_refine:
+            try:
+                self.candidate.sequence += jump_length_in_seq
+                result = self._refine_candidate_sequence(desired_time, end)
+            except SegmentDownloadError as exc:
+                raise SequenceLocatingError(exc) from exc
+        else:
+            result = self.candidate.sequence
+
+        logger.info("Segment has been located as %d", result)
+
+        return result

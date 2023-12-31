@@ -1,1 +1,2 @@
-tests/data/** linguist-vendored
+tests/data/** linguist-generated
+*.ipynb linguist-documentation

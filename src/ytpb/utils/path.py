@@ -7,6 +7,7 @@ import warnings
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
+from typing import Callable, TypedDict
 
 import pathvalidate
 import unidecode
@@ -46,72 +47,6 @@ class TitleAllowedCharacters(enum.StrEnum):
     POSIX = enum.auto()
 
 
-@dataclass
-class OutputPathTemplateContext:
-    id: str
-    title: str
-    input_start_date: datetime
-    input_end_date: datetime
-    actual_start_date: datetime
-    actual_end_date: datetime
-    duration: timedelta
-
-    def _render_title(self, value: str, settings: AddressableMappingProtocol) -> str:
-        style_address = "output.title.style"
-        style = settings.traverse(style_address)
-        match style:
-            case "original" | None:
-                output = format_title_for_filename(value)
-            case "custom":
-                custom_settings = AddressableDict(
-                    settings.traverse("output.title.custom")
-                )
-                output = format_title_for_filename(
-                    value, style=style, **(custom_settings or {})
-                )
-            case _:
-                warnings.warn(
-                    f"Unknown style '{style}', fallback to 'original'. "
-                    f"Check the {style_address} settings"
-                )
-                output = format_title_for_filename(value, style="original")
-        return output
-
-    def _render_date(
-        self, value: datetime, formatter, settings: AddressableMappingProtocol
-    ) -> str:
-        output_date_styles = settings.traverse("output.date.styles")
-        if output_date_styles:
-            return formatter.format(f"{{:{output_date_styles}}}", value)
-        else:
-            return formatter.format("{}", value)
-
-    def _render_duration(self, value) -> str:
-        return format_iso_duration(value)
-
-    def render(
-        self, variables, config_settings: AddressableMappingProtocol | None = None
-    ) -> dict[str, str]:
-        if any(["date" in x for x in variables]):
-            date_formatter = ISO8601DateFormatter()
-
-        output = {}
-        for variable in variables:
-            match variable:
-                case "title":
-                    output[variable] = self._render_title(self.title, config_settings)
-                case x if x.endswith("_date"):
-                    output[variable] = self._render_date(
-                        getattr(self, variable), date_formatter, config_settings
-                    )
-                case "duration":
-                    output[variable] = self._render_duration(self.duration)
-                case _:
-                    output[variable] = getattr(self, variable)
-
-        return output
-
-
 class ChevronTemplate(string.Template):
     """A template that supports <variable>-style substitution."""
 
@@ -124,6 +59,121 @@ class ChevronTemplate(string.Template):
             (?P<invalid>)
         )
     """
+
+
+class OutputPathContextRenderer:
+    @staticmethod
+    def render_title(value: str, settings: AddressableMappingProtocol) -> str:
+        style_address = "output.title.style"
+        style = settings.traverse(style_address)
+        match style:
+            case "original" | None:
+                output = format_title_for_filename(value)
+            case "custom":
+                custom_settings = AddressableDict(
+                    settings.traverse("output.title.custom")
+                )
+                output = format_title_for_filename(
+                    value, style=style, **custom_settings
+                )
+            case _:
+                warnings.warn(
+                    f"Unknown style '{style}', fallback to 'original'. "
+                    f"Check the {style_address} settings"
+                )
+                output = format_title_for_filename(value, style="original")
+        return output
+
+    @staticmethod
+    def render_date(
+        value: datetime, formatter, settings: AddressableMappingProtocol
+    ) -> str:
+        output_date_styles = settings.traverse("output.date.styles")
+        if output_date_styles:
+            return formatter.format(f"{{:{output_date_styles}}}", value)
+        else:
+            return formatter.format("{}", value)
+
+    @staticmethod
+    def render_duration(value, settings: AddressableMappingProtocol) -> str:
+        return format_iso_duration(value)
+
+
+class MinimalOutputPathContext(TypedDict):
+    id: str
+    title: str
+
+
+class IntervalOutputPathContext(TypedDict):
+    input_start_date: datetime
+    input_end_date: datetime
+    actual_start_date: datetime
+    actual_end_date: datetime
+    duration: timedelta
+
+
+def render_minimal_output_path_context(
+    context: MinimalOutputPathContext,
+    config_settings: AddressableMappingProtocol | None = None,
+) -> MinimalOutputPathContext:
+    config_settings = config_settings or AddressableMappingProtocol({})
+    output: MinimalOutputPathContext = {}
+    for variable in MinimalOutputPathContext.__annotations__.keys():
+        match variable:
+            case "title" as x:
+                output[x] = OutputPathContextRenderer.render_title(
+                    context[x], config_settings
+                )
+            case _ as x:
+                output[x] = context[x]
+    return output
+
+
+def render_interval_output_path_context(
+    context: IntervalOutputPathContext,
+    config_settings: AddressableMappingProtocol | None = None,
+) -> IntervalOutputPathContext:
+    config_settings = config_settings or AddressableMappingProtocol({})
+
+    date_formatter = ISO8601DateFormatter()
+
+    output: IntervalOutputPathContext = {}
+    for variable in IntervalOutputPathContext.__annotations__.keys():
+        match variable:
+            case x if x.endswith("_date"):
+                output[x] = OutputPathContextRenderer.render_date(
+                    context[x], date_formatter, config_settings
+                )
+            case "duration" as x:
+                output[x] = OutputPathContextRenderer.render_duration(
+                    context[x], config_settings
+                )
+            case _ as x:
+                output[x] = context[x]
+
+    return output
+
+
+def expand_template_output_path(
+    path: Path,
+    template_context: dict,
+    render_function: Callable[[str, dict, AddressableMappingProtocol], dict],
+    config_settings: AddressableMappingProtocol | None = None,
+) -> Path:
+    if config_settings is None:
+        config_settings = AddressableDict({})
+
+    path_string = str(path)
+
+    matched_variables = OUTPUT_PATH_PLACEHOLDER_RE.findall(path_string)
+    known_variables = set(template_context.keys())
+    if unknown_variables := set(matched_variables) - known_variables:
+        warnings.warn(f"Unknown variables: {unknown_variables}")
+
+    rendered_context = render_function(path_string, template_context, config_settings)
+    output = ChevronTemplate(path_string).substitute(rendered_context)
+
+    return Path(output)
 
 
 def sanitize_filename(value: str) -> str:
@@ -256,19 +306,3 @@ def compose_excerpt_filename(
         output_filename += f".{extension}"
 
     return output_filename
-
-
-def expand_template_output_path(
-    value: Path,
-    template_context: OutputPathTemplateContext,
-    config_settings: AddressableMappingProtocol | None = None,
-) -> Path:
-    if config_settings is None:
-        config_settings = AddressableDict({})
-    value_string = str(value)
-
-    matched_variables = OUTPUT_PATH_PLACEHOLDER_RE.findall(value_string)
-    rendered = template_context.render(matched_variables, config_settings)
-    output = ChevronTemplate(value_string).substitute(rendered)
-
-    return Path(output)

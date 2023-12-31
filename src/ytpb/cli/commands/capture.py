@@ -43,15 +43,47 @@ from ytpb.info import BroadcastStatus
 from ytpb.locate import SequenceLocator
 from ytpb.playback import Playback
 from ytpb.segment import Segment
-from ytpb.types import AbsolutePointInStream, SegmentSequence
+from ytpb.types import (
+    AbsolutePointInStream,
+    AddressableMappingProtocol,
+    SegmentSequence,
+)
+from ytpb.utils.date import ISO8601DateFormatter
 from ytpb.utils.path import (
     expand_template_output_path,
+    MinimalOutputPathContext,
     OUTPUT_PATH_PLACEHOLDER_RE,
-    OutputPathTemplateContext,
+    OutputPathContextRenderer,
+    render_minimal_output_path_context,
 )
 from ytpb.utils.remote import request_reference_sequence
 
 logger = structlog.get_logger(__name__)
+
+
+class CaptureOutputPathContext(MinimalOutputPathContext):
+    moment_date: datetime
+
+
+def render_capture_output_path_context(
+    path: Path,
+    context: CaptureOutputPathContext,
+    config_settings: AddressableMappingProtocol,
+) -> CaptureOutputPathContext:
+    output = context
+    for variable in CaptureOutputPathContext.__annotations__.keys():
+        match variable:
+            case "moment_date" as x:
+                date_formatter = ISO8601DateFormatter()
+                output[x] = OutputPathContextRenderer.render_date(
+                    context[x], date_formatter, config_settings
+                )
+            case _ as x:
+                output[x] = context[x]
+
+    output |= render_minimal_output_path_context(context, config_settings)
+
+    return output
 
 
 def validate_image_output_path(
@@ -110,7 +142,7 @@ def save_frame_as_image(video_path: Path, target_time: float, output_path: Path)
     "--output",
     type=click.Path(path_type=Path),
     help="Output image path (with extension).",
-    default="<id>_<input_start_date>.jpg",
+    default="<id>_<moment_date>.jpg",
     callback=validate_image_output_path,
 )
 @yt_dlp_option
@@ -215,17 +247,16 @@ def capture_command(
     )
     if output_path_contains_template:
         input_timezone = actual_moment_date.tzinfo
-        template_context = OutputPathTemplateContext(
-            playback.video_id,
-            playback.info.title,
-            actual_moment_date,
-            None,
-            actual_moment_date,
-            None,
-            None,
-        )
+        template_context: MpdOutputPathContext = {
+            "id": playback.video_id,
+            "title": playback.info.title,
+            "moment_date": requested_moment_date,
+        }
         preliminary_path = expand_template_output_path(
-            preliminary_path, template_context, ctx.obj.config
+            preliminary_path,
+            template_context,
+            render_capture_output_path_context,
+            ctx.obj.config,
         )
         preliminary_path = preliminary_path.expanduser()
 

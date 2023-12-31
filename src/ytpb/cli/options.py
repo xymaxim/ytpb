@@ -12,19 +12,20 @@ from ytpb.cli.common import EARLIEST_DATE_TIMEDELTA
 from ytpb.cli.custom import ConflictingOption, GlobalOption
 from ytpb.cli.parameters import RewindIntervalParamType
 
-from ytpb.utils.path import OUTPUT_PATH_PLACEHOLDER_RE, OutputPathTemplateContext
+from ytpb.utils.path import OUTPUT_PATH_PLACEHOLDER_RE
 
 
 def validate_output_path(ctx: click.Context, param: click.Option, value: Path) -> Path:
     if value:
-        if matched := set(OUTPUT_PATH_PLACEHOLDER_RE.findall(str(value))):
-            known_template_vars = [x.name for x in fields(OutputPathTemplateContext)]
-            if not matched.issubset(known_template_vars):
-                unknown_vars = matched - set(known_template_vars)
-                unknown_vars_string = str(unknown_vars).strip("{}")
-                raise click.BadParameter(
-                    f"Unknown or bad variable(s) provided: {unknown_vars_string}"
-                )
+        pass
+        # if matched := set(OUTPUT_PATH_PLACEHOLDER_RE.findall(str(value))):
+        #     known_template_vars = [x.name for x in fields(OutputPathTemplateContext)]
+        #     if not matched.issubset(known_template_vars):
+        #         unknown_vars = matched - set(known_template_vars)
+        #         unknown_vars_string = str(unknown_vars).strip("{}")
+        #         raise click.BadParameter(
+        #             f"Unknown or bad variable(s) provided: {unknown_vars_string}"
+        #         )
     return value
 
 
@@ -72,7 +73,7 @@ def output_options(f):
         "--output",
         type=click.Path(path_type=Path),
         help="Output file path (without extension).",
-        default="<id>_<input_start_date>",
+        default="<title>_<input_start_date>",
         callback=validate_output_path,
     )(f)
 

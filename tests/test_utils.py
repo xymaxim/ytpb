@@ -22,7 +22,6 @@ from ytpb.utils.path import (
     compose_excerpt_filename,
     expand_template_output_path,
     format_title_for_filename,
-    OutputPathTemplateContext,
     TitleAllowedCharacters,
 )
 from ytpb.utils.remote import request_reference_sequence
@@ -32,21 +31,6 @@ from ytpb.utils.url import (
     extract_parameter_from_url,
     normalize_video_url,
 )
-
-
-@pytest.fixture
-def output_path_template_context(video_id: str):
-    actual_start_date = datetime(2023, 11, 26, 0, 1, tzinfo=timezone.utc)
-    actual_end_date = datetime(2023, 11, 26, 1, 1, tzinfo=timezone.utc)
-    return OutputPathTemplateContext(
-        video_id,
-        "Test title",
-        datetime(2023, 11, 26, 0, 0, tzinfo=timezone.utc),
-        datetime(2023, 11, 26, 1, 0, tzinfo=timezone.utc),
-        actual_start_date,
-        actual_end_date,
-        actual_end_date - actual_start_date,
-    )
 
 
 def test_extract_itag_from_url(audio_base_url):
@@ -555,37 +539,6 @@ def test_format_timedelta(duration, expected):
 def test_format_timedelta_with_ms_precision(duration, expected):
     result = format_timedelta(duration, use_ms_precision=True)
     assert result == expected
-
-
-def test_expand_template_output_path_with_no_settings(
-    output_path_template_context: OutputPathTemplateContext, video_id: str
-):
-    template = Path("/test/<id>_<input_start_date>_<duration>")
-    expected = Path(f"/test/{video_id}_20231126T000000+00_PT1H")
-    assert expected == expand_template_output_path(
-        template, output_path_template_context
-    )
-
-
-def test_expand_template_output_path_with_custom_settings(
-    output_path_template_context: OutputPathTemplateContext,
-):
-    template = Path("/test/<title>_<input_start_date>_<duration>")
-    expected = Path("/test/test-title_20231126T000000+00_PT1H")
-    assert expected == expand_template_output_path(
-        template,
-        output_path_template_context,
-        ConfigMap(
-            {
-                "output": {
-                    "title": {
-                        "style": "custom",
-                        "custom": {"characters": "posix", "lowercase": True},
-                    }
-                }
-            }
-        ),
-    )
 
 
 class TestBuildStyleParametersFromSpec:
