@@ -50,7 +50,6 @@ class TimelapseOutputPathContext(MinimalOutputPathContext, IntervalOutputPathCon
 
 
 def render_timelapse_output_path_context(
-    path: Path,
     context: TimelapseOutputPathContext,
     config_settings: AddressableMappingProtocol,
 ) -> TimelapseOutputPathContext:
