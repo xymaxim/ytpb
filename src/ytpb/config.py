@@ -124,7 +124,7 @@ DEFAULT_CONFIG = AddressableDict(
                 "custom": {
                     "characters": "posix",
                     "separator": "-",
-                    "max_length": 60,
+                    "max_length": 30,
                     "lowercase": False,
                 },
             },
