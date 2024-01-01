@@ -14,6 +14,7 @@ and download or play excerpts.
 - Precisely cuts to the exact input times without slow re-encoding
 - Composes MPEG-DASH manifest to play excerpts instantly (e.g. with `mpv
   <https://mpv.io/>`_)
+- Captures a single frame or creates time-lapse images
 - Makes use of `yt-dlp`_ to reliably extract information about videos
 
 .. _yt-dlp: https://github.com/yt-dlp/yt-dlp/
@@ -122,14 +123,32 @@ channels.
 Capture
 =======
 
-You can capture a frame (screenshot) of a moment you want to see without making
-a video. For example, let's take a picture of the moment happening right now:
+You can also capture a frame (screenshot) of a moment or frames within an
+interval without making a video.
 
-.. code:: sh
+One frame
+---------
 
-	  $ ytpb capture --moment now <STREAM>
-	  $ ls
-	  Stream-Title_20231227T012954+00.jpg
+For example, let's take a picture of the moment happening right now: ::
+
+  $ ytpb capture --moment now <STREAM>
+  $ ls
+  Stream-Title_20231227T012954+00.jpg
+
+Timelapse
+---------
+
+Not just a single frame, but a whole timelapse with one frame every period of
+time: ::
+
+  $ ytpb timelapse --interval 2024-01-02T10:20:00+00/PT30S --every 15S <STREAM>
+  $ tree Stream-Title
+  Stream-Title
+  └── 20240102T102000+00
+      └── ET15S
+          ├── Stream-Title_20240102T102000+00_ET15S_0000.jpg
+          ├── Stream-Title_20240102T102000+00_ET15S_0000.jpg
+          └── Stream-Title_20240102T102000+00_ET15S_0000.jpg
 
 Command line application
 ************************
