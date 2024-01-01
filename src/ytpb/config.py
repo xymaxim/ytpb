@@ -108,7 +108,7 @@ DEFAULT_CONFIG = AddressableDict(
             "timelapse": {
                 "video_format": "best(format eq mp4 and frame_rate eq 30)",
                 "output": (
-                    "<title>/<input_start_date>_<every>/"
+                    "<title>/<input_start_date>/<every>/"
                     "<title>_<input_start_date>_<every>_%04d.jpg"
                 ),
             },
