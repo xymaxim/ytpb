@@ -30,7 +30,7 @@ from ytpb.cli.options import (
     cache_options,
     logging_options,
     no_cleanup_option,
-    output_options,
+    validate_output_path,
     yt_dlp_option,
 )
 from ytpb.cli.parameters import (
@@ -108,7 +108,14 @@ def render_download_output_path_context(
         help="Video format to download.",
     ),
 )
-@output_options
+@click.option(
+    "-o",
+    "--output",
+    "output_path",
+    type=click.Path(path_type=Path),
+    help="Output path (without extension).",
+    callback=validate_output_path(DownloadOutputPathContext),
+)
 @click.option(
     "-m",
     "--from-manifest",
@@ -139,7 +146,7 @@ def download_command(
     preview: bool,
     audio_format: str,
     video_format: str,
-    output: Path,
+    output_path: Path,
     from_manifest: Path,
     dry_run: bool,
     yt_dlp: bool,
@@ -307,7 +314,7 @@ def download_command(
         # Absolute output path of an excerpt without extension.
         final_output_path: Path
 
-        if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output)):
+        if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output_path)):
             input_timezone = requested_date_interval.start.tzinfo
             template_context: DownloadOutputPathContext = {
                 "id": playback.video_id,
@@ -321,13 +328,13 @@ def download_command(
                 "duration": requested_end_date - requested_start_date,
             }
             final_output_path = expand_template_output_path(
-                output,
+                output_path,
                 template_context,
                 render_download_output_path_context,
                 ctx.obj.config,
             )
         else:
-            final_output_path = output
+            final_output_path = output_path
         final_output_path = resolve_output_path(final_output_path)
 
         do_download_excerpt_segments = partial(

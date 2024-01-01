@@ -30,7 +30,7 @@ from ytpb.cli.custom import OrderedGroup
 from ytpb.cli.options import (
     boundary_options,
     cache_options,
-    output_options,
+    validate_output_path,
     yt_dlp_option,
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
@@ -109,18 +109,25 @@ def mpd_group():
         help="Video format(s) to include.",
     ),
 )
-@click.pass_context
-@output_options
+@click.option(
+    "-o",
+    "--output",
+    "output_path",
+    type=click.Path(path_type=Path),
+    help="Output path (with extension).",
+    callback=validate_output_path(MpdOutputPathContext),
+)
 @yt_dlp_option
 @cache_options
 @stream_argument
+@click.pass_context
 def compose_command(
     ctx: click.Context,
     interval: types.PointInStream,
     preview: bool,
     audio_formats: str,
     video_formats: str,
-    output: Path,
+    output_path: Path,
     force_update_cache: bool,
     no_cache: bool,
     yt_dlp: bool,
@@ -241,7 +248,7 @@ def compose_command(
 
     # Absolute output path of a manifest with extension.
     final_output_path: Path
-    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output)):
+    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output_path)):
         input_timezone = requested_date_interval.start.tzinfo
         template_context: MpdOutputPathContext = {
             "id": playback.video_id,
@@ -253,13 +260,13 @@ def compose_command(
             "duration": requested_end_date - requested_start_date,
         }
         final_output_path = expand_template_output_path(
-            output,
+            output_path,
             template_context,
             render_mpd_output_path_context,
             ctx.obj.config,
         )
     else:
-        final_output_path = output
+        final_output_path = output_path
     final_output_path = resolve_output_path(final_output_path)
 
     click.echo("(<<) Composing MPEG-DASH manifest...")

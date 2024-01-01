@@ -35,6 +35,7 @@ from ytpb.cli.options import (
     boundary_options,
     cache_options,
     no_cleanup_option,
+    validate_image_output_path,
     validate_output_path,
     yt_dlp_option,
 )
@@ -87,21 +88,6 @@ def convert_every_option_to_timedelta(
             "Couldn't match repetetion format, e.g.: '30S', '1DT2H3M4S'."
         )
     return output
-
-
-def validate_image_output_path(
-    ctx: click.Context, param: click.Option, value: Path
-) -> Path:
-    if not value.suffix:
-        raise click.BadParameter("File extension must be provided.")
-
-    extensions = Image.registered_extensions()
-    supported_extensions = {ext for ext, f in extensions.items() if f in Image.SAVE}
-    if value.suffix not in supported_extensions:
-        tip = fill("Choose one of: {}".format(", ".join(sorted(supported_extensions))))
-        raise click.BadParameter(f"Format '{value.suffix}' is not supported.\n\n{tip}")
-
-    return validate_output_path(ctx, param, value)
 
 
 def print_timelapse_summary_info(
@@ -165,10 +151,10 @@ def create_capturing_progress_bar():
 @click.option(
     "-o",
     "--output",
+    "output_path",
     type=click.Path(path_type=Path),
-    help="Output image path (with extension).",
-    default="<id>_<input_start_date>.jpg",
-    callback=validate_image_output_path,
+    help="Output path (with extension).",
+    callback=validate_image_output_path(TimelapseOutputPathContext),
 )
 @yt_dlp_option
 @no_cleanup_option
@@ -330,7 +316,7 @@ def timelapse_command(
 
     # Absolute output path of images with a numeric pattern.
     final_output_path: Path
-    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output)):
+    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output_path)):
         input_timezone = requested_date_interval.start.tzinfo
         template_context: TimelapseOutputPathContext = {
             "id": playback.video_id,
@@ -343,13 +329,13 @@ def timelapse_command(
             "every": every,
         }
         preliminary_path = expand_template_output_path(
-            output,
+            output_path,
             template_context,
             render_timelapse_output_path_context,
             ctx.obj.config,
         )
     else:
-        final_output_path = output
+        final_output_path = output_path
     final_output_path = resolve_output_path(final_output_path)
 
     click.echo("(<<) Capturing frames as images:")

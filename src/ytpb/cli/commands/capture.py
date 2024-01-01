@@ -2,14 +2,12 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from textwrap import fill
-from typing import Literal
+from typing import Callable, Literal
 
 import av
 import click
 import cloup
 import structlog
-from PIL import Image
 
 from ytpb.cli.common import (
     create_playback,
@@ -22,7 +20,7 @@ from ytpb.cli.common import (
 from ytpb.cli.options import (
     cache_options,
     no_cleanup_option,
-    output_options,
+    validate_image_output_path,
     validate_output_path,
     yt_dlp_option,
 )
@@ -84,21 +82,6 @@ def render_capture_output_path_context(
     return output
 
 
-def validate_image_output_path(
-    ctx: click.Context, param: click.Option, value: Path
-) -> Path:
-    if not value.suffix:
-        raise click.BadParameter(f"File extension must be provided.")
-
-    extensions = Image.registered_extensions()
-    supported_extensions = {ext for ext, f in extensions.items() if f in Image.SAVE}
-    if value.suffix not in supported_extensions:
-        tip = fill("Choose one of: {}".format(", ".join(sorted(supported_extensions))))
-        raise click.BadParameter(f"Format '{value.suffix}' is not supported.\n\n{tip}")
-
-    return validate_output_path(ctx, param, value)
-
-
 def extract_and_save_frame_as_image(
     video_path: Path, target_time: float, output_path: Path
 ):
@@ -140,10 +123,10 @@ def extract_and_save_frame_as_image(
 @click.option(
     "-o",
     "--output",
+    "output_path",
     type=click.Path(path_type=Path),
-    help="Output image path (with extension).",
-    default="<id>_<moment_date>.jpg",
-    callback=validate_image_output_path,
+    help="Output path (with extension).",
+    callback=validate_image_output_path(CaptureOutputPathContext),
 )
 @yt_dlp_option
 @no_cleanup_option
@@ -154,7 +137,7 @@ def capture_command(
     ctx: click.Context,
     moment: AbsolutePointInStream | Literal["now"],
     video_format: str,
-    output: Path,
+    output_path: Path,
     yt_dlp: bool,
     no_cleanup: bool,
     force_update_cache: bool,
@@ -236,20 +219,20 @@ def capture_command(
 
     # Absolute output path of an image with extension.
     final_output_path: Path
-    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output)):
+    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output_path)):
         template_context: MpdOutputPathContext = {
             "id": playback.video_id,
             "title": playback.info.title,
             "moment_date": requested_moment_date,
         }
         final_output_path = expand_template_output_path(
-            output,
+            output_path,
             template_context,
             render_capture_output_path_context,
             ctx.obj.config,
         )
     else:
-        final_output_path = output
+        final_output_path = output_path
     final_output_path = resolve_output_path(final_output_path)
 
     requested_frame_offset = requested_moment_date - moment_segment.ingestion_start_date

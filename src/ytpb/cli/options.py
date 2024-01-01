@@ -3,9 +3,11 @@ import logging
 from dataclasses import fields
 from datetime import datetime, timezone
 from pathlib import Path
+from textwrap import fill
 from typing import Any, Callable
 
 import click
+from PIL import Image
 
 from ytpb.cli import parameters
 from ytpb.cli.common import EARLIEST_DATE_TIMEDELTA
@@ -15,18 +17,40 @@ from ytpb.cli.parameters import RewindIntervalParamType
 from ytpb.utils.path import OUTPUT_PATH_PLACEHOLDER_RE
 
 
-def validate_output_path(ctx: click.Context, param: click.Option, value: Path) -> Path:
-    if value:
-        pass
-        # if matched := set(OUTPUT_PATH_PLACEHOLDER_RE.findall(str(value))):
-        #     known_template_vars = [x.name for x in fields(OutputPathTemplateContext)]
-        #     if not matched.issubset(known_template_vars):
-        #         unknown_vars = matched - set(known_template_vars)
-        #         unknown_vars_string = str(unknown_vars).strip("{}")
-        #         raise click.BadParameter(
-        #             f"Unknown or bad variable(s) provided: {unknown_vars_string}"
-        #         )
-    return value
+def validate_output_path(template_context_class) -> Callable[..., Path]:
+    def wrapper(ctx: click.Context, param: click.Option, value: Path) -> Path:
+        if matched := set(OUTPUT_PATH_PLACEHOLDER_RE.findall(str(value))):
+            known_template_vars = template_context_class.__annotations__.keys()
+            if not matched.issubset(known_template_vars):
+                unknown_vars = matched - set(known_template_vars)
+                unknown_vars_string = str(unknown_vars).strip("{}")
+                raise click.BadParameter(
+                    f"Unknown variable(s) found: {unknown_vars_string}. "
+                    f"Option value: '{value}'."
+                )
+        return value
+
+    return wrapper
+
+
+def validate_image_output_path(template_context_class) -> Callable[..., Path]:
+    def wrapper(ctx: click.Context, param: click.Option, value: Path) -> Path:
+        if not value.suffix:
+            raise click.BadParameter(f"Image extension must be provided.")
+
+        extensions = Image.registered_extensions()
+        allowed_extensions = {ext for ext, f in extensions.items() if f in Image.SAVE}
+        if value.suffix not in allowed_extensions:
+            tip = fill(
+                "Choose one of: {}".format(", ".join(sorted(allowed_extensions)))
+            )
+            raise click.BadParameter(
+                f"Format '{value.suffix}' is not supported.\n\n{tip}"
+            )
+
+        return validate_output_path(template_context_class)(ctx, param, value)
+
+    return wrapper
 
 
 def validate_start_date_not_too_far(
@@ -62,19 +86,6 @@ def boundary_options(f):
         type=parameters.RewindIntervalParamType(),
         help="Time or segment interval.",
         required=True,
-    )(f)
-
-    return f
-
-
-def output_options(f):
-    f = click.option(
-        "-o",
-        "--output",
-        type=click.Path(path_type=Path),
-        help="Output file path (without extension).",
-        default="<title>_<input_start_date>",
-        callback=validate_output_path,
     )(f)
 
     return f

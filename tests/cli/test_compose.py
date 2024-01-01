@@ -48,7 +48,6 @@ def test_compose_mpd(
                 video_formats,
                 stream_url,
             ],
-            catch_exceptions=False,
         )
     assert result.exit_code == 0
     assert result.output == expected_out

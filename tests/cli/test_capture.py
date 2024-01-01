@@ -156,4 +156,4 @@ def test_not_provided_output_extension(
             catch_exceptions=False,
             standalone_mode=False,
         )
-    assert "File extension must be provided" in str(exc_info)
+    assert "Image extension must be provided" in str(exc_info)

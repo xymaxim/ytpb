@@ -89,11 +89,11 @@ DEFAULT_CONFIG = AddressableDict(
                 "video_format": (
                     "best(format eq mp4 and height le 1080 and frame_rate eq 30)"
                 ),
-                "output": DEFAULT_OUTPUT_PATH,
+                "output_path": DEFAULT_OUTPUT_PATH,
             },
             "capture": {
                 "video_format": "best(format eq mp4 and frame_rate eq 30)",
-                "output": f"<title>_<moment_date>.jpg",
+                "output_path": f"<title>_<moment_date>.jpg",
             },
             "mpd": {
                 "compose": {
@@ -102,12 +102,12 @@ DEFAULT_CONFIG = AddressableDict(
                         "format eq webm and [height eq 720 or height eq 1080] and "
                         "frame_rate eq 30"
                     ),
-                    "output": f"{DEFAULT_OUTPUT_PATH}.mpd",
+                    "output_path": f"{DEFAULT_OUTPUT_PATH}.mpd",
                 }
             },
             "timelapse": {
                 "video_format": "best(format eq mp4 and frame_rate eq 30)",
-                "output": (
+                "output_path": (
                     "<title>/<input_start_date>/<every>/"
                     "<title>_<input_start_date>_<every>_%04d.jpg"
                 ),
