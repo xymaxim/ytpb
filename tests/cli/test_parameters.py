@@ -1,6 +1,5 @@
 from datetime import datetime, timezone
 
-import click
 import pytest
 from dateutil.tz import tzlocal
 from freezegun import freeze_time
@@ -16,8 +15,8 @@ from ytpb.cli.parameters import (
 
 def test_none_format_spec():
     spec_type = FormatSpecType.AUDIO
-    assert FormatSpecParamType(spec_type).convert("none", None, None) == None
-    assert FormatSpecParamType(spec_type).convert("", None, None) == None
+    assert FormatSpecParamType(spec_type).convert("none", None, None) is None
+    assert FormatSpecParamType(spec_type).convert("", None, None) is None
 
 
 def test_format_spec_without_function():

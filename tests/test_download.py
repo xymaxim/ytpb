@@ -1,10 +1,7 @@
 import os
-import re
-from functools import partial
 from pathlib import Path
 from urllib.parse import urljoin
 
-import pytest
 import responses
 
 from ytpb.download import download_segment

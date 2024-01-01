@@ -95,7 +95,7 @@ def test_local_rewind_range_with_relative_start_and_end(
     playback.fetch_and_set_essential()
 
     with pytest.raises(ValueError):
-        sequences = playback.locate_rewind_range(start, end, itag="140")
+        playback.locate_rewind_range(start, end, itag="140")
 
 
 @pytest.mark.parametrize(
@@ -138,7 +138,7 @@ def test_locate_rewind_range_with_swapped_start_and_end(
 
     # Then:
     with pytest.raises((ValueError, SequenceLocatingError)):
-        sequences = playback.locate_rewind_range(start, end, itag="140")
+        playback.locate_rewind_range(start, end, itag="140")
 
 
 def test_download_excerpt_between_sequences_without_merging(

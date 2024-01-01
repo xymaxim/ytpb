@@ -3,12 +3,10 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from textwrap import fill
 
 import click
 import cloup
 import structlog
-from PIL import Image
 from rich.console import Console
 from rich.progress import (
     BarColumn,
@@ -36,7 +34,6 @@ from ytpb.cli.options import (
     cache_options,
     no_cleanup_option,
     validate_image_output_path,
-    validate_output_path,
     yt_dlp_option,
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewindInterval
@@ -99,7 +96,8 @@ def print_timelapse_summary_info(
         )
     )
 
-    _format_datetime = lambda x: email.utils.format_datetime(x).split(", ")[1]
+    def _format_datetime(x):
+        return email.utils.format_datetime(x).split(", ")[1]
 
     click.echo("{:>12}: {} / S".format("Frame 1", _format_datetime(dates[0])))
 
@@ -328,7 +326,7 @@ def timelapse_command(
             "duration": requested_end_date - requested_start_date,
             "every": every,
         }
-        preliminary_path = expand_template_output_path(
+        expand_template_output_path(
             output_path,
             template_context,
             render_timelapse_output_path_context,

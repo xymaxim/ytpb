@@ -1,24 +1,19 @@
-import csv
 import json
 import os
 import re
 import tempfile
-from collections.abc import Iterable
 from dataclasses import asdict
 from pathlib import Path
 from typing import Callable
 from unittest.mock import Mock, patch
 
-import platformdirs
 import pytest
 import responses
 from pytest_socket import disable_socket
 
-from ytpb import utils
-from ytpb.download import compose_default_segment_filename
 from ytpb.info import BroadcastStatus, YouTubeVideoInfo
 from ytpb.playback import InfoFetcher, Playback
-from ytpb.segment import Segment, SegmentMetadata
+from ytpb.segment import Segment
 from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, AudioStream, VideoStream
 from ytpb.utils.url import extract_parameter_from_url

@@ -6,7 +6,6 @@ from pathlib import Path
 
 import click
 import cloup
-import requests
 import structlog
 
 from ytpb.cli.custom import get_parameter_by_name
@@ -16,8 +15,6 @@ from ytpb.exceptions import (
     BroadcastStatusError,
     CachedItemNotFoundError,
     QueryError,
-    SegmentDownloadError,
-    SequenceLocatingError,
 )
 
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
@@ -26,7 +23,6 @@ from ytpb.playback import Playback
 from ytpb.segment import Segment
 from ytpb.types import DateInterval, SequenceRange, SetOfStreams
 from ytpb.utils.date import format_timedelta, round_date
-from ytpb.utils.remote import request_reference_sequence
 from ytpb.utils.url import extract_parameter_from_url, normalize_video_url
 
 logger = structlog.getLogger(__name__)

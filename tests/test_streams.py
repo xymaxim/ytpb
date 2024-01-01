@@ -18,7 +18,7 @@ def test_abstract_methods(streams_in_list: list[AudioOrVideoStream]):
         base_url="test",
     )
     assert streams_in_list[0] in streams
-    assert not unknown_stream in streams
+    assert unknown_stream not in streams
 
 
 def test_filter(streams_in_list: list[AudioOrVideoStream]):

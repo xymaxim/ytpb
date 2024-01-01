@@ -6,7 +6,6 @@ import pytest
 from conftest import TEST_DATA_PATH
 
 from utils import assert_approx_duration, assert_number_of_streams
-from ytpb.ffmpeg import ffprobe_show_entries
 from ytpb.merge import merge_segments
 
 SEGMENT_BASE_PATH = Path(TEST_DATA_PATH) / "segments"

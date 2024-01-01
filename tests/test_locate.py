@@ -1,11 +1,8 @@
 import csv
-import logging
 from pathlib import Path
 from typing import NamedTuple
-from unittest.mock import MagicMock, patch
 
 import pytest
-import responses
 
 from conftest import TEST_DATA_PATH
 from ytpb.locate import SequenceLocator, SequenceMetadataPair
@@ -23,7 +20,7 @@ def read_gap_case_fixture_data(path: Path) -> dict:
     data = {}
     with open(path) as f:
         reader = csv.reader(f, delimiter=",")
-        column_names = next(reader)
+        next(reader)
         for fields in reader:
             row = Row(*fields)
             data[int(row.sequence)] = (

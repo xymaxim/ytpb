@@ -5,7 +5,7 @@ import string
 import warnings
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
-from typing import Any, Literal, NamedTuple
+from typing import Any, Literal
 
 
 @dataclass

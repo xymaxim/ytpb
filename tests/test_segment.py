@@ -1,12 +1,6 @@
-import math
-import os
-import re
 from dataclasses import asdict
-from typing import Callable
-from urllib.parse import urljoin
 
 import pytest
-import responses
 
 from ytpb.segment import Segment
 
@@ -25,8 +19,9 @@ def test_segment_metadata_parsing() -> None:
         "first_frame_time": 1679329560.650712,
         "first_frame_uncertainty": 8.7e-5,
         "encoding_alias": "L1_Bg",
-        "streamable": None
+        "streamable": None,
     }
+
 
 def test_another_segment_metadata_parsing() -> None:
     content = b"Sequence-Number: 19447394\r\nIngestion-Walltime-Us: 1703082200383647\r\nIngestion-Uncertainty-Us: 80\r\nStream-Duration-Us: 38894190937000\r\nMax-Dvr-Duration-Us: 7200000000\r\nTarget-Duration-Us: 2000000\r\nStreamable: T\r\nFirst-Frame-Time-Us: 1703082201132871\r\nFirst-Frame-Uncertainty-Us: 83\r\nEncoding-Alias: L1_Bg\r\n"
@@ -42,7 +37,7 @@ def test_another_segment_metadata_parsing() -> None:
         "first_frame_time": 1703082201.132871,
         "first_frame_uncertainty": 8.3e-5,
         "encoding_alias": "L1_Bg",
-        "streamable": "T"
+        "streamable": "T",
     }
 
 

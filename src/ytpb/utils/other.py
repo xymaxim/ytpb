@@ -1,11 +1,9 @@
 import logging
-import tempfile
-from datetime import datetime, timedelta
 from pathlib import Path
 
 from platformdirs import user_cache_path
 
-from ytpb.types import RelativePointInStream, RelativeSegmentSequence, SegmentSequence
+from ytpb.types import RelativePointInStream
 
 logger = logging.getLogger(__name__)
 

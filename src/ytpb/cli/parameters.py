@@ -1,5 +1,4 @@
 import logging
-import re
 from datetime import datetime, time
 from enum import auto, StrEnum
 from typing import Literal, NamedTuple
@@ -136,7 +135,7 @@ class RewindIntervalParamType(click.ParamType):
                 )
             # Duration and '..'
             case [timedelta(), ".."]:
-                raise click.BadParameter(f"Keyword '..' not compatible with duration.")
+                raise click.BadParameter("Keyword '..' not compatible with duration.")
             # Anything compatible and 'now' or '..'
             case [int() | datetime() | timedelta(), "now" | ".."]:
                 start = parsed_start

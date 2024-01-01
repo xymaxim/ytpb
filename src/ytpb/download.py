@@ -1,5 +1,4 @@
 import io
-import logging
 import os
 from pathlib import Path
 from typing import Callable
@@ -39,13 +38,13 @@ def _make_request_for_segment(
 
     try:
         response.raise_for_status()
-    except requests.exceptions.HTTPError as e:
+    except requests.exceptions.HTTPError:
         exception = SegmentDownloadError(
             f"Failed to download segment {sequence}: {response.reason}", sequence
         )
         logger.error(exception, exc_info=True)
         raise exception from None
-    
+
     if size and response.status_code == requests.codes.ok:
         logger.debug("Header 'Range' is ignored, downloaded all content")
 

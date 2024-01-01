@@ -11,7 +11,6 @@ from ytpb.cli.commands.capture import capture_command
 from ytpb.cli.commands.download import download_command
 from ytpb.cli.commands.mpd import mpd_group
 from ytpb.cli.commands.timelapse import timelapse_command
-from ytpb.cli.custom import OrderedGroup
 from ytpb.cli.options import config_options, logging_options
 
 from ytpb.config import (

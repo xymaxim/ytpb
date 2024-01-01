@@ -1,12 +1,9 @@
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 
 import pytest
 import responses
 
-from ytpb.config import DEFAULT_CONFIG
 from ytpb.exceptions import BadCommandArgument, YtpbError
-from ytpb.types import ConfigMap
 from ytpb.utils.date import (
     build_style_parameters_from_spec,
     DurationFormatPattern,
@@ -20,7 +17,6 @@ from ytpb.utils.date import (
 from ytpb.utils.path import (
     adjust_title_for_filename,
     compose_excerpt_filename,
-    expand_template_output_path,
     format_title_for_filename,
     TitleAllowedCharacters,
 )
@@ -572,8 +568,8 @@ class TestBuildStyleParametersFromSpec:
         assert str(record[0].message) == "Ignoring unknown style(s): invalid, unknown"
 
     def test_empty_or_none_style(self):
-        assert None == build_style_parameters_from_spec("")
-        assert None == build_style_parameters_from_spec(None)
+        assert None is build_style_parameters_from_spec("")
+        assert None is build_style_parameters_from_spec(None)
 
 
 @pytest.mark.parametrize(

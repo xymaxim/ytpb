@@ -10,7 +10,6 @@ from rich.console import Console
 from rich.table import Table
 
 from ytpb import types
-from ytpb.cli import parameters
 from ytpb.cli.commands.download import (
     DownloadOutputPathContext,
     render_download_output_path_context,
@@ -18,7 +17,6 @@ from ytpb.cli.commands.download import (
 from ytpb.cli.common import (
     CONSOLE_TEXT_WIDTH,
     create_playback,
-    get_downloaded_segment,
     print_summary_info,
     query_streams_or_exit,
     raise_for_sequence_ahead_of_current,
@@ -26,7 +24,6 @@ from ytpb.cli.common import (
     resolve_output_path,
     stream_argument,
 )
-from ytpb.cli.custom import OrderedGroup
 from ytpb.cli.options import (
     boundary_options,
     cache_options,
@@ -35,13 +32,11 @@ from ytpb.cli.options import (
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
 from ytpb.compose import compose_mpd, refresh_mpd
-from ytpb.download import download_segment
-from ytpb.exceptions import BroadcastStatusError, CachedItemNotFoundError
+from ytpb.exceptions import BroadcastStatusError
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
 from ytpb.mpd import extract_representations_info
 from ytpb.playback import Playback
-from ytpb.segment import Segment
 from ytpb.streams import Streams
 from ytpb.types import DateInterval, SegmentSequence
 from ytpb.utils.date import express_timedelta_in_words

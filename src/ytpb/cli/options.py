@@ -1,10 +1,7 @@
-import functools
-import logging
-from dataclasses import fields
 from datetime import datetime, timezone
 from pathlib import Path
 from textwrap import fill
-from typing import Any, Callable
+from typing import Callable
 
 import click
 from PIL import Image
@@ -12,7 +9,6 @@ from PIL import Image
 from ytpb.cli import parameters
 from ytpb.cli.common import EARLIEST_DATE_TIMEDELTA
 from ytpb.cli.custom import ConflictingOption, GlobalOption
-from ytpb.cli.parameters import RewindIntervalParamType
 
 from ytpb.utils.path import OUTPUT_PATH_PLACEHOLDER_RE
 
@@ -36,7 +32,7 @@ def validate_output_path(template_context_class) -> Callable[..., Path]:
 def validate_image_output_path(template_context_class) -> Callable[..., Path]:
     def wrapper(ctx: click.Context, param: click.Option, value: Path) -> Path:
         if not value.suffix:
-            raise click.BadParameter(f"Image extension must be provided.")
+            raise click.BadParameter("Image extension must be provided.")
 
         extensions = Image.registered_extensions()
         allowed_extensions = {ext for ext, f in extensions.items() if f in Image.SAVE}

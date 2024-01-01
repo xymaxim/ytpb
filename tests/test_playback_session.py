@@ -1,15 +1,13 @@
 import copy
 from dataclasses import asdict
-from pathlib import Path
-from typing import Callable
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 from urllib.parse import urljoin
 
 import pytest
 import responses
 from ytpb.exceptions import MaxRetryError
 
-from ytpb.playback import Playback, PlaybackSession
+from ytpb.playback import Playback
 from ytpb.streams import AudioStream, Streams
 
 
@@ -81,7 +79,7 @@ def test_max_retries_exceeded_with_segment_url(
     playback.fetch_and_set_essential()
 
     with pytest.raises(MaxRetryError) as exc_info:
-        response = playback.session.get(segment_url)
+        playback.session.get(segment_url)
 
     assert exc_info.value.response.status_code == 403
 

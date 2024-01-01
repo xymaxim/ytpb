@@ -3,20 +3,13 @@ import sys
 from datetime import datetime, timedelta
 from functools import partial
 from pathlib import Path
-from typing import Literal
 
 import click
 import cloup
 import structlog
-from requests.exceptions import HTTPError
 
-from ytpb import types
-from ytpb.cli import parameters
 from ytpb.cli.common import (
-    check_end_options,
-    check_streams_not_empty,
     create_playback,
-    get_downloaded_segment,
     print_summary_info,
     query_streams_or_exit,
     raise_for_sequence_ahead_of_current,
@@ -28,31 +21,13 @@ from ytpb.cli.custom import get_parameter_by_name
 from ytpb.cli.options import (
     boundary_options,
     cache_options,
-    logging_options,
     no_cleanup_option,
     validate_output_path,
     yt_dlp_option,
 )
-from ytpb.cli.parameters import (
-    FormatSpecParamType,
-    FormatSpecType,
-    InputRewindInterval,
-    RewindIntervalParamType,
-)
-from ytpb.download import download_segment
-from ytpb.exceptions import (
-    BaseUrlExpiredError,
-    BroadcastStatusError,
-    CachedItemNotFoundError,
-    QueryError,
-    SegmentDownloadError,
-    SequenceLocatingError,
-)
-from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
-from ytpb.info import BroadcastStatus
+from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewindInterval
+from ytpb.exceptions import SequenceLocatingError
 from ytpb.merge import merge_segments
-from ytpb.playback import Playback
-from ytpb.segment import Segment
 from ytpb.types import (
     AddressableMappingProtocol,
     DateInterval,
@@ -247,7 +222,7 @@ def download_command(
             requested_end,
             itag=reference_stream.itag,
         )
-    except SequenceLocatingError as exc:
+    except SequenceLocatingError:
         message = "\nerror: An error occured during segment locating, exit."
         click.echo(message, err=True)
         sys.exit(1)

@@ -4,7 +4,6 @@ import string
 import textwrap
 import unicodedata
 import warnings
-from dataclasses import dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable, TypedDict

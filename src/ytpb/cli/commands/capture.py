@@ -2,7 +2,7 @@ import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Literal
 
 import av
 import click
@@ -21,7 +21,6 @@ from ytpb.cli.options import (
     cache_options,
     no_cleanup_option,
     validate_image_output_path,
-    validate_output_path,
     yt_dlp_option,
 )
 from ytpb.cli.parameters import (
@@ -29,18 +28,8 @@ from ytpb.cli.parameters import (
     FormatSpecType,
     PointInStreamParamType,
 )
-from ytpb.download import download_segment
-from ytpb.exceptions import (
-    BroadcastStatusError,
-    CachedItemNotFoundError,
-    QueryError,
-    SegmentDownloadError,
-    SequenceLocatingError,
-)
-from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
-from ytpb.info import BroadcastStatus
+from ytpb.exceptions import QueryError, SegmentDownloadError, SequenceLocatingError
 from ytpb.locate import SequenceLocator
-from ytpb.playback import Playback
 from ytpb.segment import Segment
 from ytpb.types import (
     AbsolutePointInStream,

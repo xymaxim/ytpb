@@ -1,9 +1,7 @@
 import logging
-import os
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from io import BytesIO
 from pathlib import Path
 
 import av
@@ -71,8 +69,10 @@ class Segment:
     @staticmethod
     def parse_youtube_metadata(content: bytes) -> SegmentMetadata:
         optional_fields = ("Streamable", "Encoding-Alias")
-        
-        def _search_for_metadata_field(name: str, content: bytes, optional: bool = False) -> bytes | None:
+
+        def _search_for_metadata_field(
+            name: str, content: bytes, optional: bool = False
+        ) -> bytes | None:
             if matched := re.search(rf"{name}:\s(.+)\r\n".encode(), content):
                 value = matched.group(1)
             else:

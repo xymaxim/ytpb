@@ -8,7 +8,6 @@ from urllib.parse import urljoin
 import click
 
 import pytest
-import responses
 
 import toml
 from freezegun import freeze_time
@@ -899,7 +898,7 @@ def test_with_non_existent_config_file_via_option(
     with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         with pytest.raises(click.FileError) as exc_info:
-            result = ytpb_cli_invoke(
+            ytpb_cli_invoke(
                 [
                     "--config",
                     test_config_path,
@@ -952,7 +951,7 @@ def test_no_config_option(
     with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         with pytest.raises(click.MissingParameter) as exc_info:
-            result = ytpb_cli_invoke(
+            ytpb_cli_invoke(
                 [
                     "--no-config",
                     "download",
@@ -999,7 +998,7 @@ def test_conflicting_config_and_no_config_options(
     with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         with pytest.raises(click.UsageError) as exc_info:
-            result = ytpb_cli_invoke(
+            ytpb_cli_invoke(
                 [
                     "--no-config",
                     "--config",
@@ -1063,7 +1062,7 @@ def test_download_via_invalid_stream_id(
     run_temp_directory: Path,
 ) -> None:
     with pytest.raises(click.BadParameter):
-        result = ytpb_cli_invoke(
+        ytpb_cli_invoke(
             [
                 "--no-config",
                 "download",
