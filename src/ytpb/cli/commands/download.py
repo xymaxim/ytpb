@@ -18,8 +18,10 @@ from ytpb.cli.common import (
     create_playback,
     get_downloaded_segment,
     print_summary_info,
+    query_streams_or_exit,
     raise_for_sequence_ahead_of_current,
     raise_for_too_far_sequence,
+    resolve_output_path,
     stream_argument,
 )
 from ytpb.cli.custom import get_parameter_by_name
@@ -158,87 +160,44 @@ def download_command(
 
     playback = create_playback(ctx)
 
+    queried_audio_streams = []
     if audio_format:
         logger.debug("Query audio stream by format spec", spec=audio_format)
-        try:
-            queried_audio_streams = playback.streams.query(audio_format)
-        except QueryError as exc:
-            click.echo(f"\nerror: Failed to query audio streams. {exc}", err=True)
-            sys.exit(1)
-    else:
-        queried_audio_streams = []
+        queried_audio_streams = query_streams_or_exit(
+            playback.streams, audio_format, "--audio-format", allow_many=False
+        )
+
+    queried_video_streams = []
     if video_format:
         logger.debug("Query video stream by format spec", spec=video_format)
-        try:
-            queried_video_streams = playback.streams.query(video_format)
-        except QueryError as exc:
-            click.echo(f"\nerror: Failed to query video streams. {exc}", err=True)
-            sys.exit(1)
+        queried_video_streams = query_streams_or_exit(
+            playback.streams, video_format, "--video-format", allow_many=False
+        )
+
+    if queried_audio_streams and queried_video_streams:
+        click.echo("These representations will be downloaded:")
     else:
-        queried_video_streams = []
+        click.echo("This representation will be downloaded:")
 
-    check_streams_not_empty(
-        queried_audio_streams,
-        audio_format,
-        queried_video_streams,
-        video_format,
-    )
+    audio_stream, video_stream = None, None
+    if audio_format:
+        (audio_stream,) = queried_audio_streams
+        click.echo(
+            f"   - Audio: itag {audio_stream.itag}, "
+            f"{audio_stream.format} ({audio_stream.codecs}), "
+            f"{audio_stream.audio_sampling_rate} Hz"
+        )
+        logger.info("Queried audio stream", base_url=audio_stream.base_url)
 
-    are_both_streams_ambiguous = (
-        len(queried_audio_streams) > 1 and len(queried_video_streams) > 1
-    )
-    ambiguous_tip = (
-        "Found more than one formats matching a format spec.\n"
-        "Please be more explicit, or try 'yt-dlp --live-from-start -F ...' first."
-    )
-    if not are_both_streams_ambiguous:
-        if len(queried_audio_streams) == 1 and len(queried_video_streams) == 1:
-            click.echo("These representations will be downloaded:")
-        elif len(queried_audio_streams) == 1:
-            click.echo("This representation will be downloaded:")
-
-        audio_stream, video_stream = None, None
-        if audio_format:
-            if len(queried_audio_streams) == 1:
-                audio_stream = queried_audio_streams[0]
-                click.echo(
-                    f"   - Audio: itag {audio_stream.itag}, "
-                    f"{audio_stream.format} ({audio_stream.codecs}), "
-                    f"{audio_stream.audio_sampling_rate} Hz"
-                )
-                logger.info("Queried audio stream", base_url=audio_stream.base_url)
-            else:
-                logger.error(
-                    "Too many queried audio streams",
-                    itags=[s.itag for s in queried_audio_streams],
-                )
-                click.echo("error: Audio format spec is ambiguous.\n", err=True)
-                click.echo(ambiguous_tip, err=True)
-                sys.exit(1)
-
-        if video_format:
-            if len(queried_video_streams) == 1:
-                video_stream = queried_video_streams[0]
-                click.echo(
-                    f"   - Video: itag {video_stream.itag}, "
-                    f"{video_stream.format} ({video_stream.codecs}), "
-                    f"{video_stream.width}x{video_stream.height}, "
-                    f"{video_stream.frame_rate} fps"
-                )
-                logger.info("Queried video stream", base_url=video_stream.base_url)
-            else:
-                logger.error(
-                    "Too many queried video streams",
-                    itags=[s.itag for s in queried_video_streams],
-                )
-                click.echo("error: Video format spec is ambiguous.\n", err=True)
-                click.echo(ambiguous_tip, err=True)
-                sys.exit(1)
-    else:
-        message = "error: Both audio and video format specs are ambiguous.\n"
-        click.echo(message, err=True)
-        click.echo(ambiguous_tip, err=True)
-        sys.exit(1)
+    if video_format:
+        (video_stream,) = queried_video_streams
+        click.echo(
+            f"   - Video: itag {video_stream.itag}, "
+            f"{video_stream.format} ({video_stream.codecs}), "
+            f"{video_stream.width}x{video_stream.height}, "
+            f"{video_stream.frame_rate} fps"
+        )
+        logger.info("Queried video stream", base_url=video_stream.base_url)
 
     click.echo()
     click.echo("(<<) Locating start and end in the stream... ", nl=False)
@@ -291,46 +250,10 @@ def download_command(
     if preview and interval[1] != "..":
         click.echo("info: The preview mode is enabled, interval end is ignored.")
 
-    for point in (requested_start, requested_end):
-        if type(point) is SegmentSequence:
-            sequence = point
-            try:
-                download_segment(
-                    sequence,
-                    reference_base_url,
-                    output_directory=playback.get_temp_directory(),
-                    session=playback.session,
-                    force_download=False,
-                )
-            except SegmentDownloadError as exc:
-                click.echo()
-                logger.error(exc, sequence=exc.sequence, exc_info=True)
-                sys.exit(1)
-
-    try:
-        start_segment = playback.get_downloaded_segment(
-            rewind_range.start, reference_base_url
-        )
-    except FileNotFoundError:
-        downloaded_path = download_segment(
-            rewind_range.start,
-            reference_base_url,
-            playback.get_temp_directory(),
-            session=playback.session,
-        )
-        start_segment = Segment.from_file(downloaded_path)
-    try:
-        end_segment = playback.get_downloaded_segment(
-            rewind_range.end, reference_base_url
-        )
-    except FileNotFoundError:
-        downloaded_path = download_segment(
-            rewind_range.end,
-            reference_base_url,
-            playback.get_temp_directory(),
-            session=playback.session,
-        )
-        end_segment = Segment.from_file(downloaded_path)
+    start_segment = playback.get_downloaded_segment(
+        rewind_range.start, reference_base_url
+    )
+    end_segment = playback.get_downloaded_segment(rewind_range.end, reference_base_url)
 
     requested_start_date: datetime
     match requested_start:
@@ -371,8 +294,8 @@ def download_command(
         }
         if not no_merge:
             actual_date_interval = DateInterval(
-                start=actual_date_interval.start + timedelta(seconds=cut_at_start_s),
-                end=actual_date_interval.end - timedelta(seconds=cut_at_end_s),
+                actual_date_interval.start + timedelta(seconds=cut_at_start_s),
+                actual_date_interval.end - timedelta(seconds=cut_at_end_s),
             )
 
     print_summary_info(requested_date_interval, actual_date_interval, rewind_range)
@@ -381,11 +304,10 @@ def download_command(
     if dry_run:
         click.echo("notice: This is a dry run. Skip downloading and exit.")
     else:
-        preliminary_path = output
-        output_path_contains_template = OUTPUT_PATH_PLACEHOLDER_RE.search(
-            str(preliminary_path)
-        )
-        if output_path_contains_template:
+        # Absolute output path of an excerpt without extension.
+        final_output_path: Path
+
+        if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output)):
             input_timezone = requested_date_interval.start.tzinfo
             template_context: DownloadOutputPathContext = {
                 "id": playback.video_id,
@@ -398,17 +320,15 @@ def download_command(
                 "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
                 "duration": requested_end_date - requested_start_date,
             }
-            preliminary_path = expand_template_output_path(
-                preliminary_path,
+            final_output_path = expand_template_output_path(
+                output,
                 template_context,
                 render_download_output_path_context,
                 ctx.obj.config,
             )
-            preliminary_path = preliminary_path.expanduser()
-
-        # Full absolute excerpt output path without extension.
-        final_output_path = Path(preliminary_path).resolve()
-        Path.mkdir(final_output_path.parent, parents=True, exist_ok=True)
+        else:
+            final_output_path = output
+        final_output_path = resolve_output_path(final_output_path)
 
         do_download_excerpt_segments = partial(
             playback.download_excerpt,

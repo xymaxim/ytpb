@@ -1,6 +1,7 @@
 Run playback for https://www.youtube.com/watch?v=kHwmzef842g
 (<<) Collecting info about the video...
 Stream 'Webcam Zürich HB' is alive!
+This representation will be downloaded:
    - Video: itag 244, webm (vp9), 854x480, 30 fps
 
 (<<) Locating start and end in the stream... done.

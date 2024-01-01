@@ -27,6 +27,7 @@ from ytpb.cli.common import (
     create_playback,
     raise_for_sequence_ahead_of_current,
     raise_for_too_far_sequence,
+    resolve_output_path,
     stream_argument,
 )
 from ytpb.cli.custom import get_parameter_by_name
@@ -327,11 +328,9 @@ def timelapse_command(
 
     length_of_timelapse = len(dates_to_capture)
 
-    preliminary_path = output
-    output_path_contains_template = OUTPUT_PATH_PLACEHOLDER_RE.search(
-        str(preliminary_path)
-    )
-    if output_path_contains_template:
+    # Absolute output path of images with a numeric pattern.
+    final_output_path: Path
+    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output)):
         input_timezone = requested_date_interval.start.tzinfo
         template_context: TimelapseOutputPathContext = {
             "id": playback.video_id,
@@ -344,16 +343,14 @@ def timelapse_command(
             "every": every,
         }
         preliminary_path = expand_template_output_path(
-            preliminary_path,
+            output,
             template_context,
             render_timelapse_output_path_context,
             ctx.obj.config,
         )
-        preliminary_path = preliminary_path.expanduser()
-
-    # Full absolute excerpt output path without extension.
-    final_output_path = Path(preliminary_path).resolve()
-    final_output_path.parent.mkdir(parents=True, exist_ok=True)
+    else:
+        final_output_path = output
+    final_output_path = resolve_output_path(final_output_path)
 
     click.echo("(<<) Capturing frames as images:")
 

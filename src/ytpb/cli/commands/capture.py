@@ -16,6 +16,7 @@ from ytpb.cli.common import (
     prepare_line_for_summary_info,
     raise_for_sequence_ahead_of_current,
     raise_for_too_far_sequence,
+    resolve_output_path,
     stream_argument,
 )
 from ytpb.cli.options import (
@@ -205,19 +206,12 @@ def capture_command(
     click.echo("done.")
 
     try:
-        downloaded_path = download_segment(
-            moment_sequence,
-            reference_base_url,
-            output_directory=playback.get_temp_directory(),
-            session=playback.session,
-            force_download=False,
-        )
+        segment_path = playback.download_segment(moment_sequence, reference_base_url)
+        moment_segment = Segment.from_file(segment_path)
     except SegmentDownloadError as exc:
         click.echo()
         logger.error(exc, sequence=exc.sequence, exc_info=True)
         sys.exit(1)
-
-    moment_segment = Segment.from_file(downloaded_path)
 
     requested_moment_date: datetime
     match moment:
@@ -240,36 +234,33 @@ def capture_command(
         )
     )
 
-    preliminary_path = output
-    output_path_contains_template = OUTPUT_PATH_PLACEHOLDER_RE.search(
-        str(preliminary_path)
-    )
-    if output_path_contains_template:
-        input_timezone = actual_moment_date.tzinfo
+    # Absolute output path of an image with extension.
+    final_output_path: Path
+    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output)):
         template_context: MpdOutputPathContext = {
             "id": playback.video_id,
             "title": playback.info.title,
             "moment_date": requested_moment_date,
         }
-        preliminary_path = expand_template_output_path(
-            preliminary_path,
+        final_output_path = expand_template_output_path(
+            output,
             template_context,
             render_capture_output_path_context,
             ctx.obj.config,
         )
-        preliminary_path = preliminary_path.expanduser()
-
-    # Full absolute excerpt output path without extension.
-    final_output_path = Path(preliminary_path).resolve()
-    Path.mkdir(final_output_path.parent, parents=True, exist_ok=True)
+    else:
+        final_output_path = output
+    final_output_path = resolve_output_path(final_output_path)
 
     requested_frame_offset = requested_moment_date - moment_segment.ingestion_start_date
     extract_and_save_frame_as_image(
-        downloaded_path, requested_frame_offset.total_seconds(), final_output_path
+        moment_segment.local_path,
+        requested_frame_offset.total_seconds(),
+        final_output_path,
     )
 
     try:
-        saved_to_path_value = f"{final_output_path.relative_to(Path.cwd())}"
+        saved_to_path_value = final_output_path.relative_to(Path.cwd())
     except ValueError:
         saved_to_path_value = saved_to_path
     click.echo(f"\nSuccess! Image saved to '{saved_to_path_value}'.")

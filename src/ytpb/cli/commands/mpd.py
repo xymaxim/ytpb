@@ -23,6 +23,7 @@ from ytpb.cli.common import (
     query_streams_or_exit,
     raise_for_sequence_ahead_of_current,
     raise_for_too_far_sequence,
+    resolve_output_path,
     stream_argument,
 )
 from ytpb.cli.custom import OrderedGroup
@@ -130,29 +131,29 @@ def compose_command(
             "At least --audio-formats or --video-formats must be specified."
         )
 
-    console = Console(width=CONSOLE_TEXT_WIDTH)
-
     playback = create_playback(ctx)
 
+    queried_audio_streams = []
     if audio_formats:
         queried_audio_streams = query_streams_or_exit(
             playback.streams, audio_formats, "--audio-formats"
         )
-    else:
-        queried_audio_streams = []
 
+    queried_video_streams = []
     if video_formats:
         queried_video_streams = query_streams_or_exit(
             playback.streams, video_formats, "--video-formats"
         )
-    else:
-        queried_video_streams = []
 
-    num_of_streams = len(queried_audio_streams) + len(queried_video_streams)
-    if num_of_streams == 1:
+    number_of_streams = len(queried_audio_streams) + len(queried_video_streams)
+    if number_of_streams == 1:
         click.echo("This representation will be in the manifest:")
     else:
-        click.echo(f"These {num_of_streams} representations will be in the manifest:")
+        click.echo(
+            f"These {number_of_streams} representations will be in the manifest:"
+        )
+
+    console = Console(width=CONSOLE_TEXT_WIDTH)
 
     table_kwargs = {
         "box": box.MARKDOWN,
@@ -168,7 +169,7 @@ def compose_command(
         print_audio_table(console, queried_audio_streams, **table_kwargs)
     if queried_video_streams:
         print_video_table(console, queried_video_streams, **table_kwargs)
-        click.echo()
+    click.echo()
 
     reference_stream = (queried_video_streams or queried_audio_streams)[0]
     reference_base_url = reference_stream.base_url
@@ -206,22 +207,6 @@ def compose_command(
     )
     click.echo("done.")
 
-    for point in (requested_start, requested_end):
-        if type(point) is SegmentSequence:
-            sequence = point
-            try:
-                download_segment(
-                    sequence,
-                    reference_base_url,
-                    output_directory=playback.get_temp_directory(),
-                    session=playback.session,
-                    force_download=False,
-                )
-            except SegmentDownloadError as exc:
-                click.echo()
-                logger.error(exc, sequence=exc.sequence, exc_info=True)
-                sys.exit(1)
-
     start_segment = playback.get_downloaded_segment(
         rewind_range.start, reference_base_url
     )
@@ -254,11 +239,9 @@ def compose_command(
     print_summary_info(requested_date_interval, actual_date_interval, rewind_range)
     click.echo()
 
-    preliminary_path = output
-    output_path_contains_template = OUTPUT_PATH_PLACEHOLDER_RE.search(
-        str(preliminary_path)
-    )
-    if output_path_contains_template:
+    # Absolute output path of a manifest with extension.
+    final_output_path: Path
+    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output)):
         input_timezone = requested_date_interval.start.tzinfo
         template_context: MpdOutputPathContext = {
             "id": playback.video_id,
@@ -269,17 +252,15 @@ def compose_command(
             "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
             "duration": requested_end_date - requested_start_date,
         }
-        preliminary_path = expand_template_output_path(
-            preliminary_path,
+        final_output_path = expand_template_output_path(
+            output,
             template_context,
             render_mpd_output_path_context,
             ctx.obj.config,
         )
-        preliminary_path = preliminary_path.expanduser()
-
-    # Full absolute manifest output path with extension.
-    final_output_path = Path(preliminary_path).resolve()
-    Path.mkdir(final_output_path.parent, parents=True, exist_ok=True)
+    else:
+        final_output_path = output
+    final_output_path = resolve_output_path(final_output_path)
 
     click.echo("(<<) Composing MPEG-DASH manifest...")
     streams = Streams(queried_audio_streams + queried_video_streams)

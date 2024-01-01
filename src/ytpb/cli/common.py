@@ -2,6 +2,7 @@ import email
 import sys
 import textwrap
 from datetime import datetime, timedelta
+from pathlib import Path
 
 import click
 import cloup
@@ -196,17 +197,39 @@ def check_streams_not_empty(
 
 
 def query_streams_or_exit(
-    streams: SetOfStreams, format_spec: str, param: str | None = None
+    streams: SetOfStreams,
+    format_spec: str,
+    param: str | None = None,
+    allow_empty: bool = True,
+    allow_many: bool = True,
 ) -> SetOfStreams:
     try:
         queried_streams = streams.query(format_spec)
-    except QueryError as e:
-        click.secho(f"error: Invalid value for {param}. {e}: '{format_spec}'", err=True)
-        sys.exit(1)
-    if not queried_streams:
-        message = f"No streams found matching {param} format spec: '{format_spec}'"
+    except QueryError as exc:
+        message = f"error: Invalid value for '{param}'. {exc}: '{format_spec}'"
         click.echo(message, err=True)
         sys.exit(1)
+
+    if queried_streams:
+        if len(queried_streams) > 1 and not allow_many:
+            logger.error(
+                "Too many queried streams", itags=[s.itag for s in queried_streams]
+            )
+            click.echo(
+                (
+                    "error: Format spec is ambiguous: '{format_spec}'.\n\n"
+                    "Found more than one stream matched a format spec. Please be more "
+                    "explicit, or try 'yt-dlp --live-from-start -F ...' first."
+                )
+            )
+            sys.exit(1)
+    elif not allow_empty:
+        message = (
+            f"error: No streams found matching '{param}' format spec: '{format_spec}'"
+        )
+        click.echo(message, err=True)
+        sys.exit(1)
+
     return queried_streams
 
 
@@ -240,3 +263,9 @@ def raise_for_sequence_ahead_of_current(
         )
         param = get_parameter_by_name(param_name, ctx)
         raise click.BadParameter(message, ctx, param)
+
+
+def resolve_output_path(output_path: Path) -> Path:
+    resolved_path = Path(output_path).expanduser().resolve()
+    resolved_path.parent.mkdir(parents=True, exist_ok=True)
+    return resolved_path
