@@ -4,7 +4,7 @@ import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import NamedTuple
+from typing import Literal, NamedTuple
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -20,9 +20,10 @@ from rich.progress import (
     TimeRemainingColumn,
 )
 
-from ytpb import download
 from ytpb.cache import read_from_cache, write_to_cache
 from ytpb.config import USER_AGENT
+
+from ytpb.download import compose_default_segment_filename, download_segment
 from ytpb.exceptions import (
     BaseUrlExpiredError,
     CachedItemNotFoundError,
@@ -275,9 +276,46 @@ class Playback:
     def _get_reference_base_url(self, itag: str) -> str:
         return self.streams.get_by_itag(itag).base_url
 
-    def get_downloaded_segment(self, sequence: int, base_url: str):
-        segment_filename = download.compose_default_segment_filename(sequence, base_url)
-        return Segment.from_file(self.get_temp_directory() / segment_filename)
+    def download_segment(
+        self,
+        sequence,
+        base_url,
+        location: Literal[".", "segments"] = ".",
+        force_download: bool = False,
+    ) -> Path:
+        path = download_segment(
+            sequence,
+            base_url,
+            self.get_temp_directory() / location,
+            session=self.session,
+            force_download=force_download,
+        )
+        return path
+
+    def get_downloaded_segment(
+        self,
+        sequence: SegmentSequence,
+        base_url: str,
+        location: Literal[".", "segments"] = ".",
+        download: bool = True,
+    ) -> Segment:
+        """Get a downloaded segment, or download it if it doesn't exist."""
+        segment_filename = compose_default_segment_filename(sequence, base_url)
+        segment_directory = self.get_temp_directory() / location
+        try:
+            segment = Segment.from_file(segment_directory / segment_filename)
+        except FileNotFoundError:
+            if download:
+                downloaded_path = download_segment(
+                    sequence,
+                    base_url,
+                    self.get_temp_directory(),
+                    session=self.session,
+                )
+                segment = Segment.from_file(downloaded_path)
+            else:
+                raise
+        return segment
 
     def locate_rewind_range(
         self,
@@ -328,26 +366,17 @@ class Playback:
                     case RelativeSegmentSequence() as sequence_delta:
                         sequence = contrary_op(contrary_sequence, sequence_delta)
                     case timedelta() as delta:
-                        try:
-                            contrary_segment = self.get_downloaded_segment(
-                                contrary_sequence, base_url
-                            )
-                        except FileNotFoundError:
-                            downloaded_path = download.download_segment(
-                                contrary_sequence,
-                                base_url,
-                                self.get_temp_directory(),
-                                session=self.session,
-                            )
-                            contrary_segment = Segment.from_file(downloaded_path)
-                            if is_start:
-                                contrary_date = contrary_segment.ingestion_end_date
-                            else:
-                                contrary_date = contrary_segment.ingestion_start_date
-                            target_date = contrary_op(contrary_date, delta)
-                            sequence = sl.find_sequence_by_time(
-                                target_date.timestamp(), end=not is_start
-                            )
+                        contrary_segment = self.get_downloaded_segment(
+                            contrary_sequence, base_url
+                        )
+                        if is_start:
+                            contrary_date = contrary_segment.ingestion_end_date
+                        else:
+                            contrary_date = contrary_segment.ingestion_start_date
+                        target_date = contrary_op(contrary_date, delta)
+                        sequence = sl.find_sequence_by_time(
+                            target_date.timestamp(), end=not is_start
+                        )
             else:
                 match point:
                     case SegmentSequence():
@@ -411,7 +440,7 @@ class Playback:
                 raise AssertionError
 
         segments_output_directory = self.get_temp_directory() / "segments"
-        segments_output_directory.mkdir()
+        segments_output_directory.mkdir(parents=True, exist_ok=True)
         download_segment_kwargs = {
             "output_directory": segments_output_directory,
             "session": self.session,
@@ -423,13 +452,13 @@ class Playback:
         with download_progress:
             for sequence in sequences_to_download:
                 if audio_format_spec:
-                    downloaded_path = download.download_segment(
+                    downloaded_path = download_segment(
                         sequence, audio_base_url, **download_segment_kwargs
                     )
                     downloaded_audio_paths.append(downloaded_path)
                     download_progress.advance(audio_download_task)
                 if video_format_spec:
-                    downloaded_path = download.download_segment(
+                    downloaded_path = download_segment(
                         sequence, video_base_url, **download_segment_kwargs
                     )
                     downloaded_video_paths.append(downloaded_path)
