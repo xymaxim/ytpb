@@ -98,7 +98,9 @@ def validate_image_output_path(
     return validate_output_path(ctx, param, value)
 
 
-def save_frame_as_image(video_path: Path, target_time: float, output_path: Path):
+def extract_and_save_frame_as_image(
+    video_path: Path, target_time: float, output_path: Path
+):
     with av.open(str(video_path)) as container:
         stream = container.streams.video[0]
         target_pts = stream.start_time + target_time / stream.time_base
@@ -262,7 +264,7 @@ def capture_command(
     Path.mkdir(final_output_path.parent, parents=True, exist_ok=True)
 
     requested_frame_offset = requested_moment_date - moment_segment.ingestion_start_date
-    save_frame_as_image(
+    extract_and_save_frame_as_image(
         downloaded_path, requested_frame_offset.total_seconds(), final_output_path
     )
 

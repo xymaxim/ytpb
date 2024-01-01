@@ -1,3 +1,5 @@
+import email
+import shutil
 import sys
 from datetime import datetime
 from pathlib import Path
@@ -7,9 +9,18 @@ import click
 import cloup
 import structlog
 from PIL import Image
+from rich.console import Console
+from rich.progress import (
+    BarColumn,
+    MofNCompleteColumn,
+    Progress,
+    TaskProgressColumn,
+    TextColumn,
+    TimeRemainingColumn,
+)
 from timedelta_isoformat import timedelta
 
-from ytpb.cli.commands.capture import save_frame_as_image
+from ytpb.cli.commands.capture import extract_and_save_frame_as_image
 from ytpb.cli.commands.download import render_download_output_path_context
 
 from ytpb.cli.common import (
@@ -32,6 +43,7 @@ from ytpb.exceptions import QueryError, SegmentDownloadError, SequenceLocatingEr
 from ytpb.locate import SequenceLocator
 from ytpb.segment import Segment
 from ytpb.types import AddressableMappingProtocol, DateInterval, SegmentSequence
+from ytpb.utils.date import DurationFormatPattern, format_duration
 from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.path import (
     expand_template_output_path,
@@ -91,20 +103,41 @@ def validate_image_output_path(
     return validate_output_path(ctx, param, value)
 
 
-def print_timelapse_summary_info(dates: list[datetime], end_date: datetime) -> None:
-    message = "Every ... a time-lapse frame will be captured as following:"
-    click.echo(message)
+def print_timelapse_summary_info(
+    dates: list[datetime], end_date: datetime, every: timedelta
+) -> None:
+    click.echo(
+        "Every {} a time-lapse frame will be captured:".format(
+            format_duration(every, DurationFormatPattern.ISO8601_LIKE)
+        )
+    )
 
-    for i, date in enumerate(dates[:2]):
-        click.echo("     Frame {}: {}".format(i + 1, dates[i].isoformat()))
+    _format_datetime = lambda x: email.utils.format_datetime(x).split(", ")[1]
 
-    if len(dates) > 3:
-        click.echo("              ...")
+    click.echo("{:>12}: {} / S".format("Frame 1", _format_datetime(dates[0])))
 
-    if len(dates) > 2:
-        click.echo("  Last frame: {}".format(dates[-1].isoformat()))
+    number_of_dates = len(dates)
+    if number_of_dates == 2:
+        click.echo("{:>12}: {}".format("Last frame", _format_datetime(dates[-1])))
+    elif number_of_dates > 2:
+        click.echo("{:>12}: {}".format("Frame 2", _format_datetime(dates[1])))
+        if number_of_dates > 3:
+            click.echo(f"{'':12}  {'...':^26}")
+        click.echo("{:>12}: {}".format("Last frame", _format_datetime(dates[-1])))
 
-    click.echo("        (End) {}".format(end_date.isoformat()))
+    click.echo("{:>12}  {} / E".format("", _format_datetime(end_date)))
+
+
+def create_capturing_progress_bar():
+    return Progress(
+        TextColumn("{task.description}"),
+        BarColumn(bar_width=32),
+        MofNCompleteColumn(),
+        TaskProgressColumn(),
+        TextColumn("eta"),
+        TimeRemainingColumn(),
+        console=Console(),
+    )
 
 
 @cloup.command("timelapse", help="Take a timelapse capture.")
@@ -167,7 +200,7 @@ def timelapse_command(
         queried_video_streams = []
 
     click.echo()
-    click.echo("(<<) Locating start and end in the stream... ", nl=False)
+    click.echo("(<<) Locating interval start (S) and end (E)... ", nl=False)
 
     reference_stream = queried_video_streams[0]
     reference_base_url = reference_stream.base_url
@@ -282,7 +315,7 @@ def timelapse_command(
     e = requested_date_interval.end
     dates_to_capture = [s + every * i for i in range((e - s) // every + 1)]
 
-    print_timelapse_summary_info(dates_to_capture, requested_date_interval.end)
+    print_timelapse_summary_info(dates_to_capture, requested_date_interval.end, every)
 
     if preview:
         click.echo("info: Preview mode is enabled, only first 3 frames will be taken.")
@@ -293,20 +326,6 @@ def timelapse_command(
         dates_to_capture = dates_to_capture[:3]
 
     length_of_timelapse = len(dates_to_capture)
-
-    sequences_to_download: list[int] = [start_segment.sequence]
-    previous_sequence = sequences_to_download[0]
-    for i, date in enumerate(dates_to_capture[1:], 1):
-        sl = SequenceLocator(
-            reference_base_url,
-            reference_sequence=previous_sequence,
-            temp_directory=playback.get_temp_directory(),
-            session=playback.session,
-        )
-        is_end = i == length_of_timelapse - 1
-        found_sequence = sl.find_sequence_by_time(date.timestamp(), end=is_end)
-        sequences_to_download.append(found_sequence)
-        previous_sequence = found_sequence
 
     preliminary_path = output
     output_path_contains_template = OUTPUT_PATH_PLACEHOLDER_RE.search(
@@ -336,18 +355,74 @@ def timelapse_command(
     final_output_path = Path(preliminary_path).resolve()
     final_output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    for i, (sequence, date) in enumerate(zip(sequences_to_download, dates_to_capture)):
-        try:
-            segment = playback.get_downloaded_segment(sequence, reference_base_url)
-        except FileNotFoundError:
-            downloaded_path = download_segment(
-                sequence,
+    click.echo("(<<) Capturing frames as images:")
+
+    capturing_progress = create_capturing_progress_bar()
+    capturing_task = capturing_progress.add_task("", total=len(dates_to_capture))
+
+    def _save_frame_as_image(
+        segment: Segment, target_date: datetime, output_path_pattern: Path, i: int
+    ) -> None:
+        target_time_offset = (
+            target_date - segment.ingestion_start_date
+        ).total_seconds()
+        image_output_name = output_path_pattern.name % i
+        image_output_path = output_path_pattern.with_name(image_output_name)
+        extract_and_save_frame_as_image(
+            segment.local_path, target_time_offset, image_output_path
+        )
+
+    with capturing_progress:
+        # Save the first frame of a time-lapse, a frame of the located start segment.
+        _save_frame_as_image(start_segment, requested_start_date, final_output_path, 0)
+        capturing_progress.advance(capturing_task)
+
+        previous_sequence = start_segment.sequence
+        for i, target_date in enumerate(dates_to_capture[1:], 1):
+            # First, locate a segment by a target date.
+            sl = SequenceLocator(
                 reference_base_url,
-                playback.get_temp_directory(),
+                reference_sequence=previous_sequence,
+                temp_directory=playback.get_temp_directory(),
                 session=playback.session,
             )
-            segment = Segment.from_file(downloaded_path)
-        target_time_offset = (date - segment.ingestion_start_date).total_seconds()
-        image_output_name = final_output_path.name % i
-        image_output_path = final_output_path.with_name(image_output_name)
-        save_frame_as_image(segment.local_path, target_time_offset, image_output_path)
+            is_end = i == length_of_timelapse - 1
+            found_sequence = sl.find_sequence_by_time(
+                target_date.timestamp(), end=is_end
+            )
+            previous_sequence = found_sequence
+
+            try:
+                segment = playback.get_downloaded_segment(
+                    found_sequence, reference_base_url
+                )
+            except FileNotFoundError:
+                downloaded_path = download_segment(
+                    found_sequence,
+                    reference_base_url,
+                    playback.get_temp_directory(),
+                    session=playback.session,
+                )
+                segment = Segment.from_file(downloaded_path)
+
+            # And save a desired frame as i-th image of a time-lapse.
+            _save_frame_as_image(segment, target_date, final_output_path, i)
+
+            capturing_progress.advance(capturing_task)
+
+    try:
+        saved_to_path_value = final_output_path.parent.relative_to(Path.cwd())
+    except ValueError:
+        saved_to_path_value = final_output_path.parent
+    click.echo(f"\nSuccess! Saved to '{saved_to_path_value}/'.")
+
+    run_temp_directory = playback.get_temp_directory()
+    if no_cleanup:
+        click.echo(f"notice: No cleanup enabled, check {run_temp_directory}/")
+    else:
+        try:
+            shutil.rmtree(run_temp_directory)
+        except OSError:
+            logger.warning(
+                "Failed to remove %s temporary directory", run_temp_directory
+            )

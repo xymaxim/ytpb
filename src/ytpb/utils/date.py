@@ -118,7 +118,7 @@ def format_duration(duration: timedelta, pattern: DurationFormatPattern) -> str:
             formatted_part = time_object.strftime(matched.group("part"))
             output = output.replace(matched.group(0), formatted_part)
 
-    output = time_object.strftime(output)
+    output = time_object.strftime(output).rstrip(" ")
 
     return output
 
