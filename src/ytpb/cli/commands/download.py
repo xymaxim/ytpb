@@ -8,6 +8,7 @@ import click
 import cloup
 import structlog
 
+from ytpb import actions
 from ytpb.cli.common import (
     create_playback,
     print_summary_info,
@@ -313,7 +314,8 @@ def download_command(
         final_output_path = resolve_output_path(final_output_path)
 
         do_download_excerpt_segments = partial(
-            playback.download_excerpt,
+            actions.download_excerpt,
+            playback,
             rewind_range,
             audio_format,
             video_format,
