@@ -276,7 +276,7 @@ def compose_command(
     except ValueError:
         saved_to_path_value = final_output_path
 
-    click.echo(f"Success! Manifest saved to '{saved_to_path_value}'.")
+    click.echo(f"Success! Saved to '{saved_to_path_value}'.")
     click.echo("~ Note that the manifest will expire in 6 hours.")
 
 

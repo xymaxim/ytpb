@@ -17,5 +17,5 @@ Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
   Actual end: 25 Mar 2023 23:33:58 +0000, seq. 7959121
 
 (<<) Composing MPEG-DASH manifest...
-Success! Manifest saved to 'Webcam-Zurich-HB_20230325T233354+00.mpd'.
+Success! Saved to 'Webcam-Zurich-HB_20230325T233354+00.mpd'.
 ~ Note that the manifest will expire in 6 hours.
