@@ -306,12 +306,7 @@ class Playback:
             segment = Segment.from_file(segment_directory / segment_filename)
         except FileNotFoundError:
             if download:
-                downloaded_path = download_segment(
-                    sequence,
-                    base_url,
-                    self.get_temp_directory(),
-                    session=self.session,
-                )
+                downloaded_path = self.download_segment(sequence, base_url)
                 segment = Segment.from_file(downloaded_path)
             else:
                 raise
