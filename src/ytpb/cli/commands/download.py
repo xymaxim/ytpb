@@ -314,7 +314,7 @@ def download_command(
         final_output_path = resolve_output_path(final_output_path)
 
         do_download_excerpt_segments = partial(
-            actions.download_excerpt,
+            actions.download.download_excerpt,
             playback,
             rewind_range,
             audio_format,

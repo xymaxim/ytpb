@@ -28,7 +28,7 @@ def test_download_excerpt_between_sequences_without_merging(
         stream_url, temp_directory=run_temp_directory, fetcher=fake_info_fetcher
     )
     playback.fetch_and_set_essential()
-    _, *output_paths = actions.download_excerpt(
+    _, *output_paths = actions.download.download_excerpt(
         playback,
         SequenceRange(7959120, 7959121),
         "itag eq 140",
@@ -69,7 +69,7 @@ def test_download_audio_excerpt_between_sequences_without_merging(
     # When:
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
-    _, *output_paths = actions.download_excerpt(
+    _, *output_paths = actions.download.download_excerpt(
         playback, SequenceRange(7959120, 7959121), "itag eq 140", no_merge=True
     )
 
@@ -110,7 +110,7 @@ def test_download_excerpt_between_dates_without_merging(
     playback.fetch_and_set_essential()
 
     rewind_range = playback.locate_rewind_range(start_date, end_date, itag="140")
-    _, *output_paths = actions.download_excerpt(
+    _, *output_paths = actions.download.download_excerpt(
         playback, rewind_range, "itag eq 140", "itag eq 244", no_merge=True
     )
 
