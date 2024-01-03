@@ -12,7 +12,7 @@ import pytest
 import toml
 from freezegun import freeze_time
 
-from utils import assert_approx_duration
+from helpers import assert_approx_duration
 
 from ytpb.config import DEFAULT_CONFIG
 

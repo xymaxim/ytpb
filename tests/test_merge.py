@@ -5,7 +5,7 @@ import pytest
 
 from conftest import TEST_DATA_PATH
 
-from utils import assert_approx_duration, assert_number_of_streams
+from helpers import assert_approx_duration, assert_number_of_streams
 from ytpb.merge import merge_segments
 
 SEGMENT_BASE_PATH = Path(TEST_DATA_PATH) / "segments"

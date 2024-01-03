@@ -12,7 +12,7 @@ import freezegun
 import pytest
 from freezegun import freeze_time
 
-from utils import patched_freezgun_astimezone
+from helpers import patched_freezgun_astimezone
 
 from ytpb.info import YouTubeVideoInfo
 from ytpb.playback import Playback
