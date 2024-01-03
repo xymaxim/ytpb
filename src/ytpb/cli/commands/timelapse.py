@@ -18,7 +18,7 @@ from rich.progress import (
 )
 from timedelta_isoformat import timedelta
 
-from ytpb.cli.commands.capture import extract_and_save_frame_as_image
+from ytpb.actions.capture import capture_frame
 from ytpb.cli.commands.download import render_download_output_path_context
 
 from ytpb.cli.common import (
@@ -344,14 +344,11 @@ def timelapse_command(
     def _save_frame_as_image(
         segment: Segment, target_date: datetime, output_path_pattern: Path, i: int
     ) -> None:
-        target_time_offset = (
-            target_date - segment.ingestion_start_date
-        ).total_seconds()
+        target_offset = target_date - segment.ingestion_start_date
+        image = capture_frame(segment.local_path, target_offset)
         image_output_name = output_path_pattern.name % i
         image_output_path = output_path_pattern.with_name(image_output_name)
-        extract_and_save_frame_as_image(
-            segment.local_path, target_time_offset, image_output_path
-        )
+        image.save(image_output_path, quality=80)
 
     with capturing_progress:
         # Save the first frame of a time-lapse, a frame of the located start segment.

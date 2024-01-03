@@ -9,6 +9,7 @@ import click
 import cloup
 import structlog
 
+from ytpb.actions.capture import capture_frame
 from ytpb.cli.common import (
     create_playback,
     prepare_line_for_summary_info,
@@ -69,26 +70,6 @@ def render_capture_output_path_context(
     output.update(render_minimal_output_path_context(context, config_settings))
 
     return output
-
-
-def extract_and_save_frame_as_image(
-    video_path: Path, target_time: float, output_path: Path
-):
-    with av.open(str(video_path)) as container:
-        stream = container.streams.video[0]
-        target_pts = stream.start_time + target_time / stream.time_base
-        previous_frame: av.VideoFrame = None
-        for current_frame in container.decode(stream):
-            if current_frame.pts >= target_pts:
-                break
-            previous_frame = current_frame
-        else:
-            logger.debug(
-                "Target time is out of the video, use the last frame", time=target_time
-            )
-    target_frame = previous_frame or current_frame
-    image = target_frame.to_image()
-    image.save(output_path, quality=80)
 
 
 @cloup.command("capture", help="Take video frame capture.")
@@ -224,12 +205,11 @@ def capture_command(
         final_output_path = output_path
     final_output_path = resolve_output_path(final_output_path)
 
-    requested_frame_offset = requested_moment_date - moment_segment.ingestion_start_date
-    extract_and_save_frame_as_image(
+    image = capture_frame(
         moment_segment.local_path,
-        requested_frame_offset.total_seconds(),
-        final_output_path,
+        requested_moment_date - moment_segment.ingestion_start_date,
     )
+    image.save(final_output_path, quality=80)
 
     try:
         saved_to_path_value = final_output_path.relative_to(Path.cwd())
