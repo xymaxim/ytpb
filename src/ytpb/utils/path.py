@@ -269,39 +269,3 @@ def format_title_for_filename(
             raise ValueError(f"Unknown title formatting style: '{style}'")
 
     return output
-
-
-def compose_excerpt_filename(
-    prefix: str,
-    start_date: datetime,
-    /,
-    end_date: datetime | None = None,
-    *,
-    basic_or_extended: str = "basic",
-    reduced_or_complete: str = "reduced",
-    duration_or_range: str = None,
-    use_z_for_utc: bool = False,
-    extension: str = "",
-) -> str:
-    style_parameters = ISO8601DateStyleParameters(
-        format=basic_or_extended,
-        precision=reduced_or_complete,
-        use_z_for_utc=use_z_for_utc,
-    )
-    start_date_string = format_iso_datetime(start_date, style_parameters)
-    prefix_and_start_date_part = f"{prefix}_{start_date_string}"
-
-    if duration_or_range:
-        match duration_or_range:
-            case "duration":
-                postfix = format_iso_duration(end_date - start_date)
-            case "range":
-                postfix = format_iso_datetime(end_date, style_parameters)
-        output_filename = f"{prefix_and_start_date_part}_{postfix}"
-    else:
-        output_filename = f"{prefix_and_start_date_part}"
-
-    if extension:
-        output_filename += f".{extension}"
-
-    return output_filename

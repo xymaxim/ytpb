@@ -16,7 +16,6 @@ from ytpb.utils.date import (
 )
 from ytpb.utils.path import (
     adjust_title_for_filename,
-    compose_excerpt_filename,
     format_title_for_filename,
     TitleAllowedCharacters,
 )
@@ -470,43 +469,6 @@ def test_format_title_for_filename_with_characters(title, expected, characters):
     assert expected == format_title_for_filename(
         title, style="custom", characters=characters
     )
-
-
-class TestComposeExcerptOutputStem:
-    prefix = "test"
-
-    def test_without_postfix(self):
-        assert "test_20230809T102030+00" == compose_excerpt_filename(
-            self.prefix,
-            datetime.fromisoformat("20230809T102030+00"),
-        )
-
-    def test_with_end_date_postfix(self):
-        assert "test_20230809T102030+00_20230809T102034+00" == compose_excerpt_filename(
-            self.prefix,
-            datetime.fromisoformat("20230809T102030+00"),
-            datetime.fromisoformat("20230809T102034+00"),
-            duration_or_range="range",
-        )
-
-    def test_with_duration_postfix(self):
-        assert "test_20230809T102030+00_PT4S" == compose_excerpt_filename(
-            self.prefix,
-            datetime.fromisoformat("20230809T102030+00"),
-            datetime.fromisoformat("20230809T102034+00"),
-            duration_or_range="duration",
-        )
-
-    def test_with_date_with_milliseconds(self):
-        date = datetime.fromisoformat("20230809T102030+00")
-        assert "test_20230809T102030+00" == compose_excerpt_filename(
-            self.prefix,
-            date.replace(microsecond=123_000),
-        )
-        assert "test_20230809T102030+00" == compose_excerpt_filename(
-            self.prefix,
-            date.replace(microsecond=789_000),
-        )
 
 
 @pytest.mark.parametrize(
