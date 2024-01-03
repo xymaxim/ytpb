@@ -10,6 +10,7 @@ from rich.console import Console
 from rich.table import Table
 
 from ytpb import types
+from ytpb.actions.compose import compose_mpd, refresh_mpd
 from ytpb.cli.commands.download import (
     DownloadOutputPathContext,
     render_download_output_path_context,
@@ -31,7 +32,6 @@ from ytpb.cli.options import (
     yt_dlp_option,
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
-from ytpb.compose import compose_mpd, refresh_mpd
 from ytpb.exceptions import BroadcastStatusError
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
@@ -266,7 +266,7 @@ def compose_command(
 
     click.echo("(<<) Composing MPEG-DASH manifest...")
     streams = Streams(queried_audio_streams + queried_video_streams)
-    composed_manifest = compose_mpd(playback.info, streams, rewind_range)
+    composed_manifest = compose_mpd(playback, rewind_range, streams)
 
     with open(final_output_path, "w") as f:
         f.write(composed_manifest)

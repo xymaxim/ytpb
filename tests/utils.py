@@ -1,3 +1,4 @@
+from datetime import timezone
 from pathlib import Path
 
 import pytest
@@ -14,7 +15,16 @@ def assert_approx_duration(filepath: Path, expected: float, abs: float = 2.2e-2)
     approx_expected = pytest.approx(expected, abs=abs)
     if actual != approx_expected:
         raise AssertionError(
-            f"Durations are not almost equal\n"
+            "Durations are not almost equal\n"
             f" - expected: {approx_expected}\n"
             f" + actual: {actual}"
         )
+
+
+# See https://github.com/spulec/freezegun/issues/348.
+def patched_freezgun_astimezone(self, tz=None):
+    from freezegun.api import datetime_to_fakedatetime, real_datetime
+
+    return datetime_to_fakedatetime(
+        real_datetime.astimezone(self, timezone(self._tz_offset()))
+    )

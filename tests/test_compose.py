@@ -1,17 +1,22 @@
-import datetime
 from dataclasses import asdict
+from datetime import datetime, timedelta, timezone
 from difflib import unified_diff
 from unittest.mock import patch
 
+import freezegun
+
 import pytest
+from freezegun import freeze_time
 
-from ytpb.compose import compose_mpd, refresh_mpd
+from utils import patched_freezgun_astimezone
 
+from ytpb.actions.compose import compose_mpd, refresh_mpd
 from ytpb.exceptions import YtpbError
-from ytpb.info import YouTubeVideoInfo
-from ytpb.playback import SequenceRange
+from ytpb.playback import Playback, SequenceRange
 from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, AudioStream, VideoStream
+
+freezegun.api.FakeDatetime.astimezone = patched_freezgun_astimezone
 
 
 @pytest.fixture()
@@ -41,24 +46,27 @@ def testing_manifest(audio_base_url: str, video_base_url: str) -> str:
 """
 
 
+@freeze_time(tz_offset=2)
 def test_compose_mpd(
-    active_live_video_info: YouTubeVideoInfo,
+    stream_url: str,
+    fake_info_fetcher: "FakeInfoFetcher",
     streams_in_list: list[AudioOrVideoStream],
     testing_manifest: str,
 ):
+    playback = Playback(stream_url, fetcher=fake_info_fetcher)
+    playback.fetch_and_set_essential()
+
     streams = Streams(streams_in_list)
-    with patch("ytpb.compose.datetime", wraps=datetime.datetime) as mock:
-        mock.now.return_value.astimezone.return_value.tzinfo = datetime.timezone(
-            datetime.timedelta(hours=2)
-        )
-        output = compose_mpd(
-            active_live_video_info,
-            streams.filter(lambda x: x.itag in ("140", "244")),
-            SequenceRange(7959120, 7959120 + 32),
-        )
+
+    output = compose_mpd(
+        playback,
+        SequenceRange(7959120, 7959120 + 32),
+        streams.filter(lambda x: x.itag in ("140", "244")),
+    )
     assert output == testing_manifest
 
 
+@freeze_time(tz_offset=2)
 def test_refresh_mpd(streams_in_list: list[dict], testing_manifest: str):
     selected_streams_list = []
     for stream in streams_in_list:
@@ -73,9 +81,9 @@ def test_refresh_mpd(streams_in_list: list[dict], testing_manifest: str):
 
     updated_streams = Streams(selected_streams_list)
 
-    with patch("ytpb.compose.datetime", wraps=datetime.datetime) as mock:
-        mock.now.return_value.astimezone.return_value.tzinfo = datetime.timezone(
-            datetime.timedelta(hours=2)
+    with patch("ytpb.actions.compose.datetime", wraps=datetime) as mock:
+        mock.now.return_value.astimezone.return_value.tzinfo = timezone(
+            timedelta(hours=2)
         )
         output = refresh_mpd(testing_manifest, updated_streams)
 

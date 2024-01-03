@@ -1,12 +1,12 @@
 import copy
-from datetime import datetime
+from datetime import datetime, timezone
 
 from lxml import etree
 from lxml.builder import E
 
 from ytpb.exceptions import YtpbError
-from ytpb.info import YouTubeVideoInfo
 from ytpb.mpd import NAMESPACES as NS
+from ytpb.playback import Playback
 from ytpb.streams import SetOfStreams
 from ytpb.types import SequenceRange
 from ytpb.utils.units import S_TO_MS
@@ -15,16 +15,15 @@ from ytpb.utils.url import extract_parameter_from_url
 
 def _build_top_level_comment_text(base_url: str) -> str:
     expire_date = datetime.fromtimestamp(
-        int(extract_parameter_from_url("expire", base_url)),
-        datetime.now().astimezone().tzinfo,
+        int(extract_parameter_from_url("expire", base_url)), timezone.utc
     )
-    expire_date_string = expire_date.isoformat()
+    expire_date_string = expire_date.astimezone().isoformat()
     result = f"This file is created with ytpb, and expires at {expire_date_string}"
     return result
 
 
 def compose_mpd(
-    info: YouTubeVideoInfo, streams: SetOfStreams, rewind_range: SequenceRange
+    playback: Playback, rewind_range: SequenceRange, streams: SetOfStreams
 ) -> str:
     nsmap = {
         "xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -55,7 +54,8 @@ def compose_mpd(
     mpd_element.addprevious(comment_element)
 
     # Create and append the ProgramInformation tag
-    program_info_element = E.ProgramInformation(E.Title(info.title), E.Source(info.url))
+    title, url = playback.info.title, playback.info.url
+    program_info_element = E.ProgramInformation(E.Title(title), E.Source(url))
     mpd_element.append(program_info_element)
 
     # Create the Period tag

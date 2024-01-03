@@ -8,13 +8,19 @@ from pathlib import Path
 from typing import Callable
 from unittest.mock import MagicMock, patch
 
+import freezegun
+
 import pytest
 from freezegun import freeze_time
+
+from utils import patched_freezgun_astimezone
 
 from ytpb.info import YouTubeVideoInfo
 from ytpb.playback import Playback
 from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, AudioStream, VideoStream
+
+freezegun.api.FakeDatetime.astimezone = patched_freezgun_astimezone
 
 
 @pytest.fixture()
@@ -40,7 +46,7 @@ def dash_manifest(audio_base_url: str, video_base_url: str) -> str:
 """
 
 
-@freeze_time("2023-08-16T02:30:00+02:00")
+@freeze_time("2023-08-16T02:30:00+02:00", tz_offset=2)
 def test_refresh_mpd(
     ytpb_cli_invoke: Callable,
     mock_fetch_and_set_essential: MagicMock,
@@ -75,11 +81,7 @@ def test_refresh_mpd(
     with patch.object(
         Playback, "fetch_and_set_essential", side_effect=mock_essential, autospec=True
     ):
-        with patch("ytpb.compose.datetime", wraps=datetime.datetime) as mock_datetime:
-            mock_datetime.now.return_value.astimezone.return_value.tzinfo = (
-                datetime.timezone(datetime.timedelta(hours=2))
-            )
-            result = ytpb_cli_invoke(["mpd", "refresh", str(manifest_path)])
+        result = ytpb_cli_invoke(["mpd", "refresh", str(manifest_path)])
 
     # Then:
     assert result.exit_code == 0
