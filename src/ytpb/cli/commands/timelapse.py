@@ -7,6 +7,7 @@ from pathlib import Path
 import click
 import cloup
 import structlog
+from PIL import Image
 from rich.console import Console
 from rich.progress import (
     BarColumn,
@@ -18,7 +19,7 @@ from rich.progress import (
 )
 from timedelta_isoformat import timedelta
 
-from ytpb.actions.capture import capture_frame
+from ytpb.actions.capture import capture_frames, extract_frame_as_image
 from ytpb.cli.commands.download import render_download_output_path_context
 
 from ytpb.cli.common import (
@@ -165,7 +166,7 @@ def timelapse_command(
     preview: bool,
     every: timedelta,
     video_format: str,
-    output: Path,
+    output_path: Path,
     yt_dlp: bool,
     no_cleanup: bool,
     force_update_cache: bool,
@@ -326,7 +327,7 @@ def timelapse_command(
             "duration": requested_end_date - requested_start_date,
             "every": every,
         }
-        expand_template_output_path(
+        final_output_path = expand_template_output_path(
             output_path,
             template_context,
             render_timelapse_output_path_context,
@@ -341,51 +342,24 @@ def timelapse_command(
     capturing_progress = create_capturing_progress_bar()
     capturing_task = capturing_progress.add_task("", total=len(dates_to_capture))
 
-    def _save_frame_as_image(
-        segment: Segment, target_date: datetime, output_path_pattern: Path, i: int
+    def _save_ith_frame_as_image(
+        image: Image, output_path_pattern: Path, i: int
     ) -> None:
-        target_offset = target_date - segment.ingestion_start_date
-        image = capture_frame(segment.local_path, target_offset)
         image_output_name = output_path_pattern.name % i
         image_output_path = output_path_pattern.with_name(image_output_name)
         image.save(image_output_path, quality=80)
 
     with capturing_progress:
-        # Save the first frame of a time-lapse, a frame of the located start segment.
-        _save_frame_as_image(start_segment, requested_start_date, final_output_path, 0)
+        # Save the first frame of a time-lapse -- the start segment was already located.
+        first_frame_image = extract_frame_as_image(start_segment, requested_start_date)
+        _save_ith_frame_as_image(first_frame_image, final_output_path, 0)
         capturing_progress.advance(capturing_task)
 
-        previous_sequence = start_segment.sequence
-        for i, target_date in enumerate(dates_to_capture[1:], 1):
-            # First, locate a segment by a target date.
-            sl = SequenceLocator(
-                reference_base_url,
-                reference_sequence=previous_sequence,
-                temp_directory=playback.get_temp_directory(),
-                session=playback.session,
-            )
-            is_end = i == length_of_timelapse - 1
-            found_sequence = sl.find_sequence_by_time(
-                target_date.timestamp(), end=is_end
-            )
-            previous_sequence = found_sequence
-
-            try:
-                segment = playback.get_downloaded_segment(
-                    found_sequence, reference_base_url
-                )
-            except FileNotFoundError:
-                downloaded_path = download_segment(
-                    found_sequence,
-                    reference_base_url,
-                    playback.get_temp_directory(),
-                    session=playback.session,
-                )
-                segment = Segment.from_file(downloaded_path)
-
-            # And save a desired frame as i-th image of a time-lapse.
-            _save_frame_as_image(segment, target_date, final_output_path, i)
-
+        captured = capture_frames(
+            playback, dates_to_capture[1:], reference_base_url, start_segment.sequence
+        )
+        for i, (image, _) in enumerate(captured, 1):
+            _save_ith_frame_as_image(image, final_output_path, i)
             capturing_progress.advance(capturing_task)
 
     try:

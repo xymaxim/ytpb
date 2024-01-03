@@ -9,7 +9,7 @@ import click
 import cloup
 import structlog
 
-from ytpb.actions.capture import capture_frame
+from ytpb.actions.capture import extract_frame_as_image
 from ytpb.cli.common import (
     create_playback,
     prepare_line_for_summary_info,
@@ -205,10 +205,7 @@ def capture_command(
         final_output_path = output_path
     final_output_path = resolve_output_path(final_output_path)
 
-    image = capture_frame(
-        moment_segment.local_path,
-        requested_moment_date - moment_segment.ingestion_start_date,
-    )
+    image = extract_frame_as_image(moment_segment, requested_moment_date)
     image.save(final_output_path, quality=80)
 
     try:
