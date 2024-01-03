@@ -14,7 +14,7 @@ def normalize_video_url(video_url_or_id: str) -> str:
 
     for pattern in patterns:
         if matched := re.match(pattern, video_url_or_id):
-            video_url = build_video_url_from_id(matched.group("video_id"))
+            video_url = build_video_url_with_id(matched.group("video_id"))
             break
     else:
         raise BadCommandArgument(
@@ -42,11 +42,11 @@ def extract_media_type_from_url(url: str) -> tuple[str, str]:
     return type_name, subtype_name
 
 
-def get_id_from_base_url(base_url: str) -> str:
+def extract_id_from_base_url(base_url: str) -> str:
     return extract_parameter_from_url("id", base_url)[:11]
 
 
-def get_id_from_video_url(video_url: str) -> str:
+def extract_id_from_video_url(video_url: str) -> str:
     parsed = urlparse(video_url)
     try:
         return parse_qs(parsed.query)["v"][0]
@@ -54,13 +54,13 @@ def get_id_from_video_url(video_url: str) -> str:
         return parsed.path.lstrip("/")
 
 
-def build_video_url_from_id(video_id: str) -> str:
+def build_video_url_with_id(video_id: str) -> str:
     return f"https://www.youtube.com/watch?v={video_id}"
 
 
 def build_video_url_from_base_url(base_url: str) -> str:
-    video_id = get_id_from_base_url(base_url)
-    return build_video_url_from_id(video_id)
+    video_id = extract_id_from_base_url(base_url)
+    return build_video_url_with_id(video_id)
 
 
 def check_base_url_is_expired(base_url: str) -> bool:

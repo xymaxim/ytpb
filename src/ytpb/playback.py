@@ -38,8 +38,8 @@ from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.url import (
     build_video_url_from_base_url,
     check_base_url_is_expired,
+    extract_id_from_video_url,
     extract_parameter_from_url,
-    get_id_from_video_url,
 )
 
 
@@ -170,7 +170,7 @@ class Playback:
 
     @classmethod
     def from_cache(cls, video_url: str, **kwargs) -> "Playback":
-        video_id = get_id_from_video_url(video_url)
+        video_id = extract_id_from_video_url(video_url)
         cached_item = read_from_cache(video_id, Playback.get_cache_directory())
         if cached_item is None:
             raise CachedItemNotFoundError
