@@ -35,11 +35,6 @@ OUTPUT_PATH_PLACEHOLDER_NAME = r"[a-z_]+"
 OUTPUT_PATH_PLACEHOLDER_RE = re.compile(rf"<({OUTPUT_PATH_PLACEHOLDER_NAME})>")
 
 
-class OutputStemPostfixType(enum.Enum):
-    DURATION = enum.auto()
-    END = enum.auto()
-
-
 class TitleAllowedCharacters(enum.StrEnum):
     UNICODE = enum.auto()
     ASCII = enum.auto()
