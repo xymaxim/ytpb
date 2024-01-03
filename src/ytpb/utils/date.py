@@ -99,7 +99,7 @@ def format_iso_datetime(
 class DurationFormatPattern(enum.Enum):
     NUMERIC = "%H:%M%:%S"
     ISO8601 = "PT[%-HH][%-MM][%-SS]"
-    ISO8601_LIKE = "[%-H h ][%-M m ][%-S s]"
+    IN_SENTENCE = "[%-H h ][%-M m ][%-S s]"
 
 
 def format_duration(duration: timedelta, pattern: DurationFormatPattern) -> str:

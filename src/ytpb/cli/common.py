@@ -164,7 +164,7 @@ def print_summary_info(
 
     # total_duration = format_duration(
     #     timedelta(seconds=actual_date_interval.duration),
-    #     DurationFormatPattern.ISO8601_LIKE
+    #     DurationFormatPattern.IN_SENTENCE
     # )
     # click.echo(f"Total duration: {total_duration}, estimated size: ?")
 
