@@ -1,10 +1,10 @@
 import logging
-from datetime import datetime, time
+from datetime import datetime, time, timedelta
 from enum import auto, StrEnum
 from typing import Literal, NamedTuple
 
 import click
-from timedelta_isoformat import timedelta
+from timedelta_isoformat import timedelta as isotimedelta
 
 from ytpb import types
 from ytpb.conditional import FORMAT_SPEC_RE
@@ -81,14 +81,14 @@ class RewindIntervalParamType(click.ParamType):
         self,
         part: str,
         end: bool = False,
-    ) -> int | str | Literal["now", ".."] | datetime | timedelta:
+    ) -> int | str | Literal["now", ".."] | datetime | timedelta | isotimedelta:
         match part:
             # Sequence number
             case x if x.isdecimal():
                 output = int(x)
             # Duration
             case x if x[0] == "P":
-                output = timedelta.fromisoformat(x)
+                output = isotimedelta.fromisoformat(x)
             # Replacing components
             case x if set(x) & set("DHMS"):
                 output = x

@@ -1,7 +1,7 @@
 import email
 import shutil
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import click
@@ -17,7 +17,6 @@ from rich.progress import (
     TextColumn,
     TimeRemainingColumn,
 )
-from timedelta_isoformat import timedelta
 
 from ytpb.actions.capture import capture_frames, extract_frame_as_image
 from ytpb.cli.commands.download import render_download_output_path_context

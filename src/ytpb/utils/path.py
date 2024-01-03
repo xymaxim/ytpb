@@ -4,13 +4,13 @@ import string
 import textwrap
 import unicodedata
 import warnings
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Callable, TypedDict
 
 import pathvalidate
 import unidecode
-from timedelta_isoformat import timedelta
+from timedelta_isoformat import timedelta as isotimedelta
 
 from ytpb.config import AddressableDict
 from ytpb.types import AddressableMappingProtocol
@@ -90,7 +90,8 @@ class OutputPathContextRenderer:
 
     @staticmethod
     def render_duration(value: timedelta, settings: AddressableMappingProtocol) -> str:
-        return value.isoformat()
+        seconds_rounded = round(value.total_seconds())
+        return isotimedelta(seconds=seconds_rounded).isoformat()
 
 
 class MinimalOutputPathContext(TypedDict):

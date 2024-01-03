@@ -1,10 +1,9 @@
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 
 import pytest
 from dateutil.tz import tzlocal
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime
-from timedelta_isoformat import timedelta
 
 from ytpb.cli.parameters import (
     FormatSpecParamType,

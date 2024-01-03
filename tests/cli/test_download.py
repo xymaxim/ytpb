@@ -69,6 +69,7 @@ def test_download_within_interval(
                 stream_url,
             ],
             catch_exceptions=False,
+            standalone_mode=False,
         )
 
     # Then:
