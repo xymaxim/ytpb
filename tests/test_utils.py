@@ -10,7 +10,6 @@ from ytpb.utils.date import (
     express_timedelta_in_words,
     format_duration,
     format_iso_datetime,
-    format_iso_duration,
     format_timedelta,
     ISO8601DateStyleParameters,
 )
@@ -168,24 +167,6 @@ class TestFormatDatetime:
                 datetime.now(timezone.utc),
                 ISO8601DateStyleParameters(offset_format="invalid"),
             )
-
-
-@pytest.mark.parametrize(
-    "duration,expected",
-    [
-        (timedelta(seconds=0), "PT0S"),
-        (timedelta(seconds=0.1), "PT0S"),
-        (timedelta(seconds=0.5), "PT1S"),
-        (timedelta(minutes=1), "PT1M"),
-        (timedelta(hours=1), "PT1H"),
-        (timedelta(hours=1, minutes=2, seconds=0), "PT1H2M"),
-        (timedelta(hours=1, minutes=2, seconds=3), "PT1H2M3S"),
-        (timedelta(hours=1, minutes=0, seconds=3), "PT1H3S"),
-        (timedelta(hours=0, minutes=2, seconds=3), "PT2M3S"),
-    ],
-)
-def test_format_iso_duration(duration, expected):
-    assert expected == format_iso_duration(duration)
 
 
 @pytest.mark.parametrize(

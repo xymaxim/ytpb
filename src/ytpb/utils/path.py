@@ -4,18 +4,18 @@ import string
 import textwrap
 import unicodedata
 import warnings
-from datetime import datetime, timedelta
+from datetime import datetime
 from pathlib import Path
 from typing import Callable, TypedDict
 
 import pathvalidate
 import unidecode
+from timedelta_isoformat import timedelta
 
 from ytpb.config import AddressableDict
 from ytpb.types import AddressableMappingProtocol
 from ytpb.utils.date import (
     format_iso_datetime,
-    format_iso_duration,
     ISO8601DateFormatter,
     ISO8601DateStyleParameters,
 )
@@ -89,8 +89,8 @@ class OutputPathContextRenderer:
             return formatter.format("{}", value)
 
     @staticmethod
-    def render_duration(value, settings: AddressableMappingProtocol) -> str:
-        return format_iso_duration(value)
+    def render_duration(value: timedelta, settings: AddressableMappingProtocol) -> str:
+        return value.isoformat()
 
 
 class MinimalOutputPathContext(TypedDict):

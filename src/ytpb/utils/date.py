@@ -123,22 +123,6 @@ def format_duration(duration: timedelta, pattern: DurationFormatPattern) -> str:
     return output
 
 
-def format_iso_duration(duration: timedelta) -> str:
-    total_seconds = math.floor(duration.total_seconds() + 0.5)
-    total_minutes, ss = divmod(total_seconds, 60)
-    hh, mm = divmod(total_minutes, 60)
-
-    output = "PT"
-    if hh != 0:
-        output += "%dH" % hh
-    if mm != 0:
-        output += "%dM" % mm
-    if (hh == 0 and mm == 0) or ss != 0:
-        output += "%dS" % ss
-
-    return output
-
-
 def format_timedelta(duration: timedelta, use_ms_precision: bool = False) -> str:
     duration_total_seconds = abs(duration.total_seconds())
 
