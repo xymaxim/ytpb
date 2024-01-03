@@ -1,20 +1,8 @@
-import logging
-from pathlib import Path
-
-from platformdirs import user_cache_path
-
 from ytpb.types import RelativePointInStream
 
-logger = logging.getLogger(__name__)
 
-
-def get_cache_directory() -> Path:
-    return Path(user_cache_path(), "ytpb")
-
-
-def remove_cached_file(path: Path):
-    logger.debug("Removing cached file '%s'", path)
-    path.unlink()
+S_TO_MS = 1e3
+US_TO_S = 1e-6
 
 
 def resolve_relativity_in_interval(start, end):

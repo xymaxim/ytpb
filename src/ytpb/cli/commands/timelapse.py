@@ -42,7 +42,7 @@ from ytpb.exceptions import QueryError, SegmentDownloadError, SequenceLocatingEr
 from ytpb.segment import Segment
 from ytpb.types import AddressableMappingProtocol, DateInterval, SegmentSequence
 from ytpb.utils.date import DurationFormatPattern, format_duration
-from ytpb.utils.other import resolve_relativity_in_interval
+from ytpb.utils.other import resolve_relativity_in_interval, S_TO_MS
 from ytpb.utils.path import (
     expand_template_output_path,
     IntervalOutputPathContext,
@@ -50,7 +50,6 @@ from ytpb.utils.path import (
     OUTPUT_PATH_PLACEHOLDER_RE,
 )
 from ytpb.utils.remote import request_reference_sequence
-from ytpb.utils.units import S_TO_MS
 
 logger = structlog.get_logger(__name__)
 

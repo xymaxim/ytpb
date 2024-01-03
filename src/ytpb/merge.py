@@ -7,7 +7,7 @@ from typing import Any
 from more_itertools import first, last
 
 from ytpb import ffmpeg
-from ytpb.utils.units import S_TO_MS
+from ytpb.utils.other import S_TO_MS
 
 DEFAULT_VIDEO_ENCODING_SETTINGS = {
     "h264": "libx264 -crf 18",
@@ -92,7 +92,9 @@ def mux_and_cut_boundary_segment(
             )
             ffmpeg_codecs_options += ["-c:a", "copy"]
 
-        ffmpeg.run_ffmpeg(ffmpeg_input_options + ffmpeg_codecs_options + [str(output_path)])
+        ffmpeg.run_ffmpeg(
+            ffmpeg_input_options + ffmpeg_codecs_options + [str(output_path)]
+        )
 
 
 def _compose_concat_file(segment_paths, temp_directory, suffix: str = ""):
@@ -265,7 +267,9 @@ def merge_segments(
         merge_segments.paths_to_cleanup.extend(parts_to_merge)
 
         if num_of_segments == 1:
-            ffmpeg.run_ffmpeg(["-i", str(parts_to_merge[0]), "-c", "copy", str(output_path)])
+            ffmpeg.run_ffmpeg(
+                ["-i", str(parts_to_merge[0]), "-c", "copy", str(output_path)]
+            )
         else:
             concat_file_path = _compose_concat_file(parts_to_merge, temp_directory)
             ffmpeg.run_ffmpeg(

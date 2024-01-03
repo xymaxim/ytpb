@@ -9,7 +9,7 @@ from ytpb.mpd import NAMESPACES as NS
 from ytpb.playback import Playback
 from ytpb.streams import SetOfStreams
 from ytpb.types import SequenceRange
-from ytpb.utils.units import S_TO_MS
+from ytpb.utils.other import S_TO_MS
 from ytpb.utils.url import extract_parameter_from_url
 
 

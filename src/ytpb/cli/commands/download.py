@@ -35,7 +35,7 @@ from ytpb.types import (
     RelativeSegmentSequence,
     SegmentSequence,
 )
-from ytpb.utils.other import resolve_relativity_in_interval
+from ytpb.utils.other import resolve_relativity_in_interval, S_TO_MS
 from ytpb.utils.path import (
     expand_template_output_path,
     IntervalOutputPathContext,
@@ -45,7 +45,6 @@ from ytpb.utils.path import (
     render_minimal_output_path_context,
 )
 from ytpb.utils.remote import request_reference_sequence
-from ytpb.utils.units import S_TO_MS
 from ytpb.utils.url import extract_parameter_from_url
 
 logger = structlog.get_logger(__name__)

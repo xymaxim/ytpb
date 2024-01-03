@@ -8,7 +8,7 @@ import av
 
 from ytpb.exceptions import YtpbError
 from ytpb.types import SegmentSequence, Timestamp
-from ytpb.utils.units import US_TO_S
+from ytpb.utils.other import US_TO_S
 
 logger = logging.getLogger(__name__)
 
