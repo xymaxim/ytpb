@@ -1,5 +1,4 @@
 import json
-import os
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from pathlib import Path

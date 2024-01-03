@@ -4,21 +4,12 @@ import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal, NamedTuple
+from typing import Literal
 from urllib.parse import parse_qs, urlparse
 
 import requests
 import structlog
 from platformdirs import user_cache_path
-from rich.console import Console
-from rich.progress import (
-    BarColumn,
-    MofNCompleteColumn,
-    Progress,
-    TaskProgressColumn,
-    TextColumn,
-    TimeRemainingColumn,
-)
 
 from ytpb.cache import read_from_cache, write_to_cache
 from ytpb.config import USER_AGENT
@@ -33,7 +24,6 @@ from ytpb.exceptions import (
 from ytpb.fetchers import InfoFetcher, YtpbInfoFetcher
 from ytpb.info import LEFT_NOT_FETCHED, LeftNotFetched, YouTubeVideoInfo
 from ytpb.locate import SequenceLocator
-from ytpb.merge import merge_segments
 from ytpb.mpd import extract_representations_info
 from ytpb.segment import Segment
 from ytpb.streams import SetOfStreams, Streams

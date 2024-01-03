@@ -1,6 +1,5 @@
 from collections.abc import Iterator
-from datetime import datetime, timedelta
-from pathlib import Path
+from datetime import datetime
 
 import av
 import structlog

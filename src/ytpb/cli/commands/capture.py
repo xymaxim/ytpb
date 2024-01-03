@@ -4,7 +4,6 @@ from datetime import datetime
 from pathlib import Path
 from typing import Literal
 
-import av
 import click
 import cloup
 import structlog
@@ -190,7 +189,7 @@ def capture_command(
     # Absolute output path of an image with extension.
     final_output_path: Path
     if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output_path)):
-        template_context: MpdOutputPathContext = {
+        template_context: CaptureOutputPathContext = {
             "id": playback.video_id,
             "title": playback.info.title,
             "moment_date": requested_moment_date,
@@ -211,7 +210,7 @@ def capture_command(
     try:
         saved_to_path_value = final_output_path.relative_to(Path.cwd())
     except ValueError:
-        saved_to_path_value = saved_to_path
+        saved_to_path_value = final_output_path
     click.echo(f"\nSuccess! Image saved to '{saved_to_path_value}'.")
 
     run_temp_directory = playback.get_temp_directory()

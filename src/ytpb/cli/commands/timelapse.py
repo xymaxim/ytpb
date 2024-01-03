@@ -40,7 +40,6 @@ from ytpb.cli.options import (
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewindInterval
 from ytpb.download import download_segment
 from ytpb.exceptions import QueryError, SegmentDownloadError, SequenceLocatingError
-from ytpb.locate import SequenceLocator
 from ytpb.segment import Segment
 from ytpb.types import AddressableMappingProtocol, DateInterval, SegmentSequence
 from ytpb.utils.date import DurationFormatPattern, format_duration
@@ -311,7 +310,7 @@ def timelapse_command(
     if preview:
         dates_to_capture = dates_to_capture[:3]
 
-    length_of_timelapse = len(dates_to_capture)
+    len(dates_to_capture)
 
     # Absolute output path of images with a numeric pattern.
     final_output_path: Path

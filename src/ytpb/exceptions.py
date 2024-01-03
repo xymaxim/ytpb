@@ -1,4 +1,11 @@
+from __future__ import annotations
+
+from typing import TYPE_CHECKING
+
 import requests
+
+if TYPE_CHECKING:
+    from ytpb.info import BroadcastStatus
 
 
 class YtpbError(Exception):
@@ -6,7 +13,7 @@ class YtpbError(Exception):
 
 
 class BroadcastStatusError(YtpbError):
-    def __init__(self, message: str, status: "BroadcastStatus"):
+    def __init__(self, message: str, status: BroadcastStatus):
         self.status = status
         super().__init__(message)
 

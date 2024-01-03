@@ -41,7 +41,7 @@ class PointInStreamParamType(click.ParamType):
             case sequence if value.isdecimal():
                 output = SegmentSequence(sequence)
             # Seems like a date and time
-            case potential_date if value[:4].isdecimal():
+            case value if value[:4].isdecimal():
                 try:
                     output = ensure_date_aware(datetime.fromisoformat(value))
                 except ValueError:
