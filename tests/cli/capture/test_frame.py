@@ -63,6 +63,7 @@ def test_capture_by_sequence_number(
             [
                 "--no-config",
                 "capture",
+                "frame",
                 "--no-cache",
                 "--moment",
                 "7959120",
@@ -101,6 +102,7 @@ def test_capture_by_date(
             [
                 "--no-config",
                 "capture",
+                "frame",
                 "--no-cache",
                 "--moment",
                 "2023-03-25T23:33:55+00",
@@ -126,6 +128,7 @@ def test_unsupported_output_extension(
             [
                 "--no-config",
                 "capture",
+                "frame",
                 "--moment",
                 "2023-03-25T23:33:55+00",
                 "--output",
@@ -147,6 +150,7 @@ def test_not_provided_output_extension(
             [
                 "--no-config",
                 "capture",
+                "frame",
                 "--moment",
                 "2023-03-25T23:33:55+00",
                 "--output",

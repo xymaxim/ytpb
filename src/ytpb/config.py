@@ -92,8 +92,17 @@ DEFAULT_CONFIG = AddressableDict(
                 "output_path": DEFAULT_OUTPUT_PATH,
             },
             "capture": {
-                "video_format": "best(format eq mp4 and frame_rate eq 30)",
-                "output_path": "<title>_<moment_date>.jpg",
+                "frame": {
+                    "video_format": "best(format eq mp4 and frame_rate eq 30)",
+                    "output_path": "<title>_<moment_date>.jpg",
+                },
+                "timelapse": {
+                    "video_format": "best(format eq mp4 and frame_rate eq 30)",
+                    "output_path": (
+                        "<title>/<input_start_date>/<every>/"
+                        "<title>_<input_start_date>_<every>_%04d.jpg"
+                    ),
+                },
             },
             "mpd": {
                 "compose": {
@@ -104,13 +113,6 @@ DEFAULT_CONFIG = AddressableDict(
                     ),
                     "output_path": f"{DEFAULT_OUTPUT_PATH}.mpd",
                 }
-            },
-            "timelapse": {
-                "video_format": "best(format eq mp4 and frame_rate eq 30)",
-                "output_path": (
-                    "<title>/<input_start_date>/<every>/"
-                    "<title>_<input_start_date>_<every>_%04d.jpg"
-                ),
             },
         },
         "general": {

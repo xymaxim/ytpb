@@ -7,10 +7,9 @@ import cloup
 import structlog
 import toml
 
-from ytpb.cli.commands.capture import capture_command
+from ytpb.cli.commands.capture import capture_group
 from ytpb.cli.commands.download import download_command
 from ytpb.cli.commands.mpd import mpd_group
-from ytpb.cli.commands.timelapse import timelapse_command
 from ytpb.cli.options import config_options, logging_options
 
 from ytpb.config import (
@@ -83,8 +82,7 @@ def cli(ctx: click.Context, config_path: Path, no_config: bool, debug: bool) -> 
 
 cli.section(
     "Top-level commands",
-    capture_command,
+    capture_group,
     download_command,
     mpd_group,
-    timelapse_command,
 )
