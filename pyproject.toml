@@ -43,3 +43,6 @@ Source = "https://github.com/xymaxim/ytpb"
 
 [tool.black]
 line-length = 88
+
+[tool.pytest.ini_options]
+pm-patterns-base-dir = "tests/data/expected/"
