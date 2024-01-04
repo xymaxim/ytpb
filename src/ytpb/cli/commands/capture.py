@@ -18,10 +18,10 @@ from rich.progress import (
     TextColumn,
     TimeRemainingColumn,
 )
+from timedelta_isoformat import timedelta as isotimedelta
 
 from ytpb.actions.capture import capture_frames, extract_frame_as_image
 from ytpb.cli.commands.download import render_download_output_path_context
-
 from ytpb.cli.common import (
     create_playback,
     prepare_line_for_summary_info,
@@ -103,7 +103,7 @@ def render_timelapse_output_path_context(
     for variable in TimelapseOutputPathContext.__annotations__.keys():
         match variable:
             case "every" as x:
-                output[x] = context[x].isoformat().replace("P", "E")
+                output[x] = isotimedelta.isoformat(context[x]).replace("P", "E")
 
     output.update(render_download_output_path_context(context, config_settings))
 
@@ -114,10 +114,10 @@ def convert_every_option_to_timedelta(
     ctx: click.Context, param: click.Option, value: str
 ) -> timedelta:
     try:
-        output = timedelta.fromisoformat(f"PT{value}")
+        output = isotimedelta.fromisoformat(f"PT{value}")
     except ValueError:
         raise click.BadParameter(
-            "Couldn't match repetetion format, e.g.: '30S', '1DT2H3M4S'."
+            "Couldn't match repetetion format, e.g.: '30S', '1DT2H3M4S', etc."
         )
     return output
 
@@ -293,7 +293,7 @@ def frame_command(
         saved_to_path_value = final_output_path.relative_to(Path.cwd())
     except ValueError:
         saved_to_path_value = final_output_path
-    click.echo(f"\nSuccess! Image saved to '{saved_to_path_value}'.")
+    click.echo(f"\nSuccess! Saved to '{saved_to_path_value}'.")
 
     run_temp_directory = playback.get_temp_directory()
     if no_cleanup:
@@ -409,37 +409,10 @@ def many_command(
 
     click.echo("done.")
 
-    for point in (requested_start, requested_end):
-        if type(point) is SegmentSequence:
-            sequence = point
-            try:
-                download_segment(
-                    sequence,
-                    reference_base_url,
-                    output_directory=playback.get_temp_directory(),
-                    session=playback.session,
-                    force_download=False,
-                )
-            except SegmentDownloadError as exc:
-                click.echo()
-                logger.error(exc, sequence=exc.sequence, exc_info=True)
-                sys.exit(1)
-
     start_segment = playback.get_downloaded_segment(
         rewind_range.start, reference_base_url
     )
-    try:
-        end_segment = playback.get_downloaded_segment(
-            rewind_range.end, reference_base_url
-        )
-    except FileNotFoundError:
-        downloaded_path = download_segment(
-            rewind_range.end,
-            reference_base_url,
-            playback.get_temp_directory(),
-            session=playback.session,
-        )
-        end_segment = Segment.from_file(downloaded_path)
+    end_segment = playback.get_downloaded_segment(rewind_range.end, reference_base_url)
 
     requested_start_date: datetime
     match requested_start:
@@ -486,13 +459,9 @@ def many_command(
 
     if preview:
         click.echo("info: Preview mode is enabled, only first 3 frames will be taken.")
-
-    click.echo()
-
-    if preview:
         dates_to_capture = dates_to_capture[:3]
 
-    len(dates_to_capture)
+    click.echo()
 
     # Absolute output path of images with a numeric pattern.
     final_output_path: Path
