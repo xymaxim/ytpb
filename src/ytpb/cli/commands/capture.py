@@ -46,7 +46,7 @@ from ytpb.cli.parameters import (
 )
 from ytpb.download import download_segment
 from ytpb.exceptions import QueryError, SegmentDownloadError, SequenceLocatingError
-from ytpb.locate import SequenceLocator
+from ytpb.locate import SegmentLocator
 from ytpb.segment import Segment
 from ytpb.types import (
     AbsolutePointInStream,
@@ -224,7 +224,7 @@ def frame_command(
             moment_sequence = sequence
         case datetime() as date:
             try:
-                sl = SequenceLocator(
+                sl = SegmentLocator(
                     reference_base_url,
                     temp_directory=playback.get_temp_directory(),
                     session=playback.session,

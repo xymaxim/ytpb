@@ -23,7 +23,7 @@ from ytpb.exceptions import (
 )
 from ytpb.fetchers import InfoFetcher, YtpbInfoFetcher
 from ytpb.info import LEFT_NOT_FETCHED, LeftNotFetched, YouTubeVideoInfo
-from ytpb.locate import SequenceLocator
+from ytpb.locate import SegmentLocator
 from ytpb.mpd import extract_representations_info
 from ytpb.segment import Segment
 from ytpb.streams import SetOfStreams, Streams
@@ -305,7 +305,7 @@ class Playback:
         if isinstance(point, SegmentSequence):
             sequence = point
         else:
-            sl = SequenceLocator(
+            sl = SegmentLocator(
                 base_url,
                 temp_directory=self.get_temp_directory(),
                 session=self.session,
@@ -328,7 +328,7 @@ class Playback:
         else:
             itag = itag or next(iter(self.streams)).itag
             base_url = self._get_reference_base_url(itag)
-            sl = SequenceLocator(
+            sl = SegmentLocator(
                 base_url,
                 temp_directory=self.get_temp_directory(),
                 session=self.session,

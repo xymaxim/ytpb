@@ -5,7 +5,7 @@ import av
 import structlog
 from PIL import Image
 
-from ytpb.locate import SequenceLocator
+from ytpb.locate import SegmentLocator
 from ytpb.playback import Playback
 
 from ytpb.segment import Segment
@@ -44,7 +44,7 @@ def capture_frames(
     number_of_targets = len(target_dates)
     previous_sequence = reference_sequence
     for i, target_date in enumerate(target_dates):
-        sl = SequenceLocator(
+        sl = SegmentLocator(
             base_url,
             reference_sequence=previous_sequence,
             temp_directory=playback.get_temp_directory(),

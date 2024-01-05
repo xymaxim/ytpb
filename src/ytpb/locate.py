@@ -69,7 +69,7 @@ class SequenceMetadataPair:
         return metadata
 
 
-class SequenceLocator:
+class SegmentLocator:
     """Sequence number locator which finds a segment with the desired time.
 
     The location algorithm contains three steps: (1) roughly estimate a

@@ -6,7 +6,7 @@ import pytest
 
 from conftest import TEST_DATA_PATH
 
-from ytpb.locate import SequenceLocator, SequenceMetadataPair
+from ytpb.locate import SegmentLocator, SequenceMetadataPair
 from ytpb.segment import Segment, SegmentMetadata
 from ytpb.types import SegmentSequence
 
@@ -89,7 +89,7 @@ class BaseGapCase:
         cls.test_base_url = "https://rr5---sn-5hneknee.googlevideo.com/videoplayback/expire/1679810403/ei/A4sfZK2bNI6HyQWm_ayoBQ/ip/0.0.0.0/id/kHwmzef842g.2/itag/140/source/yt_live_broadcast/requiressl/yes/spc/99c5CWjeTpgWlc2Ht4dNOPt0QhK37Bg/vprv/1/playlist_type/DVR/ratebypass/yes/mime/audio%2Fmp4/live/1/gir/yes/noclen/1/dur/2.000/keepalive/yes/fexp/24007246/sparams/expire,ei,ip,id,itag,source,requiressl,spc,vprv,playlist_type,ratebypass,mime,live,gir,noclen,dur/sig/AOq0QJ8wRQIhAPBxN7yXkU2fPTceJrT_lK4Xw6mT7xWGOjkOrV7Yeh8KAiAq1suuogbWY1qV3dAERpp5I-YUSlVRZQBFlqRpmH-5xQ%3D%3D/mh/XB/mm/44/mn/sn-5hneknee/ms/lva/mt/1679787559/mv/u/mvi/5/pl/24/lsparams/mh,mm,mn,ms,mv,mvi,pl/lsig/AG3C_xAwRQIgfNF-yRJyHRp2Uy4nuoe4-SExdFLMbippDYfUo9FMH0ACIQCEdJrPkdJIilz7Kr-cmdu1Nh3NOwRVdbndOsu-ubkChQ%3D%3D/"
 
     def setup_method(self):
-        self.ssl = SequenceLocator(self.test_base_url, self.reference_sequence)
+        self.ssl = SegmentLocator(self.test_base_url, self.reference_sequence)
 
 
 class TestGapCase1(BaseGapCase):
@@ -110,7 +110,7 @@ class TestGapCase1(BaseGapCase):
         if reference is None:
             assert expected_sequence == self.ssl.find_sequence_by_time(target_time)
         else:
-            sl = SequenceLocator(self.test_base_url, reference)
+            sl = SegmentLocator(self.test_base_url, reference)
             assert expected_sequence == sl.find_sequence_by_time(target_time)
 
     @pytest.mark.xfail
@@ -122,7 +122,7 @@ class TestGapCase1(BaseGapCase):
         if reference is None:
             assert expected_sequence == self.ssl.find_sequence_by_time(target_time)
         else:
-            sl = SequenceLocator(self.test_base_url, reference)
+            sl = SegmentLocator(self.test_base_url, reference)
             assert expected_sequence == sl.find_sequence_by_time(target_time)
 
 
