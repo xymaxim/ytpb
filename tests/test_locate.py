@@ -132,7 +132,7 @@ class TestGapCase2(BaseGapCase):
 
     def test_S1(self):
         assert 7947333 == self.ssl.find_sequence_by_time(1679763599.262686)
-        assert self.track == [
+        assert self.ssl.track == [
             (7947323, 20.997890949249268),
             (7947333, 1.00620698928833),
             (7947334, -1.0062079429626465),
