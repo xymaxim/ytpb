@@ -70,6 +70,14 @@ class SequenceMetadataPair:
 
 
 class SequenceLocator:
+    """Sequence number locator which finds a segment with the desired time.
+
+    The location algorithm contains three steps: (1) roughly estimate a
+    sequence number based on the constant duration of segments; (2) refine
+    the pre-estimated sequence to find a candidate; (3) check if the
+    candidate is not in a gap.
+    """
+
     def __init__(
         self,
         base_url: str,
@@ -77,13 +85,6 @@ class SequenceLocator:
         temp_directory: Path | None = None,
         session: requests.Session | None = None,
     ) -> None:
-        """Sequence number locator which finds a segment with the desired time.
-
-        The location algorithm contains three steps: (1) roughly estimate a
-        sequence number based on the constant duration of segments; (2) refine
-        the pre-estimated sequence to find a candidate; (3) check if the
-        candidate is not in a gap.
-        """
         self.base_url = base_url
         self._temp_directory = temp_directory
         self.session = session or requests.Session()
