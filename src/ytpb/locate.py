@@ -5,7 +5,6 @@ import tempfile
 from pathlib import Path
 
 import requests
-
 import structlog
 
 from ytpb.download import compose_default_segment_filename, download_segment
@@ -70,12 +69,12 @@ class SequenceMetadataPair:
 
 
 class SegmentLocator:
-    """Sequence number locator which finds a segment with the desired time.
+    """A locator which finds a segment with the desired time.
 
-    The location algorithm contains three steps: (1) roughly estimate a
-    sequence number based on the constant duration of segments; (2) refine
-    the pre-estimated sequence to find a candidate; (3) check if the
-    candidate is not in a gap.
+    The location algorithm contains three steps: (1) roughly estimate a sequence
+    number based on the constant duration of segments; (2) refine the
+    pre-estimated sequence to find a candidate; (3) check if a candidate is not
+    in a gap.
     """
 
     def __init__(
@@ -86,20 +85,16 @@ class SegmentLocator:
         session: requests.Session | None = None,
     ) -> None:
         self.base_url = base_url
-        self._temp_directory = temp_directory
-        self.session = session or requests.Session()
-
-        self.segment_duration = float(extract_parameter_from_url("dur", base_url))
 
         if reference_sequence is None:
             reference_sequence = request_reference_sequence(base_url)
         self.reference = SequenceMetadataPair(reference_sequence, self)
 
-        self._track: list[tuple[SegmentSequence, float]] = []
+        self._temp_directory = temp_directory
+        self.session = session or requests.Session()
 
-    @property
-    def track(self) -> list[tuple[SegmentSequence, float]]:
-        return self._track
+        self.segment_duration = float(extract_parameter_from_url("dur", base_url))
+        self.track: list[tuple[SegmentSequence, float]] = []
 
     def get_temp_directory(self):
         if self._temp_directory is None:
