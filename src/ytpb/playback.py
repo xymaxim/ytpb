@@ -317,15 +317,11 @@ class Playback:
             case SegmentSequence() as sequence:
                 self.download_segment(sequence, base_url)
                 segment = self.get_downloaded_segment(sequence, base_url)
-
                 if not is_end:
                     date = segment.ingestion_start_date
                 else:
                     date = segment.ingestion_end_date
-
-                moment = RewindMoment(
-                    date=date, sequence=sequence, cut_at=0, is_end=is_end
-                )
+                moment = RewindMoment(date, sequence, 0, is_end)
             case datetime() as date:
                 sl = SegmentLocator(
                     base_url,
@@ -334,13 +330,8 @@ class Playback:
                 )
                 sequence = sl.find_sequence_by_time(point.timestamp(), end=is_end)
                 segment = self.get_downloaded_segment(sequence, base_url)
-                if not is_end:
-                    cut_at = (date - segment.ingestion_start_date).total_seconds()
-                else:
-                    cut_at = (segment.ingestion_end_date - date).total_seconds()
-                moment = RewindMoment(
-                    date=date, sequence=sequence, cut_at=cut_at, is_end=is_end
-                )
+                cut_at = (date - segment.ingestion_start_date).total_seconds()
+                moment = RewindMoment(date, sequence, cut_at, is_end)
 
         return moment
 

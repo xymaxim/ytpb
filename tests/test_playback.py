@@ -63,7 +63,7 @@ class TestLocateMoment:
     def test_end_date(self, add_responses_callback_for_reference_base_url: Callable):
         add_responses_callback_for_reference_base_url()
         date = datetime.fromisoformat("2023-03-25T23:33:55Z")
-        expected = RewindMoment(date, 7959120, 1.488092, True)
+        expected = RewindMoment(date, 7959120, 0.508824, True)
         assert expected == self.playback.locate_moment(date, itag="140", is_end=True)
 
 
