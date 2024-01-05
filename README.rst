@@ -131,7 +131,7 @@ One frame
 
 For example, let's take a picture of the moment happening right now: ::
 
-  $ ytpb capture --moment now <STREAM>
+  $ ytpb capture frame --moment now <STREAM>
   $ ls
   Stream-Title_20231227T012954+00.jpg
 
@@ -141,7 +141,7 @@ Timelapse
 Not just a single frame, but a whole timelapse with one frame every period of
 time: ::
 
-  $ ytpb timelapse --interval 2024-01-02T10:20:00+00/PT30S --every 15S <STREAM>
+  $ ytpb capture timelapse --interval 2024-01-02T10:20:00+00/PT30S --every 15S <STREAM>
   $ tree Stream-Title
   Stream-Title
   └── 20240102T102000+00
