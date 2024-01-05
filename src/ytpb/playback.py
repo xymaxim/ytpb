@@ -73,6 +73,14 @@ class ExcerptMetadata:
     actual_end_date: int
 
 
+@dataclass(frozen=True)
+class RewindMoment:
+    date: datetime
+    sequence: SegmentSequence
+    cut_at: float
+    is_end: bool
+
+
 class PlaybackSession(requests.Session):
     max_retries: int = 3
 
@@ -297,22 +305,44 @@ class Playback:
         return segment
 
     def locate_moment(
-        self, point: AbsolutePointInStream, itag: str | None = None
+        self,
+        point: AbsolutePointInStream,
+        itag: str | None = None,
+        is_end: bool = False,
     ) -> SegmentSequence:
         itag = itag or next(iter(self.streams)).itag
         base_url = self._get_reference_base_url(itag)
 
-        if isinstance(point, SegmentSequence):
-            sequence = point
-        else:
-            sl = SegmentLocator(
-                base_url,
-                temp_directory=self.get_temp_directory(),
-                session=self.session,
-            )
-            sequence = sl.find_sequence_by_time(point.timestamp(), end=True)
+        match point:
+            case SegmentSequence() as sequence:
+                self.download_segment(sequence, base_url)
+                segment = self.get_downloaded_segment(sequence, base_url)
 
-        return sequence
+                if not is_end:
+                    date = segment.ingestion_start_date
+                else:
+                    date = segment.ingestion_end_date
+
+                moment = RewindMoment(
+                    date=date, sequence=sequence, cut_at=0, is_end=is_end
+                )
+            case datetime() as date:
+                sl = SegmentLocator(
+                    base_url,
+                    temp_directory=self.get_temp_directory(),
+                    session=self.session,
+                )
+                sequence = sl.find_sequence_by_time(point.timestamp(), end=is_end)
+                segment = self.get_downloaded_segment(sequence, base_url)
+                if not is_end:
+                    cut_at = (date - segment.ingestion_start_date).total_seconds()
+                else:
+                    cut_at = (segment.ingestion_end_date - date).total_seconds()
+                moment = RewindMoment(
+                    date=date, sequence=sequence, cut_at=cut_at, is_end=is_end
+                )
+
+        return moment
 
     def locate_interval(
         self,

@@ -1,6 +1,6 @@
 import json
 from dataclasses import asdict
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
 from urllib.parse import urljoin
@@ -9,6 +9,7 @@ import pytest
 import responses
 
 from conftest import TEST_DATA_PATH
+
 from freezegun import freeze_time
 
 from ytpb.exceptions import (
@@ -18,36 +19,52 @@ from ytpb.exceptions import (
 )
 from ytpb.fetchers import YtpbInfoFetcher
 from ytpb.info import YouTubeVideoInfo
-from ytpb.playback import Playback, SequenceRange
+from ytpb.playback import Playback, RewindMoment, SequenceRange
 from ytpb.streams import AudioOrVideoStream
 from ytpb.types import RelativeSegmentSequence
 
 
-@pytest.mark.parametrize(
-    "point", [7959120, datetime.fromisoformat("2023-03-25T23:33:55Z")]
-)
-def test_local_moment(
-    point: int | datetime,
-    fake_info_fetcher: "FakeInfoFetcher",
-    add_responses_callback_for_reference_base_url: Callable,
-    add_responses_callback_for_segment_urls: Callable,
-    mocked_responses: responses.RequestsMock,
-    stream_url: str,
-    active_live_video_info: YouTubeVideoInfo,
-    audio_base_url: str,
-    tmp_path: Path,
-):
-    # Given:
-    if isinstance(point, datetime):
-        add_responses_callback_for_reference_base_url()
+class TestLocateMoment:
+    @pytest.fixture(autouse=True)
+    def setup_method(
+        self,
+        fake_info_fetcher: "FakeInfoFetcher",
+        add_responses_callback_for_segment_urls: Callable,
+        mocked_responses: responses.RequestsMock,
+        stream_url: str,
+        active_live_video_info: YouTubeVideoInfo,
+        audio_base_url: str,
+        tmp_path: Path,
+    ):
         add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
+        self.playback = Playback(stream_url, fetcher=fake_info_fetcher)
+        self.playback.fetch_and_set_essential()
 
-    # When:
-    playback = Playback(stream_url, fetcher=fake_info_fetcher)
-    playback.fetch_and_set_essential()
+    def test_start_sequence(self):
+        sequence = 7959120
+        date = datetime.fromtimestamp(1679787234.491176, tz=timezone.utc)
+        expected = RewindMoment(date, sequence, 0, False)
+        assert expected == self.playback.locate_moment(sequence, itag="140")
 
-    # Then:
-    assert 7959120 == playback.locate_moment(point, itag="140")
+    def test_end_sequence(self):
+        sequence = 7959120
+        date = datetime(2023, 3, 25, 23, 33, 56, 488092, tzinfo=timezone.utc)
+        expected = RewindMoment(date, sequence, 0, True)
+        assert expected == self.playback.locate_moment(
+            sequence, itag="140", is_end=True
+        )
+
+    def test_start_date(self, add_responses_callback_for_reference_base_url: Callable):
+        add_responses_callback_for_reference_base_url()
+        date = datetime.fromisoformat("2023-03-25T23:33:55Z")
+        expected = RewindMoment(date, 7959120, 0.508824, False)
+        assert expected == self.playback.locate_moment(date, itag="140")
+
+    def test_end_date(self, add_responses_callback_for_reference_base_url: Callable):
+        add_responses_callback_for_reference_base_url()
+        date = datetime.fromisoformat("2023-03-25T23:33:55Z")
+        expected = RewindMoment(date, 7959120, 1.488092, True)
+        assert expected == self.playback.locate_moment(date, itag="140", is_end=True)
 
 
 @pytest.mark.parametrize(
