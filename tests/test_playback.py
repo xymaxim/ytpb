@@ -24,6 +24,33 @@ from ytpb.types import RelativeSegmentSequence
 
 
 @pytest.mark.parametrize(
+    "point", [7959120, datetime.fromisoformat("2023-03-25T23:33:55Z")]
+)
+def test_local_moment(
+    point: int | datetime,
+    fake_info_fetcher: "FakeInfoFetcher",
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    stream_url: str,
+    active_live_video_info: YouTubeVideoInfo,
+    audio_base_url: str,
+    tmp_path: Path,
+):
+    # Given:
+    if isinstance(point, datetime):
+        add_responses_callback_for_reference_base_url()
+        add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
+
+    # When:
+    playback = Playback(stream_url, fetcher=fake_info_fetcher)
+    playback.fetch_and_set_essential()
+
+    # Then:
+    assert 7959120 == playback.locate_moment(point, itag="140")
+
+
+@pytest.mark.parametrize(
     "start,end",
     [
         # Segments and corresponding ingestion start dates:

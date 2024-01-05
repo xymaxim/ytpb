@@ -28,6 +28,7 @@ from ytpb.mpd import extract_representations_info
 from ytpb.segment import Segment
 from ytpb.streams import SetOfStreams, Streams
 from ytpb.types import (
+    AbsolutePointInStream,
     PointInStream,
     RelativePointInStream,
     RelativeSegmentSequence,
@@ -294,6 +295,24 @@ class Playback:
             else:
                 raise
         return segment
+
+    def locate_moment(
+        self, point: AbsolutePointInStream, itag: str | None = None
+    ) -> SegmentSequence:
+        itag = itag or next(iter(self.streams)).itag
+        base_url = self._get_reference_base_url(itag)
+
+        if isinstance(point, SegmentSequence):
+            sequence = point
+        else:
+            sl = SequenceLocator(
+                base_url,
+                temp_directory=self.get_temp_directory(),
+                session=self.session,
+            )
+            sequence = sl.find_sequence_by_time(point.timestamp(), end=True)
+
+        return sequence
 
     def locate_rewind_range(
         self,
