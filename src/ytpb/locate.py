@@ -95,6 +95,12 @@ class SequenceLocator:
             reference_sequence = request_reference_sequence(base_url)
         self.reference = SequenceMetadataPair(reference_sequence, self)
 
+        self._track: list[tuple[SegmentSequence, float]] = []
+
+    @property
+    def track(self) -> list[tuple[SegmentSequence, float]]:
+        return self._track
+
     def get_temp_directory(self):
         if self._temp_directory is None:
             self._temp_directory = tempfile.mkdtemp()
@@ -121,6 +127,7 @@ class SequenceLocator:
         of jump and linear search. This contains Step 2 and 3 of the algorithm.
         """
         current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
+        self.track.append((self.candidate.sequence, current_diff_in_s))
         logger.debug(
             "Made a jump to segment, time difference: %+f s",
             current_diff_in_s,
@@ -138,6 +145,7 @@ class SequenceLocator:
             self.candidate.sequence += 1 * direction
             current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
             have_same_signs = int(math.copysign(1, current_diff_in_s)) ^ direction == 0
+            self.track.append((self.candidate.sequence, current_diff_in_s))
             logger.debug(
                 "Step to next segment, time difference: %+f s",
                 current_diff_in_s,
@@ -157,8 +165,10 @@ class SequenceLocator:
                     seq=self.candidate.sequence,
                     time=self.candidate.metadata.ingestion_walltime,
                 )
-
-            candidate_diff_in_s = self._find_time_diff(self.candidate, desired_time)
+                candidate_diff_in_s = self.track[-2][1]
+                self.track.append((self.candidate.sequence, candidate_diff_in_s))
+            else:
+                candidate_diff_in_s = current_diff_in_s
 
             # Download a full candidate segment and check its duration:
             downloaded_path = self._download_full_segment(self.candidate.sequence)
@@ -176,6 +186,12 @@ class SequenceLocator:
                 logger.debug("Input time falls into a gap")
                 if end is False:
                     self.candidate.sequence += 1
+                    self.track.append(
+                        (
+                            self.candidate.sequence,
+                            self._find_time_diff(self.candidate, desired_time),
+                        )
+                    )
                     logger.debug(
                         "Use next sequence as a start sequence",
                         seq=self.candidate.sequence,
@@ -208,6 +224,7 @@ class SequenceLocator:
 
         self.candidate = SequenceMetadataPair(estimated_sequence, self)
         initial_diff_in_s = self._find_time_diff(self.candidate, desired_time)
+        self.track.append((self.candidate.sequence, initial_diff_in_s))
 
         # The jump length value could be negative or positive.
         jump_length_in_seq = int(initial_diff_in_s // self.segment_duration)
