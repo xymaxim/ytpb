@@ -84,14 +84,13 @@ class SegmentLocator:
         temp_directory: Path | None = None,
         session: requests.Session | None = None,
     ) -> None:
+        self._temp_directory = temp_directory
         self.base_url = base_url
+        self.session = session or requests.Session()
 
         if reference_sequence is None:
             reference_sequence = request_reference_sequence(base_url)
         self.reference = SequenceMetadataPair(reference_sequence, self)
-
-        self._temp_directory = temp_directory
-        self.session = session or requests.Session()
 
         self.segment_duration = float(extract_parameter_from_url("dur", base_url))
         self.track: list[tuple[SegmentSequence, float]] = []
