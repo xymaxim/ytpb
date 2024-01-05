@@ -116,7 +116,7 @@ class SegmentLocator:
 
     def _refine_candidate_sequence(
         self, desired_time: Timestamp, end: bool
-    ) -> SegmentSequence:
+    ) -> tuple[SegmentSequence, bool]:
         """Refine the initial, pre-estimated sequence number using a combination
         of jump and linear search. This contains Step 2 and 3 of the algorithm.
         """
@@ -146,6 +146,8 @@ class SegmentLocator:
                 seq=self.candidate.sequence,
                 time=self.candidate.metadata.ingestion_walltime,
             )
+
+        falls_into_gap = False
 
         if current_diff_in_s == 0:
             refined_sequence = self.candidate.sequence
@@ -177,6 +179,7 @@ class SegmentLocator:
 
             # Step 3. Finally, check if the desired date falls into a gap.
             if candidate_duration < candidate_diff_in_s:
+                falls_into_gap = True
                 logger.debug("Input time falls into a gap")
                 if end is False:
                     self.candidate.sequence += 1
@@ -194,7 +197,7 @@ class SegmentLocator:
 
             refined_sequence = self.candidate.sequence
 
-        return refined_sequence
+        return refined_sequence, falls_into_gap
 
     def find_sequence_by_time(
         self, desired_time: Timestamp, end: bool = False
@@ -237,15 +240,16 @@ class SegmentLocator:
         if jump_length_in_seq == 0:
             need_to_refine = False
 
+        output: tuple[SegmentSequence, bool]
         if need_to_refine:
             try:
                 self.candidate.sequence += jump_length_in_seq
-                result = self._refine_candidate_sequence(desired_time, end)
+                output = self._refine_candidate_sequence(desired_time, end)
             except SegmentDownloadError as exc:
                 raise SequenceLocatingError(exc) from exc
         else:
-            result = self.candidate.sequence
+            output = (self.candidate.sequence, False)
 
-        logger.info("Segment has been located as %d", result)
+        logger.info("Segment has been located as %d", self.candidate.sequence)
 
-        return result
+        return output

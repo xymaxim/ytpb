@@ -78,7 +78,8 @@ class RewindMoment:
     date: datetime
     sequence: SegmentSequence
     cut_at: float
-    is_end: bool
+    is_end: bool = False
+    falls_into_gap: bool = False
 
 
 class PlaybackSession(requests.Session):
@@ -328,10 +329,19 @@ class Playback:
                     temp_directory=self.get_temp_directory(),
                     session=self.session,
                 )
-                sequence = sl.find_sequence_by_time(point.timestamp(), end=is_end)
+                sequence, falls_into_gap = sl.find_sequence_by_time(
+                    point.timestamp(), end=is_end
+                )
                 segment = self.get_downloaded_segment(sequence, base_url)
-                cut_at = (date - segment.ingestion_start_date).total_seconds()
-                moment = RewindMoment(date, sequence, cut_at, is_end)
+                if falls_into_gap:
+                    if is_end:
+                        date = segment.ingestion_end_date
+                    else:
+                        date = segment.ingestion_start_date
+                    cut_at = 0
+                else:
+                    cut_at = (date - segment.ingestion_start_date).total_seconds()
+                moment = RewindMoment(date, sequence, cut_at, is_end, falls_into_gap)
 
         return moment
 
