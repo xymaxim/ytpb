@@ -109,7 +109,7 @@ def test_download_excerpt_between_dates_without_merging(
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
 
-    rewind_range = playback.locate_rewind_range(start_date, end_date, itag="140")
+    rewind_range = playback.locate_interval(start_date, end_date, itag="140")
     _, *output_paths = actions.download.download_excerpt(
         playback, rewind_range, "itag eq 140", "itag eq 244", no_merge=True
     )

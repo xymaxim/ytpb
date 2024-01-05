@@ -202,7 +202,7 @@ def compose_command(
         requested_end = RelativeSequenceNumber(number_of_segments)
 
     click.echo("(<<) Locating start and end in the stream... ", nl=False)
-    rewind_range = playback.locate_rewind_range(
+    rewind_range = playback.locate_interval(
         requested_start,
         requested_end,
         itag=reference_stream.itag,

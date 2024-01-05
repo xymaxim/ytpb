@@ -314,7 +314,7 @@ class Playback:
 
         return sequence
 
-    def locate_rewind_range(
+    def locate_interval(
         self,
         start_point: PointInStream,
         end_point: PointInStream,

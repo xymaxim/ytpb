@@ -75,7 +75,7 @@ def test_local_moment(
         (RelativeSegmentSequence(1), 7959121),
     ],
 )
-def test_locate_rewind_range(
+def test_locate_interval(
     start,
     end,
     fake_info_fetcher: "FakeInfoFetcher",
@@ -95,7 +95,7 @@ def test_locate_rewind_range(
     # When:
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
-    sequences = playback.locate_rewind_range(start, end, itag="140")
+    sequences = playback.locate_interval(start, end, itag="140")
 
     # Then:
     assert sequences == SequenceRange(7959120, 7959121)
@@ -121,7 +121,7 @@ def test_local_rewind_range_with_relative_start_and_end(
     playback.fetch_and_set_essential()
 
     with pytest.raises(ValueError):
-        playback.locate_rewind_range(start, end, itag="140")
+        playback.locate_interval(start, end, itag="140")
 
 
 @pytest.mark.parametrize(
@@ -141,7 +141,7 @@ def test_local_rewind_range_with_relative_start_and_end(
         (datetime.fromisoformat("2023-03-25T23:33:57Z"), RelativeSegmentSequence(-1)),
     ],
 )
-def test_locate_rewind_range_with_swapped_start_and_end(
+def test_locate_interval_with_swapped_start_and_end(
     start,
     end,
     fake_info_fetcher: "FakeInfoFetcher",
@@ -164,7 +164,7 @@ def test_locate_rewind_range_with_swapped_start_and_end(
 
     # Then:
     with pytest.raises((ValueError, SequenceLocatingError)):
-        playback.locate_rewind_range(start, end, itag="140")
+        playback.locate_interval(start, end, itag="140")
 
 
 def test_create_playback_from_url(

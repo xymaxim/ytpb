@@ -397,7 +397,7 @@ def many_command(
                 )
 
     try:
-        rewind_range = playback.locate_rewind_range(
+        rewind_range = playback.locate_interval(
             requested_start,
             requested_end,
             itag=reference_stream.itag,
