@@ -5,8 +5,8 @@ from typing import NamedTuple
 import pytest
 
 from conftest import TEST_DATA_PATH
-from ytpb.locate import SequenceLocator, SequenceMetadataPair
 
+from ytpb.locate import SequenceLocator, SequenceMetadataPair
 from ytpb.segment import Segment, SegmentMetadata
 from ytpb.types import SegmentSequence
 
@@ -93,8 +93,6 @@ class BaseGapCase:
 
 
 class TestGapCase1(BaseGapCase):
-    """Test gap case 1 -- no gaps."""
-
     fixture_data_path = f"{TEST_DATA_PATH}/gap-cases/gap-case-1-fixture.csv"
     reference_sequence = 7959630
 
@@ -133,7 +131,7 @@ class TestGapCase2(BaseGapCase):
     reference_sequence = 7947346
 
     def test_S1(self):
-        assert self.ssl.find_sequence_by_time(1679763599.262686) == 7947333
+        assert 7947333 == self.ssl.find_sequence_by_time(1679763599.262686)
         assert self.track == [
             (7947323, 20.997890949249268),
             (7947333, 1.00620698928833),
@@ -142,7 +140,7 @@ class TestGapCase2(BaseGapCase):
         ]
 
     def test_S2(self):
-        assert self.ssl.find_sequence_by_time(1679763601.235894) == 7947334
+        assert 7947334 == self.ssl.find_sequence_by_time(1679763601.235894)
         assert self.ssl.track == [
             (7947324, 20.967691898345947),
             (7947334, 0.9670000076293945),
@@ -151,7 +149,7 @@ class TestGapCase2(BaseGapCase):
         ]
 
     def test_S3(self):
-        assert self.ssl.find_sequence_by_time(1679763611.742391) == 7947335
+        assert 7947335 == self.ssl.find_sequence_by_time(1679763611.742391)
         assert self.ssl.track == [
             (7947329, 21.476399183273315),
             (7947339, -18.615211963653564),
@@ -164,7 +162,7 @@ class TestGapCase2(BaseGapCase):
         ]
 
     def test_E3(self):
-        assert self.ssl.find_sequence_by_time(1679763611.742391, end=True) == 7947334
+        assert 7947334 == self.ssl.find_sequence_by_time(1679763611.742391, end=True)
         assert self.ssl.track == [
             (7947329, 21.476399183273315),
             (7947339, -18.615211963653564),
@@ -177,8 +175,7 @@ class TestGapCase2(BaseGapCase):
 
     @pytest.mark.xfail
     def test_S4(self):
-        sequence = self.ssl.find_sequence_by_time(1679763626.506922)
-        assert sequence == 7947335
+        assert 7947335 == self.ssl.find_sequence_by_time(1679763626.506922)
 
 
 class TestGapCase3(BaseGapCase):
@@ -186,19 +183,19 @@ class TestGapCase3(BaseGapCase):
     reference_sequence = 7958122
 
     def test_S1(self):
-        assert self.ssl.find_sequence_by_time(1679785199.451019) == 7958102
+        assert 7958102 == self.ssl.find_sequence_by_time(1679785199.451019)
 
     def test_S2(self):
-        assert self.ssl.find_sequence_by_time(1679785201.449813) == 7958103
+        assert 7958103 == self.ssl.find_sequence_by_time(1679785201.449813)
 
     def test_S3(self):
-        assert self.ssl.find_sequence_by_time(1679785204.623643) == 7958104
+        assert 7958104 == self.ssl.find_sequence_by_time(1679785204.623643)
 
     def test_E3(self):
-        assert self.ssl.find_sequence_by_time(1679785204.623643, end=True) == 7958103
+        assert 7958103 == self.ssl.find_sequence_by_time(1679785204.623643, end=True)
 
     def test_S4(self):
-        assert self.ssl.find_sequence_by_time(1679785208.850441) == 7958104
+        assert 7958104 == self.ssl.find_sequence_by_time(1679785208.850441)
 
     def test_S5(self):
-        assert self.ssl.find_sequence_by_time(1679785208.903407) == 7958106
+        assert 7958106 == self.ssl.find_sequence_by_time(1679785208.903407)
