@@ -147,8 +147,8 @@ time: ::
   └── 20240102T102000+00
       └── ET15S
           ├── Stream-Title_20240102T102000+00_ET15S_0000.jpg
-          ├── Stream-Title_20240102T102000+00_ET15S_0000.jpg
-          └── Stream-Title_20240102T102000+00_ET15S_0000.jpg
+          ├── Stream-Title_20240102T102000+00_ET15S_0001.jpg
+          └── Stream-Title_20240102T102000+00_ET15S_0002.jpg
 
 Command line application
 ************************
