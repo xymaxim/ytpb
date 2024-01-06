@@ -1,3 +1,15 @@
+"""This module contains test cases for the Playback class.
+
+Here are segments and corresponding ingestion start dates and timestamps
+used in the tests:
+             7959120       21       22
+                  |        |        |
+ 2023-03-25T23:33:54.491Z  56.490Z  58.492Z
+                  1679787234.491176
+                           1679787236.489910
+                                    1679787238.491916
+"""
+
 import json
 from dataclasses import asdict
 from datetime import datetime, timedelta, timezone
@@ -43,36 +55,30 @@ class TestLocateMoment:
         sequence = 7959120
         date = datetime.fromtimestamp(1679787234.491176, tz=timezone.utc)
         expected = RewindMoment(date, sequence, 0, False)
-        assert expected == self.playback.locate_moment(sequence, itag="140")
+        assert expected == self.playback.locate_moment(sequence, "140")
 
     def test_end_sequence(self):
         sequence = 7959120
         date = datetime(2023, 3, 25, 23, 33, 56, 488092, tzinfo=timezone.utc)
         expected = RewindMoment(date, sequence, 0, True)
-        assert expected == self.playback.locate_moment(
-            sequence, itag="140", is_end=True
-        )
+        assert expected == self.playback.locate_moment(sequence, "140", True)
 
     def test_start_date(self, add_responses_callback_for_reference_base_url: Callable):
         add_responses_callback_for_reference_base_url()
         date = datetime.fromisoformat("2023-03-25T23:33:55Z")
         expected = RewindMoment(date, 7959120, 0.508824, False)
-        assert expected == self.playback.locate_moment(date, itag="140")
+        assert expected == self.playback.locate_moment(date, "140")
 
     def test_end_date(self, add_responses_callback_for_reference_base_url: Callable):
         add_responses_callback_for_reference_base_url()
         date = datetime.fromisoformat("2023-03-25T23:33:55Z")
         expected = RewindMoment(date, 7959120, 0.508824, True)
-        assert expected == self.playback.locate_moment(date, itag="140", is_end=True)
+        assert expected == self.playback.locate_moment(date, "140", True)
 
 
 @pytest.mark.parametrize(
     "start,end",
     [
-        # Segments and corresponding ingestion start dates:
-        #             7959120       21       22
-        #                  |        |        |
-        # 2023-03-25T23:33:54.491Z  56.490   58.492
         (7959120, 7959121),
         (7959120, datetime.fromisoformat("2023-03-25T23:33:57Z")),
         (7959120, timedelta(seconds=3)),  # segment duration (2 s) + 1 s
@@ -111,7 +117,7 @@ def test_locate_interval(
     # When:
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
-    interval = playback.locate_interval(start, end, itag="140")
+    interval = playback.locate_interval(start, end, "140")
 
     # Then:
     assert interval.start.sequence == 7959120
@@ -136,18 +142,13 @@ def test_local_interval_with_relative_start_and_end(
 ):
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
-
     with pytest.raises(ValueError):
-        playback.locate_interval(start, end, itag="140")
+        playback.locate_interval(start, end, "140")
 
 
 @pytest.mark.parametrize(
     "start,end",
     [
-        # Segments and corresponding ingestion start dates:
-        #             7959120       21       22
-        #                  |        |        |
-        # 2023-03-25T23:33:54.491Z  56.490   58.492
         (7959122, 7959121),
         (7959121, datetime.fromisoformat("2023-03-25T23:33:55Z")),
         (datetime.fromisoformat("2023-03-25T23:33:57Z"), 7959120),
@@ -181,7 +182,7 @@ def test_locate_interval_with_swapped_start_and_end(
 
     # Then:
     with pytest.raises((ValueError, SequenceLocatingError)):
-        playback.locate_interval(start, end, itag="140")
+        playback.locate_interval(start, end, "140")
 
 
 def test_create_playback_from_url(
