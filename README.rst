@@ -506,6 +506,103 @@ will be automatically determined during the merging stage. ::
 
 See the `Output name context`_ subsection for the available template variables.
 
+Formatting titles
+^^^^^^^^^^^^^^^^^
+
+Titles can be formatted to adapt them for the output name: set maximum length,
+normalize characters, change case, etc.
+
+See the corresponding ``[output.title]`` section in ``config.toml``.
+
+Available styles
+""""""""""""""""
+
+Two styles are available: ``original`` and ``custom``.
+
+.. raw:: html
+
+	 <details>
+	 <summary><a>Expand for details on available styles...</a></summary>
+
+Let's consider the following titles as original:
+
+1. FRANCE 24 – EN DIRECT – Info et actualités internationales en continu 24h/24
+2. 【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG
+
+.. raw:: html
+
+	 <h6><code>original</code></h6>
+
+An original title with unallowed symbols replaced. Allows Unicode characters.
+
+.. code:: TOML
+
+	  [output.title]
+	  style = "original"
+
+1. ``FRANCE 24 – EN DIRECT – Info et actualités internationales en continu 24h-24``
+2. ``【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG``
+
+.. raw:: html
+
+   <h6><code>custom</code></h6>
+
+Format an original title with settings from the ``[output.title.custom]``
+section: reduce length, convert to ASCII-only characters, make
+POSIX-compatible, make lowercase.
+
+*Shortening titles*. For example, to shorten the title length (by truncating at
+word boundaries) and keep Unicode characters, the following settings:
+
+.. code:: TOML
+
+	  [output.title]
+	  style = "custom"
+
+	  [output.title.custom]
+	  max_length = 30
+	  characters = "unicode"
+
+will produce:
+
+1. ``FRANCE 24 — EN DIRECT — Info et actualités``
+2. ``【LIVE】新宿駅前の様子 Shinjuku, Tokyo``
+
+*Converting to ASCII-only*. To convert all characters to ASCII-only, the following:
+
+.. code:: TOML
+
+	  [output.title.custom]
+	  characters = "ascii"
+
+will produce:
+
+1. ``FRANCE 24 -- EN DIRECT -- Info et actualites internationales en continu 24h-24``
+2. ``[(LIVE)] Xin Su Yi Qian noYang Zi Shinjuku, Tokyo JAPAN[(raibukamera)] | TBS NEWS DIG``
+
+*Making POSIX-compliant*. To make the output filename POSIX-compliant and
+lowercase it, the following:
+
+.. code:: TOML
+
+	  [output.title.custom]
+	  max_length = 50
+	  separator = "-"
+	  characters = "posix"
+	  lowercase = true
+
+will produce:
+
+1. ``france-24--en-direct--info-et-actualites-internationales-en-continu-24h-24``
+2. ``live-xin-su-yi-qian-noyang-zi-shinjuku-tokyo-japan-raibukamera-tbs-news-dig``
+
+.. raw:: html
+
+	 </details>
+
+Formatting dates
+^^^^^^^^^^^^^^^^
+
 The date formatting can be changed via the ``output.date.styles`` field in the
 ``config.toml`` file. The default styles (``"basic,reduced,hh"``) correspond to
 the basic representation with the reduced precision. Some examples:
@@ -514,13 +611,13 @@ the basic representation with the reduced precision. Some examples:
 
 	  [output.date]
 	  # 2024-01-02T10:20:00+00:00
-	  # styles = "extended,complete,hhmm"
+	  styles = "extended,complete,hhmm"
 
 	  # 20240102T102000+00
-	  # styles = "basic,complete,hh"
+	  styles = "basic,complete,hh"
 
 	  # 20240102T1020Z
-	  # styles = "basic,reduced,z"
+	  styles = "basic,reduced,z"
 
 Configuring
 ===========
@@ -831,86 +928,6 @@ variables as ``<variable>``. The available template variables are:
   ``output.date.style`` configuration option.
 - ``actual_start_date``, ``actual_end_date`` — actual start and end dates
 - ``duration`` — actual duration. Example: 'PT1M30S'.
-
-Formatting titles
------------------
-
-Let's consider the following titles here and below:
-
-1. FRANCE 24 – EN DIRECT – Info et actualités internationales en continu 24h/24
-2. 【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG
-
-Availables styles
-^^^^^^^^^^^^^^^^^
-
-Two styles are available: ``original`` and ``custom``.
-
-See the corresponding ``[output.title]`` section in ``config.toml``.
-
-``original``
-""""""""""""
-
-An original title with unallowed symbols replaced. Allows Unicode characters.
-
-.. code:: TOML
-
-	  [output.title]
-	  style = "original"
-
-1. ``FRANCE 24 – EN DIRECT – Info et actualités internationales en continu 24h-24``
-2. ``【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG``
-
-``custom``
-""""""""""
-
-Format an original title with settings from the ``[output.title.custom]``
-section: shorten, convert to ASCII-only characters, make POSIX-compatible,
-change to lowercase.
-
-*Shortening titles*. For example, to shorten the title length (by truncating at
-word boundaries) and keep Unicode characters, the following settings:
-
-.. code:: TOML
-
-	  [output.title]
-	  style = "custom"
-
-	  [output.title.custom]
-	  max_length = 30
-	  characters = "unicode"
-
-will produce:
-
-1. ``FRANCE 24 — EN DIRECT — Info et actualités``
-2. ``【LIVE】新宿駅前の様子 Shinjuku, Tokyo``
-
-*Converting to ASCII-only*. To convert all characters to ASCII-only, the following:
-
-.. code:: TOML
-
-	  [output.title.custom]
-	  characters = "ascii"
-
-will produce:
-
-1. ``FRANCE 24 -- EN DIRECT -- Info et actualites internationales en continu 24h-24``
-2. ``[(LIVE)] Xin Su Yi Qian noYang Zi Shinjuku, Tokyo JAPAN[(raibukamera)] | TBS NEWS DIG``
-
-*Making POSIX-compliant*. To make the output filename POSIX-compliant and
-lowercase it, the following:
-
-.. code:: TOML
-
-	  [output.title.custom]
-	  max_length = 50
-	  separator = "-"
-	  characters = "posix"
-	  lowercase = true
-
-will produce:
-
-1. ``france-24--en-direct--info-et-actualites-internationales-en-continu-24h-24``
-2. ``live-xin-su-yi-qian-noyang-zi-shinjuku-tokyo-japan-raibukamera-tbs-news-dig``
 
 Contributing
 ************
