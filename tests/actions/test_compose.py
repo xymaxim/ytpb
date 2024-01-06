@@ -1,7 +1,6 @@
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from difflib import unified_diff
-from unittest.mock import patch
 
 import freezegun
 import pytest
@@ -91,11 +90,7 @@ def test_refresh_mpd(streams_in_list: list[dict], testing_manifest: str):
 
     updated_streams = Streams(selected_streams_list)
 
-    with patch("ytpb.actions.compose.datetime", wraps=datetime) as mock:
-        mock.now.return_value.astimezone.return_value.tzinfo = timezone(
-            timedelta(hours=2)
-        )
-        output = refresh_mpd(testing_manifest, updated_streams)
+    output = refresh_mpd(testing_manifest, updated_streams)
 
     actual_diff = list(
         unified_diff(
