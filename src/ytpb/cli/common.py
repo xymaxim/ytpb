@@ -20,9 +20,9 @@ from ytpb.exceptions import (
 
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
-from ytpb.playback import Playback
+from ytpb.playback import Playback, RewindInterval
 from ytpb.segment import Segment
-from ytpb.types import DateInterval, SequenceRange, SetOfStreams
+from ytpb.types import DateInterval, SetOfStreams
 from ytpb.utils.date import format_timedelta, round_date
 from ytpb.utils.url import extract_parameter_from_url, normalize_video_url
 
@@ -143,7 +143,7 @@ def prepare_line_for_summary_info(
 def print_summary_info(
     input_date_interval: DateInterval,
     actual_date_interval: DateInterval,
-    rewind_range: SequenceRange,
+    rewind_interval: RewindInterval,
     use_ms_precision: bool = False,
 ) -> None:
     input_tzinfo = input_date_interval.start.tzinfo
@@ -153,14 +153,22 @@ def print_summary_info(
         actual_date_interval.start - input_date_interval.start,
         use_ms_precision,
     )
-    click.echo(f"Actual start: {start_time_info_line}, seq. {rewind_range.start}")
+    click.echo(
+        "Actual start: {}, seq. {}".format(
+            start_time_info_line, rewind_interval.start.sequence
+        )
+    )
 
     end_time_info_line = prepare_line_for_summary_info(
         actual_date_interval.end.astimezone(input_tzinfo),
         actual_date_interval.end - input_date_interval.end,
         use_ms_precision,
     )
-    click.echo(f"  Actual end: {end_time_info_line}, seq. {rewind_range.end}")
+    click.echo(
+        "  Actual end: {}, seq. {}".format(
+            end_time_info_line, rewind_interval.end.sequence
+        )
+    )
 
     # total_duration = format_duration(
     #     timedelta(seconds=actual_date_interval.duration),

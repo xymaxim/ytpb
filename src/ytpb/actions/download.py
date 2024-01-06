@@ -14,8 +14,7 @@ from rich.progress import (
 
 from ytpb.download import download_segment
 from ytpb.merge import merge_segments
-from ytpb.playback import Playback
-from ytpb.types import SequenceRange
+from ytpb.playback import Playback, RewindInterval
 
 logger = structlog.get_logger()
 
@@ -29,7 +28,7 @@ class _ExcerptDownloadResult(NamedTuple):
 
 def download_excerpt(
     playback: Playback,
-    rewind_range: SequenceRange,
+    rewind_interval: RewindInterval,
     audio_format_spec: str | None = None,
     video_format_spec: str | None = None,
     output_directory: str | Path | None = None,
@@ -37,8 +36,9 @@ def download_excerpt(
     no_merge: bool = False,
     **merge_kwargs,
 ) -> _ExcerptDownloadResult:
-    start_sequence, end_sequence = rewind_range.start, rewind_range.end
-    sequences_to_download = range(start_sequence, end_sequence + 1)
+    sequences_to_download = range(
+        rewind_interval.start.sequence, rewind_interval.end.sequence + 1
+    )
 
     download_progress = Progress(
         TextColumn("{task.description}"),

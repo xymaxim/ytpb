@@ -33,7 +33,6 @@ from ytpb.types import (
     RelativePointInStream,
     RelativeSegmentSequence,
     SegmentSequence,
-    SequenceRange,
 )
 from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.url import (

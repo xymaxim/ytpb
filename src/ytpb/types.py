@@ -33,23 +33,6 @@ class AddressableMappingProtocol(Protocol):
 ConfigMap: TypeAlias = AddressableChainMap
 
 
-@dataclass(frozen=True)
-class SequenceRange:
-    start: SegmentSequence
-    end: SegmentSequence
-
-    def __post_init__(self):
-        if self.start > self.end:
-            raise ValueError(
-                "Start sequence number is ahead of the end one: "
-                f"{self.start} > {self.end}"
-            )
-
-    @property
-    def length(self) -> int:
-        return self.end - self.start + 1
-
-
 @dataclass
 class DateInterval:
     """Represents a closed date interval."""

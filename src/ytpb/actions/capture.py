@@ -51,7 +51,7 @@ def capture_frames(
             session=playback.session,
         )
         is_end = i == number_of_targets - 1
-        found_sequence = sl.find_sequence_by_time(target_date.timestamp(), end=is_end)
+        found_sequence, _ = sl.find_sequence_by_time(target_date.timestamp(), is_end)
         previous_sequence = found_sequence
 
         segment = playback.get_downloaded_segment(found_sequence, base_url)

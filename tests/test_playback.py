@@ -30,7 +30,7 @@ from ytpb.exceptions import (
 )
 from ytpb.fetchers import YtpbInfoFetcher
 from ytpb.info import YouTubeVideoInfo
-from ytpb.playback import Playback, RewindMoment, SequenceRange
+from ytpb.playback import Playback, RewindMoment
 from ytpb.streams import AudioOrVideoStream
 from ytpb.types import RelativeSegmentSequence
 

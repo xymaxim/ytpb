@@ -1,10 +1,9 @@
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from difflib import unified_diff
 from unittest.mock import patch
 
 import freezegun
-
 import pytest
 from freezegun import freeze_time
 
@@ -12,11 +11,22 @@ from helpers import patched_freezgun_astimezone
 
 from ytpb.actions.compose import compose_mpd, refresh_mpd
 from ytpb.exceptions import YtpbError
-from ytpb.playback import Playback, SequenceRange
+from ytpb.playback import Playback, RewindInterval
 from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, AudioStream, VideoStream
 
 freezegun.api.FakeDatetime.astimezone = patched_freezgun_astimezone
+
+
+@dataclass
+class FakeRewindMoment:
+    sequence: int
+
+
+@dataclass
+class FakeRewindInterval:
+    start: FakeRewindMoment
+    end: FakeRewindMoment
 
 
 @pytest.fixture()
@@ -60,7 +70,7 @@ def test_compose_mpd(
 
     output = compose_mpd(
         playback,
-        SequenceRange(7959120, 7959120 + 32),
+        FakeRewindInterval(FakeRewindMoment(7959120), FakeRewindMoment(7959120 + 32)),
         streams.filter(lambda x: x.itag in ("140", "244")),
     )
     assert output == testing_manifest

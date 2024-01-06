@@ -1,4 +1,5 @@
 import os
+from dataclasses import dataclass
 from datetime import datetime
 from pathlib import Path
 from typing import Callable
@@ -7,7 +8,18 @@ from urllib.parse import urljoin
 import responses
 
 from ytpb import actions
-from ytpb.playback import Playback, SequenceRange
+from ytpb.playback import Playback
+
+
+@dataclass
+class FakeRewindMoment:
+    sequence: int
+
+
+@dataclass
+class FakeRewindInterval:
+    start: FakeRewindMoment
+    end: FakeRewindMoment
 
 
 def test_download_excerpt_between_sequences_without_merging(
@@ -30,7 +42,7 @@ def test_download_excerpt_between_sequences_without_merging(
     playback.fetch_and_set_essential()
     _, *output_paths = actions.download.download_excerpt(
         playback,
-        SequenceRange(7959120, 7959121),
+        FakeRewindInterval(FakeRewindMoment(7959120), FakeRewindMoment(7959121)),
         "itag eq 140",
         "itag eq 244",
         no_merge=True,
@@ -70,7 +82,10 @@ def test_download_audio_excerpt_between_sequences_without_merging(
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
     _, *output_paths = actions.download.download_excerpt(
-        playback, SequenceRange(7959120, 7959121), "itag eq 140", no_merge=True
+        playback,
+        FakeRewindInterval(FakeRewindMoment(7959120), FakeRewindMoment(7959121)),
+        "itag eq 140",
+        no_merge=True,
     )
 
     # Then:
@@ -109,9 +124,9 @@ def test_download_excerpt_between_dates_without_merging(
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
 
-    rewind_range = playback.locate_interval(start_date, end_date, itag="140")
+    rewind_interval = playback.locate_interval(start_date, end_date, itag="140")
     _, *output_paths = actions.download.download_excerpt(
-        playback, rewind_range, "itag eq 140", "itag eq 244", no_merge=True
+        playback, rewind_interval, "itag eq 140", "itag eq 244", no_merge=True
     )
 
     # Then:

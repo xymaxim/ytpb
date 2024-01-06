@@ -202,17 +202,17 @@ def compose_command(
         requested_end = RelativeSequenceNumber(number_of_segments)
 
     click.echo("(<<) Locating start and end in the stream... ", nl=False)
-    rewind_range = playback.locate_interval(
-        requested_start,
-        requested_end,
-        itag=reference_stream.itag,
+    rewind_interval = playback.locate_interval(
+        requested_start, requested_end, reference_stream.itag
     )
     click.echo("done.")
 
     start_segment = playback.get_downloaded_segment(
-        rewind_range.start, reference_base_url
+        rewind_interval.start.sequence, reference_base_url
     )
-    end_segment = playback.get_downloaded_segment(rewind_range.end, reference_base_url)
+    end_segment = playback.get_downloaded_segment(
+        rewind_interval.end.sequence, reference_base_url
+    )
 
     requested_start_date: datetime
     match requested_start:
@@ -238,7 +238,7 @@ def compose_command(
         end_segment.ingestion_end_date,
     )
 
-    print_summary_info(requested_date_interval, actual_date_interval, rewind_range)
+    print_summary_info(requested_date_interval, actual_date_interval, rewind_interval)
     click.echo()
 
     # Absolute output path of a manifest with extension.
@@ -266,7 +266,7 @@ def compose_command(
 
     click.echo("(<<) Composing MPEG-DASH manifest...")
     streams = Streams(queried_audio_streams + queried_video_streams)
-    composed_manifest = compose_mpd(playback, rewind_range, streams)
+    composed_manifest = compose_mpd(playback, rewind_interval, streams)
 
     with open(final_output_path, "w") as f:
         f.write(composed_manifest)

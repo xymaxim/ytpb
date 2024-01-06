@@ -229,7 +229,7 @@ def frame_command(
                     temp_directory=playback.get_temp_directory(),
                     session=playback.session,
                 )
-                moment_sequence = sl.find_sequence_by_time(date.timestamp())
+                moment_sequence, _ = sl.find_sequence_by_time(date.timestamp())
             except SequenceLocatingError:
                 message = "\nerror: An error occured during segment locating, exit."
                 click.echo(message, err=True)
@@ -341,7 +341,7 @@ def frame_command(
 @cache_options
 @stream_argument
 @click.pass_context
-def many_command(
+def timelapse_command(
     ctx: click.Context,
     interval: InputRewindInterval,
     preview: bool,
@@ -397,10 +397,8 @@ def many_command(
                 )
 
     try:
-        rewind_range = playback.locate_interval(
-            requested_start,
-            requested_end,
-            itag=reference_stream.itag,
+        rewind_interval = playback.locate_interval(
+            requested_start, requested_end, reference_stream.itag
         )
     except SequenceLocatingError:
         message = "\nerror: An error occured during segment locating, exit."
@@ -410,9 +408,11 @@ def many_command(
     click.echo("done.")
 
     start_segment = playback.get_downloaded_segment(
-        rewind_range.start, reference_base_url
+        rewind_interval.start.sequence, reference_base_url
     )
-    end_segment = playback.get_downloaded_segment(rewind_range.end, reference_base_url)
+    end_segment = playback.get_downloaded_segment(
+        rewind_interval.end.sequence, reference_base_url
+    )
 
     requested_start_date: datetime
     match requested_start:

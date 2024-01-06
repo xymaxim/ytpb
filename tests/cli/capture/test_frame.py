@@ -110,6 +110,8 @@ def test_capture_by_date(
                 "itag eq 244",
                 stream_url,
             ],
+            catch_exceptions=False,
+            standalone_mode=False,
         )
     assert result.exit_code == 0
     actual_image_path = tmp_path / "Webcam-Zurich-HB_20230325T233355+00.jpg"

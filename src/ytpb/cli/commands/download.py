@@ -217,10 +217,10 @@ def download_command(
         requested_end = RelativeSegmentSequence(number_of_segments)
 
     try:
-        rewind_range = playback.locate_interval(
+        rewind_interval = playback.locate_interval(
             requested_start,
             requested_end,
-            itag=reference_stream.itag,
+            reference_stream.itag,
         )
     except SequenceLocatingError:
         message = "\nerror: An error occured during segment locating, exit."
@@ -233,9 +233,11 @@ def download_command(
         click.echo("info: The preview mode is enabled, interval end is ignored.")
 
     start_segment = playback.get_downloaded_segment(
-        rewind_range.start, reference_base_url
+        rewind_interval.start.sequence, reference_base_url
     )
-    end_segment = playback.get_downloaded_segment(rewind_range.end, reference_base_url)
+    end_segment = playback.get_downloaded_segment(
+        rewind_interval.end.sequence, reference_base_url
+    )
 
     requested_start_date: datetime
     match requested_start:
@@ -280,7 +282,7 @@ def download_command(
                 actual_date_interval.end - timedelta(seconds=cut_at_end_s),
             )
 
-    print_summary_info(requested_date_interval, actual_date_interval, rewind_range)
+    print_summary_info(requested_date_interval, actual_date_interval, rewind_interval)
     click.echo()
 
     if dry_run:
@@ -315,7 +317,7 @@ def download_command(
         do_download_excerpt_segments = partial(
             actions.download.download_excerpt,
             playback,
-            rewind_range,
+            rewind_interval,
             audio_format,
             video_format,
             output_directory=final_output_path.parent,
@@ -325,8 +327,9 @@ def download_command(
 
         if no_merge:
             click.echo(
-                f"(<<) Downloading segments {rewind_range.start}-{rewind_range.end} "
-                "(no merge requested)..."
+                "(<<) Downloading segments {}-{} (no merge requested)...".format(
+                    rewind_interval.start.sequence, rewind_interval.end.sequence
+                )
             )
             download_result = do_download_excerpt_segments()
             some_downloaded_paths = (
@@ -341,7 +344,9 @@ def download_command(
         else:
             click.echo("(<<) Preparing and saving the excerpt...")
             click.echo(
-                f"1. Downloading segments {rewind_range.start}-{rewind_range.end}:"
+                "1. Downloading segments {}-{}:".format(
+                    rewind_interval.start.sequence, rewind_interval.end.sequence
+                )
             )
 
             download_result = do_download_excerpt_segments()

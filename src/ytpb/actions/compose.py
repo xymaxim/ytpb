@@ -6,9 +6,8 @@ from lxml.builder import E
 
 from ytpb.exceptions import YtpbError
 from ytpb.mpd import NAMESPACES as NS
-from ytpb.playback import Playback
+from ytpb.playback import Playback, RewindInterval
 from ytpb.streams import SetOfStreams
-from ytpb.types import SequenceRange
 from ytpb.utils.other import S_TO_MS
 from ytpb.utils.url import extract_parameter_from_url
 
@@ -23,7 +22,7 @@ def _build_top_level_comment_text(base_url: str) -> str:
 
 
 def compose_mpd(
-    playback: Playback, rewind_range: SequenceRange, streams: SetOfStreams
+    playback: Playback, rewind_interval: RewindInterval, streams: SetOfStreams
 ) -> str:
     nsmap = {
         "xsi": "http://www.w3.org/2001/XMLSchema-instance",
@@ -36,8 +35,8 @@ def compose_mpd(
 
     segment_duration_s = float(extract_parameter_from_url("dur", some_base_url))
     segment_duration_ms = int(segment_duration_s) * int(S_TO_MS)
-    rewind_range_length = rewind_range.end - rewind_range.start + 1
-    range_duration_s = rewind_range_length * int(segment_duration_s)
+    rewind_length = rewind_interval.end.sequence - rewind_interval.start.sequence + 1
+    range_duration_s = rewind_length * int(segment_duration_s)
 
     mpd_element.attrib.update(
         {
@@ -67,7 +66,7 @@ def compose_mpd(
     segment_template_element.attrib.update(
         {
             "media": "sq/$Number$",
-            "startNumber": str(rewind_range.start),
+            "startNumber": str(rewind_interval.start.sequence),
             "duration": str(segment_duration_ms),
             "timescale": "1000",
         }
