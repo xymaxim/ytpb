@@ -9,7 +9,6 @@ import pytest
 import responses
 
 from conftest import TEST_DATA_PATH
-
 from freezegun import freeze_time
 
 from ytpb.exceptions import (
@@ -107,15 +106,16 @@ def test_locate_interval(
     # Given:
     if not (isinstance(start, int) and isinstance(end, int)):
         add_responses_callback_for_reference_base_url()
-        add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
+    add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
 
     # When:
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
-    sequences = playback.locate_interval(start, end, itag="140")
+    interval = playback.locate_interval(start, end, itag="140")
 
     # Then:
-    assert sequences == SequenceRange(7959120, 7959121)
+    assert interval.start.sequence == 7959120
+    assert interval.end.sequence == 7959121
 
 
 @pytest.mark.parametrize(
@@ -127,7 +127,7 @@ def test_locate_interval(
         (RelativeSegmentSequence(1), timedelta(seconds=2)),
     ],
 )
-def test_local_rewind_range_with_relative_start_and_end(
+def test_local_interval_with_relative_start_and_end(
     start: timedelta | RelativeSegmentSequence,
     end: timedelta | RelativeSegmentSequence,
     stream_url: str,
@@ -173,7 +173,7 @@ def test_locate_interval_with_swapped_start_and_end(
     # Given:
     if not (isinstance(start, int) and isinstance(end, int)):
         add_responses_callback_for_reference_base_url()
-        add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
+    add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
 
     # When:
     playback = Playback(stream_url, fetcher=fake_info_fetcher)

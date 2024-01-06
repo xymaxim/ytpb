@@ -82,6 +82,19 @@ class RewindMoment:
     falls_into_gap: bool = False
 
 
+@dataclass(frozen=True)
+class RewindInterval:
+    start: RewindMoment
+    end: RewindMoment
+
+    def __post_init__(self):
+        if self.start.sequence > self.end.sequence:
+            raise ValueError(
+                "Start moment is ahead of the end one: "
+                f"{self.start.sequence} > {self.end.sequence}"
+            )
+
+
 class PlaybackSession(requests.Session):
     max_retries: int = 3
 
@@ -350,75 +363,53 @@ class Playback:
         start_point: PointInStream,
         end_point: PointInStream,
         itag: str | None = None,
-    ) -> SequenceRange:
+    ) -> RewindInterval:
         # First, resolve relativity where it's possible, without locating:
         start_point, end_point = resolve_relativity_in_interval(start_point, end_point)
 
+        itag = itag or next(iter(self.streams)).itag
         if type(start_point) is type(end_point) is SegmentSequence:
-            return SequenceRange(start_point, end_point)
-        else:
-            itag = itag or next(iter(self.streams)).itag
-            base_url = self._get_reference_base_url(itag)
-            sl = SegmentLocator(
-                base_url,
-                temp_directory=self.get_temp_directory(),
-                session=self.session,
-            )
+            start_moment = self.locate_moment(start_point, itag=itag)
+            end_moment = self.locate_moment(end_point, itag=itag, is_end=True)
+            return RewindInterval(start_moment, end_moment)
 
         # Then, locate end if start is relative:
         if isinstance(start_point, RelativePointInStream):
-            if isinstance(end_point, SegmentSequence):
-                end_sequence = end_point
-            elif isinstance(end_point, datetime):
-                end_sequence = sl.find_sequence_by_time(end_point.timestamp(), end=True)
+            end_moment = self.locate_moment(end_point, itag=itag, is_end=True)
         else:
-            end_sequence = None
+            end_moment = None
 
-        # Finally, iterate over start and end points to locate sequences:
-        start_and_end_sequences: list[SegmentSequence | None] = [None, end_sequence]
+        # Finally, iterate over start and end points to locate moments:
+        start_and_end_moments: list[RewindMoment | None] = [None, end_moment]
         for index, (point, is_start) in enumerate(
             ((start_point, True), (end_point, False))
         ):
             if isinstance(point, RelativePointInStream):
-                start_sequence, end_sequence = start_and_end_sequences
+                start_moment, end_moment = start_and_end_moments
                 # Given the current relative point as delta, the resulted point:
                 # start/end point = end/start point -/+ delta.
                 if is_start:
-                    contrary_sequence = end_sequence
+                    contrary_moment = end_moment
                     contrary_op = operator.sub
                 else:
-                    contrary_sequence = start_sequence
+                    contrary_moment = start_moment
                     contrary_op = operator.add
 
                 match point:
                     case RelativeSegmentSequence() as sequence_delta:
-                        sequence = contrary_op(contrary_sequence, sequence_delta)
-                    case timedelta() as delta:
-                        contrary_segment = self.get_downloaded_segment(
-                            contrary_sequence, base_url
-                        )
-                        if is_start:
-                            contrary_date = contrary_segment.ingestion_end_date
-                        else:
-                            contrary_date = contrary_segment.ingestion_start_date
-                        target_date = contrary_op(contrary_date, delta)
-                        sequence = sl.find_sequence_by_time(
-                            target_date.timestamp(), end=not is_start
-                        )
+                        sequence = contrary_op(contrary_moment.sequence, sequence_delta)
+                        moment = self.locate_moment(sequence, itag, not is_start)
+                    case timedelta() as time_delta:
+                        date = contrary_op(contrary_moment.date, time_delta)
+                        moment = self.locate_moment(date, itag, not is_start)
             else:
-                match point:
-                    case SegmentSequence():
-                        sequence = point
-                    case datetime() as date:
-                        sequence = sl.find_sequence_by_time(
-                            date.timestamp(), end=not is_start
-                        )
+                moment = self.locate_moment(point, itag, not is_start)
 
-            start_and_end_sequences[index] = sequence
+            start_and_end_moments[index] = moment
 
         try:
-            resulted_range = SequenceRange(*start_and_end_sequences)
+            resulted_interval = RewindInterval(*start_and_end_moments)
         except ValueError as exc:
             raise SequenceLocatingError(str(exc)) from exc
 
-        return resulted_range
+        return resulted_interval
