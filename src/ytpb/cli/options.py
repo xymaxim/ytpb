@@ -88,7 +88,7 @@ def config_options(f):
         "--config",
         "config_path",
         cls=GlobalOption,
-        help="Specifies the path to a configuration file.",
+        help="Specifies a path to a configuration file.",
         type=click.Path(path_type=Path),
         is_eager=True,
     )(f)
@@ -96,7 +96,7 @@ def config_options(f):
     f = click.option(
         "--no-config",
         cls=GlobalOption,
-        help="Do not load user configuration file.",
+        help="Do not load any configuration files.",
         default=False,
         is_flag=True,
         is_eager=True,

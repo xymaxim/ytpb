@@ -83,8 +83,7 @@ def mpd_group():
 
 @mpd_group.command(
     "compose",
-    short_help="Compose MPEG-DASH manifest.",
-    help="Compose MPEG-DASH manifest for stream excerpt.",
+    help="Compose an MPEG-DASH manifest.",
 )
 @cloup.option_group(
     "Input options",
@@ -274,8 +273,7 @@ def compose_command(
 
 @mpd_group.command(
     "refresh",
-    short_help="Refresh composed MPEG-DASH manifest.",
-    help="Refresh composed MPEG-DASH manifest for stream excerpt.",
+    help="Refresh a composed MPEG-DASH manifest.",
 )
 @yt_dlp_option
 @cloup.argument("manifest", help="Manifest file to refresh.")

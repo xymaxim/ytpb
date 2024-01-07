@@ -65,7 +65,7 @@ def render_download_output_path_context(
     return output
 
 
-@cloup.command("download", help="Download stream excerpt.")
+@cloup.command("download", short_help="Download excerpts.", help="Download an excerpt.")
 @cloup.option_group(
     "Input options",
     interval_option,
@@ -98,7 +98,7 @@ def render_download_output_path_context(
     "--from-manifest",
     metavar="PATH",
     type=click.Path(path_type=Path),
-    help="Path to MPEG-DASH manifest.",
+    help="Path to a MPEG-DASH manifest.",
 )
 @click.option(
     "-X",

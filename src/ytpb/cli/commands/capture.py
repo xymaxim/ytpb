@@ -149,7 +149,7 @@ def print_timelapse_summary_info(
     click.echo("{:>12}  {} / E".format("", _format_datetime(end_date)))
 
 
-@cloup.group("capture", short_help="Capture a single or many frames.")
+@cloup.group("capture", help="Capture a single or many frames.")
 def capture_group():
     pass
 
