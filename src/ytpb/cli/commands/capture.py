@@ -24,13 +24,13 @@ from ytpb.actions.capture import capture_frames, extract_frame_as_image
 from ytpb.cli.commands.download import render_download_output_path_context
 from ytpb.cli.common import (
     create_playback,
+    get_parameter_by_name,
     prepare_line_for_summary_info,
     raise_for_sequence_ahead_of_current,
     raise_for_too_far_sequence,
     resolve_output_path,
     stream_argument,
 )
-from ytpb.cli.custom import get_parameter_by_name
 from ytpb.cli.options import (
     cache_options,
     interval_option,

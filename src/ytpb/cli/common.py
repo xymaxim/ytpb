@@ -8,7 +8,6 @@ import click
 import cloup
 import structlog
 
-from ytpb.cli.custom import get_parameter_by_name
 from ytpb.download import compose_default_segment_filename
 from ytpb.exceptions import (
     BadCommandArgument,
@@ -31,6 +30,10 @@ logger = structlog.getLogger(__name__)
 
 CONSOLE_TEXT_WIDTH = 80
 EARLIEST_DATE_TIMEDELTA = timedelta(days=6, hours=23)
+
+
+def get_parameter_by_name(name: str, ctx: click.Context) -> click.Parameter:
+    return next((p for p in ctx.command.params if p.name == name), None)
 
 
 def create_playback(ctx: click.Context) -> Playback:

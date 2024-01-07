@@ -12,6 +12,7 @@ from cloup.constraints import constraint, require_any
 from ytpb import actions
 from ytpb.cli.common import (
     create_playback,
+    get_parameter_by_name,
     print_summary_info,
     query_streams_or_exit,
     raise_for_sequence_ahead_of_current,
@@ -19,7 +20,6 @@ from ytpb.cli.common import (
     resolve_output_path,
     stream_argument,
 )
-from ytpb.cli.custom import get_parameter_by_name
 from ytpb.cli.options import (
     cache_options,
     interval_option,
