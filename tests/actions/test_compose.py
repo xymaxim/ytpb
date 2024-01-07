@@ -1,5 +1,4 @@
 from dataclasses import asdict, dataclass
-from datetime import datetime, timedelta, timezone
 from difflib import unified_diff
 
 import freezegun
@@ -10,7 +9,7 @@ from helpers import patched_freezgun_astimezone
 
 from ytpb.actions.compose import compose_mpd, refresh_mpd
 from ytpb.exceptions import YtpbError
-from ytpb.playback import Playback, RewindInterval
+from ytpb.playback import Playback
 from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, AudioStream, VideoStream
 

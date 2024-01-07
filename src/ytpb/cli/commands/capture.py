@@ -45,7 +45,6 @@ from ytpb.cli.parameters import (
     InputRewindInterval,
     PointInStreamParamType,
 )
-from ytpb.download import download_segment
 from ytpb.exceptions import QueryError, SegmentDownloadError, SequenceLocatingError
 from ytpb.locate import SegmentLocator
 from ytpb.segment import Segment
