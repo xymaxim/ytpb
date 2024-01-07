@@ -4,11 +4,12 @@ from textwrap import fill
 from typing import Callable
 
 import click
+from cloup.constraints import constraint, mutually_exclusive
 from PIL import Image
 
 from ytpb.cli import parameters
 from ytpb.cli.common import EARLIEST_DATE_TIMEDELTA
-from ytpb.cli.custom import ConflictingOption, GlobalOption
+from ytpb.cli.custom import GlobalOption
 
 from ytpb.utils.path import OUTPUT_PATH_PLACEHOLDER_RE
 
@@ -108,19 +109,17 @@ def config_options(f):
 def cache_options(f):
     f = click.option(
         "--force-update-cache",
-        cls=ConflictingOption,
-        conflicting_with=["no_cache"],
         help="Force to update cache.",
         is_flag=True,
     )(f)
 
     f = click.option(
         "--no-cache",
-        cls=ConflictingOption,
-        conflicting_with=["force_update_cache"],
         help="Do not use cache.",
         is_flag=True,
     )(f)
+
+    f = constraint(mutually_exclusive, ["no_cache", "force_update_cache"])(f)
 
     return f
 
