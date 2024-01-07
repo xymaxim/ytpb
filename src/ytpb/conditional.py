@@ -1,8 +1,9 @@
 import re
 from typing import Any, Callable
 
-import structlog
 import pycond as pc
+
+import structlog
 
 from ytpb.config import BUILT_IN_ALIASES
 from ytpb.exceptions import QueryError

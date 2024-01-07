@@ -7,7 +7,6 @@ from PIL import Image
 
 from ytpb.locate import SegmentLocator
 from ytpb.playback import Playback
-
 from ytpb.segment import Segment
 from ytpb.types import SegmentSequence
 

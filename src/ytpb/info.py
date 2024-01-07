@@ -25,6 +25,7 @@ class YouTubeVideoInfo:
     status: BroadcastStatus
     dash_manifest_url: str | None = None
 
+
 class LeftNotFetched:
     """Represents a value that is intentionally not fetched."""
 

@@ -18,9 +18,7 @@ def stream_comparison_function(stream: AudioOrVideoStream):
 class Streams(MutableSet):
     """Represents a set of `ytpb.info.RepresentationInfo` objects."""
 
-    def __init__(
-        self, iterable: list[AudioOrVideoStream] | None = None
-    ) -> None:
+    def __init__(self, iterable: list[AudioOrVideoStream] | None = None) -> None:
         self._elements = set()
         for value in iterable or []:
             if not isinstance(value, AudioOrVideoStream):
@@ -86,7 +84,9 @@ class Streams(MutableSet):
             raise QueryError(f"Format spec is invalid: {format_spec}")
 
         expression_filter = make_filter_from_expression(expression)
-        queried: list[AudioOrVideoStream] = list(filter(expression_filter, self._elements))
+        queried: list[AudioOrVideoStream] = list(
+            filter(expression_filter, self._elements)
+        )
         if queried:
             if function_name:
                 try:

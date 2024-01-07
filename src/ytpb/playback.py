@@ -13,7 +13,6 @@ from platformdirs import user_cache_path
 
 from ytpb.cache import read_from_cache, write_to_cache
 from ytpb.config import USER_AGENT
-
 from ytpb.download import compose_default_segment_filename, download_segment
 from ytpb.exceptions import (
     BaseUrlExpiredError,

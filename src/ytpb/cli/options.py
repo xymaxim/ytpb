@@ -9,7 +9,6 @@ from PIL import Image
 
 from ytpb.cli import parameters
 from ytpb.cli.common import EARLIEST_DATE_TIMEDELTA
-
 from ytpb.utils.path import OUTPUT_PATH_PLACEHOLDER_RE
 
 

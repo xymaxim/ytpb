@@ -16,7 +16,6 @@ from ytpb.exceptions import (
     CachedItemNotFoundError,
     QueryError,
 )
-
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
 from ytpb.playback import Playback, RewindInterval
