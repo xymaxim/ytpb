@@ -2,22 +2,22 @@
 
 	<h1 align="center">(<<) Ytpb — YouTube Live Playback</h1>
 
-Ytpb is a playback for YouTube live streams. Rewind to exact moment in streams
-and download or play excerpts.
+	<p align="center">
+	Ytpb is a playback for YouTube live streams. Rewind to exact moment in
+	streams and download or play excerpts.
+	</p>
 
-  *(Disclaimer: Work in progress. Any ideas and contributions are welcome.)*
+*(DISCLAMER: Work in progress. Any ideas and contributions are welcome.)*
 
 **Features**
 
-- Command line interface (CLI) and Python package
-- Downloads audio and/or video past excerpts of live streams
-- Precisely cuts to the exact input times without slow re-encoding
-- Composes MPEG-DASH manifest to play excerpts instantly (e.g. with `mpv
-  <https://mpv.io/>`_)
-- Captures a single frame or creates time-lapse images
-- Makes use of `yt-dlp`_ to reliably extract information about videos
-
-.. _yt-dlp: https://github.com/yt-dlp/yt-dlp/
+- Command line interface (CLI) and Python library
+- Download audio and/or video past excerpts of live streams
+- Precisely cut to exact moments without slow re-encoding
+- Compose MPEG-DASH manifests to play excerpts instantly
+- Capture a single frame or create time-lapse images
+- Makes use of `yt-dlp <https://github.com/yt-dlp/yt-dlp/>`_ to reliably extract
+  information about videos
 
 .. contents:: **Table of contents**
    :depth: 2
@@ -62,7 +62,7 @@ terms. The `Contributing`_ describes how to participate.
 Installation
 ************
 
-Ytpb requires Python 3.12 or higher. Currently, Ytpb isn't available on
+Ytpb requires Python 3.11 or higher. Currently, Ytpb isn't available on
 PyPI. You can install it from GitHub. The recommended way is to use `pipx
 <https://pypa.github.io/pipx/>`_:
 
