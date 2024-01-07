@@ -65,26 +65,22 @@ def validate_start_date_not_too_far(
     return value
 
 
-def boundary_options(f):
-    """A set of options which defines rewind interval."""
+interval_option = click.option(
+    "-i",
+    "--interval",
+    metavar="INTERVAL",
+    type=parameters.RewindIntervalParamType(),
+    help="Time or segment interval.",
+    required=True,
+)
 
-    f = click.option(
-        "-p",
-        "--preview",
-        help="Run in preview mode.",
-        is_flag=True,
-    )(f)
 
-    f = click.option(
-        "-i",
-        "--interval",
-        metavar="INTERVAL",
-        type=parameters.RewindIntervalParamType(),
-        help="Time or segment interval.",
-        required=True,
-    )(f)
-
-    return f
+preview_option = click.option(
+    "-p",
+    "--preview",
+    help="Run in preview mode.",
+    is_flag=True,
+)
 
 
 def config_options(f):

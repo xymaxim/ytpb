@@ -20,9 +20,10 @@ from ytpb.cli.common import (
 )
 from ytpb.cli.custom import get_parameter_by_name
 from ytpb.cli.options import (
-    boundary_options,
     cache_options,
+    interval_option,
     no_cleanup_option,
+    preview_option,
     validate_output_path,
     yt_dlp_option,
 )
@@ -67,7 +68,7 @@ def render_download_output_path_context(
 @cloup.command("download", help="Download stream excerpt.")
 @cloup.option_group(
     "Input options",
-    boundary_options,
+    interval_option,
     cloup.option(
         "-af",
         "--audio-format",
@@ -82,6 +83,7 @@ def render_download_output_path_context(
         type=FormatSpecParamType(FormatSpecType.VIDEO),
         help="Video format to download.",
     ),
+    preview_option,
 )
 @click.option(
     "-o",
@@ -118,9 +120,9 @@ def render_download_output_path_context(
 def download_command(
     ctx: click.Context,
     interval: InputRewindInterval,
-    preview: bool,
     audio_format: str,
     video_format: str,
+    preview: bool,
     output_path: Path,
     from_manifest: Path,
     dry_run: bool,

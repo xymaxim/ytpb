@@ -32,9 +32,10 @@ from ytpb.cli.common import (
 )
 from ytpb.cli.custom import get_parameter_by_name
 from ytpb.cli.options import (
-    boundary_options,
     cache_options,
+    interval_option,
     no_cleanup_option,
+    preview_option,
     validate_image_output_path,
     yt_dlp_option,
 )
@@ -310,7 +311,7 @@ def frame_command(
 @capture_group.command("timelapse", help="Capture time-lapse frames.")
 @cloup.option_group(
     "Input options",
-    boundary_options,
+    interval_option,
     cloup.option(
         "-e",
         "--every",
@@ -327,6 +328,7 @@ def frame_command(
         type=FormatSpecParamType(FormatSpecType.VIDEO),
         help="Video format to capture.",
     ),
+    preview_option,
 )
 @click.option(
     "-o",
@@ -344,9 +346,9 @@ def frame_command(
 def timelapse_command(
     ctx: click.Context,
     interval: InputRewindInterval,
-    preview: bool,
     every: timedelta,
     video_format: str,
+    preview: bool,
     output_path: Path,
     yt_dlp: bool,
     no_cleanup: bool,

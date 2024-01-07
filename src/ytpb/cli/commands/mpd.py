@@ -26,8 +26,8 @@ from ytpb.cli.common import (
     stream_argument,
 )
 from ytpb.cli.options import (
-    boundary_options,
     cache_options,
+    interval_option,
     validate_output_path,
     yt_dlp_option,
 )
@@ -88,7 +88,7 @@ def mpd_group():
 )
 @cloup.option_group(
     "Input options",
-    boundary_options,
+    interval_option,
     cloup.option(
         "-af",
         "--audio-formats",
@@ -119,7 +119,6 @@ def mpd_group():
 def compose_command(
     ctx: click.Context,
     interval: types.PointInStream,
-    preview: bool,
     audio_formats: str,
     video_formats: str,
     output_path: Path,
@@ -193,13 +192,6 @@ def compose_command(
         )
     if requested_end == "now":
         requested_end = head_sequence - 1
-
-    if preview:
-        assert False
-        segment_duration = ...
-        preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
-        number_of_segments = round(preview_duration_value / segment_duration)
-        requested_end = RelativeSequenceNumber(number_of_segments)
 
     click.echo("(<<) Locating start and end in the stream... ", nl=False)
     rewind_interval = playback.locate_interval(
