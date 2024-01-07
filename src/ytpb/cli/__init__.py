@@ -20,7 +20,7 @@ from ytpb.config import (
 )
 from ytpb.types import ConfigMap
 
-logger = structlog.get_logger()
+logger = structlog.get_logger(__name__)
 
 
 @dataclass

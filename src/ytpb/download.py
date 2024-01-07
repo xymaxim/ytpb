@@ -11,7 +11,7 @@ from ytpb.exceptions import SegmentDownloadError
 from ytpb.types import SegmentSequence
 from ytpb.utils.url import extract_media_type_from_url, extract_parameter_from_url
 
-logger = structlog.get_logger()
+logger = structlog.get_logger(__name__)
 
 _SegmentOutputFilename = str | Callable[[SegmentSequence, str], str]
 

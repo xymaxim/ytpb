@@ -16,7 +16,7 @@ from ytpb.download import download_segment
 from ytpb.merge import merge_segments
 from ytpb.playback import Playback, RewindInterval
 
-logger = structlog.get_logger()
+logger = structlog.get_logger(__name__)
 
 
 class _ExcerptDownloadResult(NamedTuple):

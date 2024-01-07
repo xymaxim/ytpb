@@ -41,10 +41,9 @@ from ytpb.utils.url import (
     extract_parameter_from_url,
 )
 
+logger = structlog.get_logger(__name__)
 
 SEGMENT_URL_PATTERN = r"https://.+\.googlevideo\.com/videoplayback/.+"
-
-logger = structlog.get_logger()
 
 
 @dataclass
