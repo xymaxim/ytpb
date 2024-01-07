@@ -5,12 +5,13 @@ from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import av
+import structlog
 
 from ytpb.exceptions import YtpbError
 from ytpb.types import SegmentSequence, Timestamp
 from ytpb.utils.other import US_TO_S
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 @dataclass

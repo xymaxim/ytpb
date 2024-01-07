@@ -4,6 +4,7 @@ from enum import auto, StrEnum
 from typing import Literal, NamedTuple
 
 import click
+import structlog
 from timedelta_isoformat import timedelta as isotimedelta
 
 from ytpb import types
@@ -11,7 +12,7 @@ from ytpb.conditional import FORMAT_SPEC_RE
 from ytpb.types import SegmentSequence
 from ytpb.utils.date import ensure_date_aware
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class PointInStreamParamType(click.ParamType):

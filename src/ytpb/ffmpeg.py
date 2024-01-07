@@ -4,9 +4,11 @@ import subprocess
 from pathlib import Path
 from typing import Any
 
+import structlog
+
 from ytpb.exceptions import FFmpegRunError
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 def run_ffmpeg(

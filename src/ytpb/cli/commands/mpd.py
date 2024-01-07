@@ -5,6 +5,7 @@ from pathlib import Path
 
 import click
 import cloup
+import structlog
 from cloup.constraints import constraint, require_any
 from rich import box
 from rich.console import Console
@@ -46,7 +47,7 @@ from ytpb.utils.path import expand_template_output_path, OUTPUT_PATH_PLACEHOLDER
 from ytpb.utils.remote import request_reference_sequence
 from ytpb.utils.url import build_video_url_from_base_url, extract_parameter_from_url
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 MpdOutputPathContext = DownloadOutputPathContext

@@ -2,6 +2,7 @@ import logging
 from abc import ABC, abstractmethod
 
 import requests
+import structlog
 from yt_dlp import DownloadError, YoutubeDL
 
 from ytpb.exceptions import BroadcastStatusError
@@ -11,7 +12,7 @@ from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, AudioStream, VideoStream
 from ytpb.utils.url import extract_parameter_from_url
 
-logger = logging.getLogger(__name__)
+logger = structlog.get_logger(__name__)
 
 
 class InfoFetcher(ABC):
