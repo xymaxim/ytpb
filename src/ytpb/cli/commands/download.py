@@ -7,6 +7,7 @@ from pathlib import Path
 import click
 import cloup
 import structlog
+from cloup.constraints import constraint, require_any
 
 from ytpb import actions
 from ytpb.cli.common import (
@@ -116,6 +117,7 @@ def render_download_output_path_context(
 @no_cleanup_option
 @cache_options
 @stream_argument
+@constraint(require_any, ["audio_format", "video_format"])
 @click.pass_context
 def download_command(
     ctx: click.Context,
@@ -134,11 +136,6 @@ def download_command(
     no_cache: bool,
     stream_url: str,
 ) -> int:
-    if audio_format is None and video_format is None:
-        raise click.UsageError(
-            "At least --audio-format or --video-format must be specified."
-        )
-
     if no_merge:
         no_cleanup = True
 

@@ -5,6 +5,7 @@ from pathlib import Path
 
 import click
 import cloup
+from cloup.constraints import constraint, require_any
 from rich import box
 from rich.console import Console
 from rich.table import Table
@@ -114,6 +115,7 @@ def mpd_group():
 @yt_dlp_option
 @cache_options
 @stream_argument
+@constraint(require_any, ["audio_formats", "video_formats"])
 @click.pass_context
 def compose_command(
     ctx: click.Context,
@@ -126,11 +128,6 @@ def compose_command(
     yt_dlp: bool,
     stream_url: str,
 ) -> int:
-    if not audio_formats and not video_formats:
-        raise click.BadArgumentUsage(
-            "At least --audio-formats or --video-formats must be specified."
-        )
-
     playback = create_playback(ctx)
 
     queried_audio_streams = []
