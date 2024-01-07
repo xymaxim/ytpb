@@ -22,7 +22,7 @@ jobs:
       with:
         ffmpeg-version: release
         architecture: ""
-        github-token: ${{ github.server_url == "https://github.com" && github.token || "" }}
+        github-token: ${{ github.server_url == 'https://github.com' && github.token || '' }}
     - name: Set up Python ${{ matrix.python-version }}
       uses: actions/setup-python@v5
       with:
