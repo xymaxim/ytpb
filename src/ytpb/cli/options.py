@@ -9,7 +9,6 @@ from PIL import Image
 
 from ytpb.cli import parameters
 from ytpb.cli.common import EARLIEST_DATE_TIMEDELTA
-from ytpb.cli.custom import GlobalOption
 
 from ytpb.utils.path import OUTPUT_PATH_PLACEHOLDER_RE
 
@@ -88,7 +87,6 @@ def config_options(f):
     f = click.option(
         "--config",
         "config_path",
-        cls=GlobalOption,
         help="Specifies a path to a configuration file.",
         type=click.Path(path_type=Path),
         is_eager=True,
@@ -96,7 +94,6 @@ def config_options(f):
 
     f = click.option(
         "--no-config",
-        cls=GlobalOption,
         help="Do not load any configuration files.",
         default=False,
         is_flag=True,
@@ -128,7 +125,6 @@ def logging_options(f):
     f = click.option(
         "--debug",
         "debug",
-        cls=GlobalOption,
         help="Enable verbose output for debugging.",
         is_flag=True,
         is_eager=True,

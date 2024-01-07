@@ -3,12 +3,6 @@ import collections
 import click
 
 
-class GlobalOption(click.Option):
-    def __init__(self, *args, **kwargs):
-        self.is_global = True
-        super().__init__(*args, **kwargs)
-
-
 class OrderedGroup(click.Group):
     def __init__(self, name=None, commands=None, **attrs):
         super().__init__(name, commands, **attrs)
