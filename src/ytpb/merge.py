@@ -4,8 +4,6 @@ from pathlib import Path
 from tempfile import NamedTemporaryFile
 from typing import Any
 
-from more_itertools import first, last
-
 from ytpb import ffmpeg
 from ytpb.utils.other import S_TO_MS
 
@@ -179,11 +177,11 @@ def merge_segments(
     else:
         num_of_segments = len(audio_segment_paths or video_segment_paths)
 
-        start_audio_segment_path = first(audio_segment_paths, None)
-        start_video_segment_path = first(video_segment_paths, None)
+        start_audio_segment_path = get_nth_or_none(audio_segment_paths, 0)
+        start_video_segment_path = get_nth_or_none(video_segment_paths, 0)
 
-        end_audio_segment_path = last(audio_segment_paths, None)
-        end_video_segment_path = last(video_segment_paths, None)
+        end_audio_segment_path = get_nth_or_none(audio_segment_paths, -1)
+        end_video_segment_path = get_nth_or_none(video_segment_paths, -1)
 
         if num_of_segments == 1:
             segment_trimmed_path = Path(temp_directory, "a.a" + output_extension)
