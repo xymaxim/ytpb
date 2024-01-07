@@ -10,7 +10,7 @@ version = "0.4.2"
 authors = [ { name = "Maxim Stolyarchuk" } ]
 keywords = [ "youtube" ]
 license = { file = "LICENSE" }
-requires-python = ">=3.11"
+requires-python = ">=3.10"
 dependencies = [
     "av>=11.0.0",
     "click>=8.1.7",
