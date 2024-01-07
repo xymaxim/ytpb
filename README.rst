@@ -107,15 +107,14 @@ the ``-p/--preview`` option:
 Compose and play
 ================
 
+  *Note: Currently, playing works only with FFmpeg <= 4.4.3.*
+
 If you want to play the excerpt without downloading it, you can compose a
 MPEG-DASH manifest (MPD) file and then play it in a player that supports DASH
-streams:
+streams: ::
 
-.. code:: sh
-
-	  $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT30S <STREAM>
-	  $ ls
-	  Stream-Title_20240102T102000+00.mpd
+  $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT30S <STREAM>
+  $ mpv Stream-Title_20240102T102000+00.mpd
 
 By default, a manifest will contain all available audio tracks and VP9 video
 channels.
