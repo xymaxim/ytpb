@@ -2,6 +2,8 @@
 
 import math
 import tempfile
+from bisect import bisect_left
+from functools import partial
 from pathlib import Path
 
 import requests
@@ -29,7 +31,7 @@ def find_time_diff_in_sequences(
 
 
 class SequenceMetadataPair:
-    def __init__(self, sequence: SegmentSequence, locator: "SequenceLocator"):
+    def __init__(self, sequence: SegmentSequence, locator: "SegmentLocator"):
         self.locator = locator
         self.sequence = sequence
 
@@ -102,7 +104,7 @@ class SegmentLocator:
 
     def _download_full_segment(self, sequence: SegmentSequence) -> Path:
         downloaded_path = download_segment(
-            self.candidate.sequence,
+            sequence,
             self.base_url,
             output_directory=self.get_temp_directory(),
             session=self.session,
@@ -114,11 +116,25 @@ class SegmentLocator:
     ) -> float:
         return desired_time - candidate.metadata.ingestion_walltime
 
+    def _get_bisected_segment_timestamp(
+        self, sequence: SegmentSequence, *, target: Timestamp
+    ) -> Timestamp:
+        self.candidate.sequence = sequence
+        current_diff_in_s = self._find_time_diff(self.candidate, target)
+        self.track.append((sequence, current_diff_in_s))
+        logger.debug(
+            "Bisect step, time difference: %+f s",
+            current_diff_in_s,
+            seq=self.candidate.sequence,
+            time=self.candidate.metadata.ingestion_walltime,
+        )
+        return self.candidate.metadata.ingestion_walltime
+
     def _refine_candidate_sequence(
         self, desired_time: Timestamp, end: bool
     ) -> tuple[SegmentSequence, bool]:
-        """Refine the initial, pre-estimated sequence number using a combination
-        of jump and linear search. This contains Step 2 and 3 of the algorithm.
+        """Refine the initial, pre-estimated sequence number using a binary
+        search. This contains Step 2 and 3 of the algorithm.
         """
         current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
         self.track.append((self.candidate.sequence, current_diff_in_s))
@@ -131,58 +147,47 @@ class SegmentLocator:
 
         # The direction of iteration: to the right (1) or left (-1).
         direction = int(math.copysign(1, current_diff_in_s))
-        logger.debug("Start iterating search (iteration direction: %+d)", direction)
 
-        # Locate a segment where the time difference changes a sign.
-        have_same_signs = True
-        while have_same_signs and current_diff_in_s != 0:
-            self.candidate.sequence += 1 * direction
-            current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
-            have_same_signs = int(math.copysign(1, current_diff_in_s)) ^ direction == 0
-            self.track.append((self.candidate.sequence, current_diff_in_s))
-            logger.debug(
-                "Step to next segment, time difference: %+f s",
-                current_diff_in_s,
-                seq=self.candidate.sequence,
-                time=self.candidate.metadata.ingestion_walltime,
-            )
+        search_domain_boundaries = (self.track[0][0], self.candidate.sequence)
+        left, right = min(search_domain_boundaries), max(search_domain_boundaries)
+        search_domain = range(left, right + 1)
+        logger.debug("Start a binary search", left=left, right=right)
+
+        bisect_key = partial(self._get_bisected_segment_timestamp, target=desired_time)
+        bisect_left(search_domain, desired_time, key=bisect_key)
+
+        refined_sequence: SegmentSequence
 
         falls_into_gap = False
-
         if current_diff_in_s == 0:
             refined_sequence = self.candidate.sequence
         else:
-            logger.debug("Found a change in time difference sign")
-
-            if direction == 1:
-                self.candidate.sequence -= 1
-                logger.debug(
-                    "Step back to previous segment",
-                    seq=self.candidate.sequence,
-                    time=self.candidate.metadata.ingestion_walltime,
-                )
-                candidate_diff_in_s = self.track[-2][1]
-                self.track.append((self.candidate.sequence, candidate_diff_in_s))
-            else:
-                candidate_diff_in_s = current_diff_in_s
-
             # Download a full candidate segment and check its duration:
             downloaded_path = self._download_full_segment(self.candidate.sequence)
             candidate_segment = Segment.from_file(downloaded_path)
             candidate_duration = candidate_segment.get_actual_duration()
 
+            candidate_diff_in_s = current_diff_in_s
             logger.debug(
-                "Candidate time difference: %+f s, actual duration: %f s",
+                "Candidate time difference: %+f s, actual duration: %+f s",
                 candidate_diff_in_s,
                 candidate_duration,
             )
 
             # Step 3. Finally, check if the desired date falls into a gap.
-            if candidate_duration < candidate_diff_in_s:
+            if candidate_duration < abs(candidate_diff_in_s):
                 falls_into_gap = True
-                logger.debug("Input time falls into a gap")
-                if end is False:
-                    self.candidate.sequence += 1
+                logger.debug("Input target time falls into a gap")
+                changed_to_adjacent = False
+                if candidate_diff_in_s < 0:
+                    if end:
+                        self.candidate.sequence -= 1
+                        changed_to_adjacent = True
+                else:
+                    if not end:
+                        self.candidate.sequence += 1
+                        changed_to_adjacent = True
+                if changed_to_adjacent:
                     self.track.append(
                         (
                             self.candidate.sequence,
@@ -190,7 +195,8 @@ class SegmentLocator:
                         )
                     )
                     logger.debug(
-                        "Use next sequence as a start sequence",
+                        "Step to adjacent segment, time difference: %+f s",
+                        self.track[-1][1],
                         seq=self.candidate.sequence,
                         time=self.candidate.metadata.ingestion_walltime,
                     )
