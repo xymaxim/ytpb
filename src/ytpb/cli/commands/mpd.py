@@ -58,9 +58,9 @@ def print_audio_table(console, streams, **table_kwargs):
     table = Table(title="(Audio)", **table_kwargs)
     for name in ("itag", "Format", "Codec", "Sampling"):
         if name == "itag":
-            table.add_column(" " + name, ratio=20, justify="center")
+            table.add_column(" " + name, ratio=0.2, justify="center")
         else:
-            table.add_column(name, ratio=(100 - 20) / 3)
+            table.add_column(name, ratio=(1 - 0.2) / 3)
     for s in sorted(streams, key=lambda x: (x.audio_sampling_rate, x.itag)):
         table.add_row(s.itag, s.format, s.codecs, f"{s.audio_sampling_rate} Hz")
     console.print(table)
@@ -70,9 +70,9 @@ def print_video_table(console, streams, **table_kwargs):
     table = Table(title="(Video)", **table_kwargs)
     for name in ("itag", "Format", "Codec", "Quality"):
         if name == "itag":
-            table.add_column(" " + name, ratio=20, justify="center")
+            table.add_column(" " + name, ratio=0.2, justify="center")
         else:
-            table.add_column(name, ratio=(100 - 20) / 3)
+            table.add_column(name, ratio=(1 - 0.2) / 3)
     for s in sorted(streams, key=lambda x: (x.codecs, x.quality, x.itag)):
         table.add_row(s.itag, s.format, s.codecs, str(s.quality))
     console.print(table)
