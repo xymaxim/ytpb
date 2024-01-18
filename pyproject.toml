@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "ytpb"
 description = "Playback for YouTube live streams"
 readme = "README.rst"
-version = "0.4.2"
+version = "2024.1.18"
 authors = [ { name = "Maxim Stolyarchuk" } ]
 keywords = [ "youtube" ]
 license = { file = "LICENSE" }
