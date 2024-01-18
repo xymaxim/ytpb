@@ -6,10 +6,11 @@ This representation will be downloaded:
 
 (<<) Locating start and end in the stream... done.
 Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
-  Actual end: 25 Mar 2023 23:33:58 +0000, seq. 7959121
+  Actual end: 25 Mar 2023 23:33:57 +0000, seq. 7959121
 
-(<<) Downloading segments 7959120-7959121 (no merge requested)...
+(<<) Preparing and saving the excerpt...
+1. Downloading segments 7959120-7959121:
    - Audio ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2 100% eta 0:00:00
+2. Merging segments (may take a while)... done.
 
-Success! Segments saved to /tmp/pytest-of-ms/pytest-1/test_no_merge_option0/tmpnghtuj8q/segments/.
-notice: No cleanup enabled, check /tmp/pytest-of-ms/pytest-1/test_no_merge_option0/tmpnghtuj8q/
+Success! Saved to 'Webcam-Zurich-HB_20230325T233354+00.mp4'.

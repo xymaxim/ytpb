@@ -1,5 +1,6 @@
 import glob
 import os
+import re
 from pathlib import Path
 from typing import Callable
 from unittest.mock import MagicMock, patch
@@ -45,6 +46,7 @@ def test_download_within_interval(
     stream_url: str,
     audio_base_url: str,
     tmp_path: Path,
+    expected_out,
 ) -> None:
     # Given:
     add_responses_callback_for_reference_base_url()
@@ -73,6 +75,7 @@ def test_download_within_interval(
         )
 
     # Then:
+    assert result.output == expected_out
     assert result.exit_code == 0
     assert glob.glob(str(tmp_path / f"*{output_subpath}"))
 
@@ -264,9 +267,12 @@ def test_download_audio_and_or_video(
 
     # Then:
     assert result.exit_code == 0
-    expected = expected_out._pattern_filename.read_text()
-    expected = expected.replace("{TEMP_DIRECTORY}", str(run_temp_directory))
-    assert result.output == expected
+    expected_output = re.sub(
+        r"notice: No cleanup enabled, check .+",
+        f"notice: No cleanup enabled, check {run_temp_directory}/",
+        expected_out._pattern_filename.read_text(),
+    )
+    assert expected_output == result.output
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
@@ -490,10 +496,17 @@ def test_no_merge_option(
     assert not os.path.exists(tmp_path / "Webcam-Zurich-HB_20230325T233354+00.mp4")
     assert os.path.exists(run_temp_directory / "7959120.i140.mp4")
 
-    expected = expected_out._pattern_filename.read_text()
-    expected = expected.replace("{SAVED_TO}", str(run_temp_directory / "segments"))
-    expected = expected.replace("{TEMP_DIRECTORY}", str(run_temp_directory))
-    assert result.output == expected
+    expected_output = re.sub(
+        r"Success! Segments saved to .+\.",
+        f"Success! Segments saved to {run_temp_directory}/segments/.",
+        expected_out._pattern_filename.read_text(),
+    )
+    expected_output = re.sub(
+        r"notice: No cleanup enabled, check .+",
+        f"notice: No cleanup enabled, check {run_temp_directory}/",
+        expected_output,
+    )
+    assert expected_output == result.output
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")

@@ -33,13 +33,16 @@ dependencies = [
 test = [
     "freezegun>=1.4.0",
     "pytest>=7.4.4",
-    "pytest-matcher>=1.4.0",
+    "pytest-matcher>=1.5.1",
     "pytest-socket>=0.6.0",
     "responses>=0.24.1"
 ]
 
 [project.urls]
 Source = "https://github.com/xymaxim/ytpb"
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.black]
 line-length = 88
