@@ -145,11 +145,24 @@ class SegmentLocator:
             time=self.candidate.metadata.ingestion_walltime,
         )
 
+        if abs(current_diff_in_s) < self.segment_duration:
+            if current_diff_in_s < 0:
+                return self.candidate.sequence - 1, False
+            else:
+                return self.candidate.sequence, False
+
         # The direction of iteration: to the right (1) or left (-1).
         direction = int(math.copysign(1, current_diff_in_s))
 
-        search_domain_boundaries = (self.track[0][0], self.candidate.sequence)
-        left, right = min(search_domain_boundaries), max(search_domain_boundaries)
+        # Expand a search domain if it doesn't include a target:
+        candidate_sequence = self.candidate.sequence
+        next_to_last = self.track[-2]
+        if current_diff_in_s * next_to_last[1] > 0:
+            last_hope_jump = 4
+            candidate_sequence += direction * last_hope_jump
+
+        domain_sequences = (candidate_sequence, next_to_last[0])
+        left, right = min(domain_sequences), max(domain_sequences)
         search_domain = range(left, right + 1)
         logger.debug("Start a binary search", left=left, right=right)
 

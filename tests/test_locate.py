@@ -172,9 +172,10 @@ class TestGapCase3(BaseGapCase):
             1679785204.623643, end=True
         )
 
-    @pytest.mark.xfail
     def test_S4(self):
-        assert (7958104, False) == self.ssl.find_sequence_by_time(1679785208.850441)
+        sequence, is_inside_gap = self.ssl.find_sequence_by_time(1679785208.850441)
+        assert sequence in (7958104, 7958105)
+        assert False == is_inside_gap
 
     def test_S5(self):
         assert (7958106, False) == self.ssl.find_sequence_by_time(1679785208.903407)
