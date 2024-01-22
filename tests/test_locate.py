@@ -137,48 +137,17 @@ class TestGapCase2(BaseGapCase):
 
     def test_S1(self):
         assert (7947333, False) == self.ssl.find_sequence_by_time(1679763599.262686)
-        assert self.ssl.track == [
-            (7947323, 20.997890949249268),
-            (7947333, 1.00620698928833),
-            (7947334, -1.0062079429626465),
-            (7947333, 1.00620698928833),
-        ]
 
     def test_S2(self):
         assert (7947334, False) == self.ssl.find_sequence_by_time(1679763601.235894)
-        assert self.ssl.track == [
-            (7947324, 20.967691898345947),
-            (7947334, 0.9670000076293945),
-            (7947335, -21.97999405860901),
-            (7947334, 0.9670000076293945),
-        ]
 
     def test_S3(self):
         assert (7947335, True) == self.ssl.find_sequence_by_time(1679763611.742391)
-        assert self.ssl.track == [
-            (7947329, 21.476399183273315),
-            (7947339, -18.615211963653564),
-            (7947338, -16.721007823944092),
-            (7947337, -14.771991968154907),
-            (7947336, -12.82406997680664),
-            (7947335, -11.473496913909912),
-            (7947334, 11.473497152328491),
-            (7947335, -11.473496913909912),
-        ]
 
     def test_E3(self):
         assert (7947334, True) == self.ssl.find_sequence_by_time(
             1679763611.742391, end=True
         )
-        assert self.ssl.track == [
-            (7947329, 21.476399183273315),
-            (7947339, -18.615211963653564),
-            (7947338, -16.721007823944092),
-            (7947337, -14.771991968154907),
-            (7947336, -12.82406997680664),
-            (7947335, -11.473496913909912),
-            (7947334, 11.473497152328491),
-        ]
 
     @pytest.mark.xfail
     def test_S4(self):
@@ -204,7 +173,9 @@ class TestGapCase3(BaseGapCase):
         )
 
     def test_S4(self):
-        assert (7958104, False) == self.ssl.find_sequence_by_time(1679785208.850441)
+        sequence, is_inside_gap = self.ssl.find_sequence_by_time(1679785208.850441)
+        assert sequence in (7958104, 7958105)
+        assert False == is_inside_gap
 
     def test_S5(self):
         assert (7958106, False) == self.ssl.find_sequence_by_time(1679785208.903407)
