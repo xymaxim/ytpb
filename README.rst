@@ -107,7 +107,7 @@ the ``-p/--preview`` option:
 Compose and play
 ================
 
-  *Note: Currently, playing works only with FFmpeg <= 4.4.3.*
+  *Note: Currently, playing works only with FFmpeg <= 5.1.4.*
 
 If you want to play the excerpt without downloading it, you can compose a
 MPEG-DASH manifest (MPD) file and then play it in a player that supports DASH
