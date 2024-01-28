@@ -1,4 +1,3 @@
-import logging
 from datetime import datetime, time, timedelta
 from enum import auto, StrEnum
 from typing import Literal, NamedTuple

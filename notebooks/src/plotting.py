@@ -1,8 +1,8 @@
 import numpy as np
-from brokenaxes import brokenaxes, BrokenAxes
+from brokenaxes import BrokenAxes
 from matplotlib.collections import LineCollection
 from matplotlib.lines import Line2D
-from matplotlib.ticker import MaxNLocator, MultipleLocator, ScalarFormatter
+from matplotlib.ticker import MaxNLocator, ScalarFormatter
 
 
 class PlainOffsetScalarFormatter(ScalarFormatter):
