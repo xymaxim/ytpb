@@ -123,8 +123,15 @@ class RewindIntervalParamType(click.ParamType):
 
         start_part, end_part = parts
 
-        parsed_start = self._parse_interval_part(start_part)
-        parsed_end = self._parse_interval_part(end_part)
+        try:
+            parsed_start = self._parse_interval_part(start_part)
+        except ValueError as exc:
+            raise click.BadParameter(f"'{start_part}', {exc}.")
+
+        try:
+            parsed_end = self._parse_interval_part(end_part)
+        except ValueError as exc:
+            raise click.BadParameter(f"'{end_part}', {exc}.")
 
         match parsed_start, parsed_end:
             # Two durations

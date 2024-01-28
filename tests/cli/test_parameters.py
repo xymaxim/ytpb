@@ -1,5 +1,6 @@
 from datetime import datetime, timedelta, timezone
 
+import click
 import pytest
 from dateutil.tz import tzlocal
 from freezegun import freeze_time
@@ -130,3 +131,16 @@ def test_input_rewind_interval_with_replacing_components(value: str, expected):
 @freeze_time("2024-01-02T10:20:30-01")
 def test_input_rewind_interval_with_time_of_today(value: str, expected):
     assert expected == RewindIntervalParamType().convert(value, None, None)
+
+
+@pytest.mark.parametrize(
+    "value,invalid_part",
+    [
+        ("20240102T102070+00/PT30M", "20240102T102070+00"),
+        ("20240102T102030+00/PT30", "PT30"),
+    ],
+)
+def test_invalid_input_rewind_interval(value: str, invalid_part: str):
+    with pytest.raises(click.BadParameter) as exc_info:
+        RewindIntervalParamType().convert(value, None, None)
+    assert invalid_part in str(exc_info.value)
