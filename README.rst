@@ -107,7 +107,7 @@ the ``-p/--preview`` option:
 Compose and play
 ================
 
-  *Note: Currently, playing works only with FFmpeg <= 5.1.4. See issue `<https://github.com/xymaxim/ytpb/issues/4>`__.*
+  Note: Currently, playing works only with FFmpeg <= 5.1.4. See issue `#4 <https://github.com/xymaxim/ytpb/issues/4>`__.
 
 If you want to play the excerpt without downloading it, you can compose a
 MPEG-DASH manifest (MPD) file and then play it in a player that supports DASH
