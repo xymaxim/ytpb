@@ -88,7 +88,7 @@ def test_format_spec_with_function():
         ),
     ],
 )
-def test_input_rewind_interval(value: str, expected):
+def test_rewind_interval(value: str, expected):
     assert expected == RewindIntervalParamType().convert(value, None, None)
 
 
@@ -112,7 +112,7 @@ def test_input_rewind_interval(value: str, expected):
         ),
     ],
 )
-def test_input_rewind_interval_with_replacing_components(value: str, expected):
+def test_rewind_interval_with_replacing_components(value: str, expected):
     assert expected == RewindIntervalParamType().convert(value, None, None)
 
 
@@ -129,7 +129,7 @@ def test_input_rewind_interval_with_replacing_components(value: str, expected):
     ],
 )
 @freeze_time("2024-01-02T10:20:30-01")
-def test_input_rewind_interval_with_time_of_today(value: str, expected):
+def test_rewind_interval_with_time_of_today(value: str, expected):
     assert expected == RewindIntervalParamType().convert(value, None, None)
 
 
@@ -140,7 +140,7 @@ def test_input_rewind_interval_with_time_of_today(value: str, expected):
         ("20240102T102030+00/PT30", "PT30"),
     ],
 )
-def test_invalid_input_rewind_interval(value: str, invalid_part: str):
+def test_invalid_rewind_interval(value: str, invalid_part: str):
     with pytest.raises(click.BadParameter) as exc_info:
         RewindIntervalParamType().convert(value, None, None)
     assert invalid_part in str(exc_info.value)
