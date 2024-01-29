@@ -2,17 +2,23 @@
 
 	<h1 align="center">(<<) Ytpb — YouTube Live Playback</h1>
 
+.. image:: https://github.com/xymaxim/ytpb/actions/workflows/ci.yml/badge.svg
+    :target: https://github.com/xymaxim/ytpb/actions/workflows/ci.yml
+
+.. raw:: html
+
 	<p align="center">
-	Ytpb is a playback for YouTube live streams. Rewind to exact moment in
-	streams and download or play excerpts.
+	Rewind to past moments in YouTube live streams and download or play excerpts.
 	</p>
 
 *(DISCLAMER: Work in progress. Any ideas and contributions are welcome.)*
 
+Ytpb is a playback for YouTube live streams written in Python. It lets you go back to past moments beyond the limit of the standard player. You can keep stream excerpts by downloading audio and/or video and capturing images or play them instantly (without downloading) in your video player via MPEG-DASH.
+
 **Features**
 
 - Command line interface (CLI) and Python library
-- Download audio and/or video past excerpts of live streams
+- Download audio and/or video excerpts of live streams
 - Precisely cut to exact moments without slow re-encoding
 - Compose MPEG-DASH manifests to play excerpts instantly
 - Capture a single frame or create time-lapse images
@@ -56,7 +62,7 @@ downloading) in a player (via MPEG-DASH).
 
 After installing, take a look at the `Quick start`_ section describing the
 first try. The next two sections describe the `Command line application`_ and
-`Python package`_ in depth. The `Reference`_ explains some general aspects and
+`Python package`_ in depth. The `Reference`_ explains somex general aspects and
 terms. The `Contributing`_ describes how to participate.
 
 Installation
