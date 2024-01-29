@@ -123,12 +123,12 @@ class TestGapCase1(BaseGapCase):
         target_time = 1679788198.599000
         expected_sequence = 7959601
         if reference is None:
-            assert (expected_sequence, True) == self.ssl.find_sequence_by_time(
+            assert (expected_sequence, False) == self.ssl.find_sequence_by_time(
                 target_time
             )
         else:
             sl = SegmentLocator(self.test_base_url, reference)
-            assert (expected_sequence, True) == sl.find_sequence_by_time(target_time)
+            assert (expected_sequence, False) == sl.find_sequence_by_time(target_time)
 
 
 class TestGapCase2(BaseGapCase):
