@@ -13,7 +13,7 @@
 
 *(DISCLAMER: Work in progress. Any ideas and contributions are welcome.)*
 
-Ytpb is a playback for YouTube live streams written in Python. It lets you go back to past moments beyond the limit of the standard player. You can keep stream excerpts by downloading audio and/or video and capturing images or play them instantly (without downloading) in your video player via MPEG-DASH.
+*Ytpb* is a playback for YouTube live streams written in Python. It lets you go back to past moments beyond the limit of the standard player. You can keep stream excerpts by downloading audio and/or video and capturing images or play them instantly (without downloading) in your video player via MPEG-DASH.
 
 **Features**
 
@@ -44,7 +44,7 @@ real-time (e.g., with `FFmpeg <https://ffmpeg.org/>`_ + `yt-dlp`_) or play it
 What if you want (`link 1
 <https://www.reddit.com/r/youtube/comments/xnndkb/rewind_a_live_stream_more_than_12_hours/>`_,
 `link 2 <https://github.com/streamlink/streamlink/issues/2936/>`_) to seek back
-beyond the limit of the player? Some projects (see, e.g., `link 1
+beyond the limit of the player? Some projects (see, for example, `link 1
 <https://github.com/jmf1988/ytdash>`__, `link 2
 <https://github.com/rytsikau/ee.Yrewind>`__, `link 3
 <https://github.com/yt-dlp/yt-dlp/pull/6498>`__) try to provide ways to save the
@@ -52,9 +52,9 @@ entire stream from the start or by defining the relative offset from
 now. However, all solutions, to our knowledge, don't take into account the
 streaming instability causing from intermittent stutters to large gaps. It
 results in not accurate rewind timings: the desired moment could be shifted to
-seconds, minutes, or even hours.
+seconds, minutes, or even `hours <https://github.com/xymaxim/ytpb/issues/2>`__.
 
-Ytpb will help you to locate the rewind interval precisely and bring the desired
+*Ytpb* will help you to locate the rewind interval precisely and bring the desired
 excerpt back in two ways: by downloading or playing it instantly (without
 downloading) in a player (via MPEG-DASH).
 
@@ -68,7 +68,7 @@ terms. The `Contributing`_ describes how to participate.
 Installation
 ************
 
-Ytpb requires Python 3.11 or higher. Currently, Ytpb isn't available on
+*Ytpb* requires Python 3.11 or higher. Currently, *Ytpb* isn't available on
 PyPI. You can install it from GitHub. The recommended way is to use `pipx
 <https://pypa.github.io/pipx/>`_:
 
@@ -79,7 +79,7 @@ PyPI. You can install it from GitHub. The recommended way is to use `pipx
 Quick start
 ***********
 
-The Ytpb Command Line Interface (CLI) provides commands to download YouTube live
+The *Ytpb* Command Line Interface (CLI) provides commands to download YouTube live
 stream excerpts and compose MPEG-DASH manifests to play excerpts later in
 different available qualities. Here are below basic examples demonstrating usage
 scenarios.
@@ -158,7 +158,7 @@ time: ::
 Command line application
 ************************
 
-This section describes using the Ytpb CLI: from an overview of commands, showing
+This section describes using the *Ytpb* CLI: from an overview of commands, showing
 their usage and configuration to advanced use cases.
 
 Overview
@@ -727,7 +727,7 @@ update.
 Python package
 **************
 
-Aside from the CLI, you can use Ytpb as a Python package. See `DEVELOPING.rst`_.
+Aside from the CLI, you can use *Ytpb* as a Python package. See `DEVELOPING.rst`_.
 
 Reference
 *********
