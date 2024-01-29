@@ -1,4 +1,5 @@
-notebooks/shared/
+notebooks/shared/*
+!notebooks/shared/.gitkeep
 notebooks/out/
 
 # Byte-compiled / optimized / DLL files
