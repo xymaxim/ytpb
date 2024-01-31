@@ -114,6 +114,14 @@ DEFAULT_CONFIG = AddressableDict(
                     "output_path": f"{DEFAULT_OUTPUT_PATH}.mpd",
                 }
             },
+            "play": {
+                "audio_format": "itag eq 140",
+                "video_format": (
+                    "format eq webm and "
+                    "[height eq 720 or height eq 1080] and "
+                    "frame_rate eq 30"
+                ),
+            },
         },
         "general": {
             "preview_duration": 10,
