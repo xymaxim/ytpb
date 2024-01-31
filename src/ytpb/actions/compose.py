@@ -21,7 +21,7 @@ def _build_top_level_comment_text(base_url: str) -> str:
     return result
 
 
-def compose_mpd(
+def compose_static_mpd(
     playback: Playback, rewind_interval: RewindInterval, streams: SetOfStreams
 ) -> str:
     nsmap = {

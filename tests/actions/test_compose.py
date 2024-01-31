@@ -7,7 +7,7 @@ from freezegun import freeze_time
 
 from helpers import patched_freezgun_astimezone
 
-from ytpb.actions.compose import compose_mpd, refresh_mpd
+from ytpb.actions.compose import compose_static_mpd, refresh_mpd
 from ytpb.exceptions import YtpbError
 from ytpb.playback import Playback
 from ytpb.streams import Streams
@@ -66,7 +66,7 @@ def test_compose_mpd(
 
     streams = Streams(streams_in_list)
 
-    output = compose_mpd(
+    output = compose_static_mpd(
         playback,
         FakeRewindInterval(FakeRewindMoment(7959120), FakeRewindMoment(7959120 + 32)),
         streams.filter(lambda x: x.itag in ("140", "244")),

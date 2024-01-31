@@ -8,7 +8,7 @@ import structlog
 from cloup.constraints import constraint, require_any
 from python_mpv_jsonipc import MPV
 
-from ytpb.actions.compose import compose_mpd
+from ytpb.actions.compose import compose_static_mpd
 from ytpb.cli.common import create_playback, stream_argument
 from ytpb.cli.options import cache_options, interval_option, yt_dlp_option
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
@@ -30,7 +30,7 @@ class StreamPlayer:
             start_point=timedelta(minutes=30), end_point=now
         )
         streams = Streams([self._playback.streams.get_by_itag("244")])
-        manifest = compose_mpd(self._playback, interval, streams)
+        manifest = compose_static_mpd(self._playback, interval, streams)
         with NamedTemporaryFile("w", suffix=".mpd", delete=False) as f:
             manifest_path = Path(f.name)
             f.write(manifest)
