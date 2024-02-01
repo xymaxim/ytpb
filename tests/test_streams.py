@@ -67,3 +67,8 @@ def test_query_with_unknown_alias(streams_in_list: list[AudioOrVideoStream]):
 def test_query_with_function(streams_in_list: list[AudioOrVideoStream]):
     streams = Streams(streams_in_list)
     assert streams.query("best(format eq webm)") == [streams.get_by_itag("271")]
+
+
+def test_union(streams_in_list: list[AudioOrVideoStream]):
+    a, b, *_ = streams_in_list
+    assert Streams([a, b]) == Streams([a]) | Streams([b])

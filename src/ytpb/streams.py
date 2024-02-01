@@ -1,6 +1,6 @@
 from collections.abc import MutableSet
 from operator import attrgetter
-from typing import Any, Callable, Iterator
+from typing import Any, Callable, Iterator, Self
 
 from ytpb.conditional import FORMAT_SPEC_RE, make_filter_from_expression
 from ytpb.exceptions import QueryError
@@ -39,6 +39,10 @@ class Streams(MutableSet):
 
     def __len__(self):
         return len(self._elements)
+
+    def __ior__(self, other: Self) -> Self:
+        self.update(other)
+        return self
 
     def __iter__(self) -> Iterator[AudioOrVideoStream]:
         return iter(self._elements)
