@@ -14,7 +14,7 @@ from ytpb.cli.options import cache_options, interval_option, yt_dlp_option
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
 from ytpb.playback import Playback
 from ytpb.streams import Streams
-from ytpb.types import AudioOrVideoStream
+from ytpb.types import AudioOrVideoStream, SetOfStreams
 from ytpb.utils.remote import request_reference_sequence
 
 logger = structlog.get_logger(__name__)
@@ -23,11 +23,9 @@ YTPB_CLIENT_NAME = "yp"
 
 
 class StreamPlayer:
-    def __init__(
-        self, playback: Playback, streams: list[AudioOrVideoStream], mpv_path: Path
-    ):
+    def __init__(self, playback: Playback, streams: SetOfStreams, mpv_path: Path):
         self._playback = playback
-        self._streams = Streams(streams)
+        self._streams = streams
 
         self._mpv = MPV(mpv_location=mpv_path)
 
@@ -93,27 +91,19 @@ def play_command(
 ) -> int:
     playback = create_playback(ctx)
 
-    queried_streams: list[AudioOrVideoStream] = []
-
     if audio_format:
         logger.debug("Query audio streams by format spec", spec=audio_format)
-        queried_streams.extend(
-            list(
-                query_streams_or_exit(
-                    playback.streams, audio_format, "--audio-format", allow_many=False
-                )
-            )
+        queried_audio_streams = query_streams_or_exit(
+            playback.streams, audio_format, "--audio-format", allow_many=False
         )
 
     if video_format:
         logger.debug("Query video stream by format spec", spec=video_format)
-        queried_streams.extend(
-            list(
-                query_streams_or_exit(
-                    playback.streams, video_format, "--video-format", allow_many=False
-                )
-            )
+        queried_video_streams = query_streams_or_exit(
+            playback.streams, video_format, "--video-format", allow_many=False
         )
 
-    player = StreamPlayer(playback, queried_streams, mpv_path)
+    all_queried_streams = Streams(queried_audio_streams + queried_video_streams)
+
+    player = StreamPlayer(playback, all_queried_streams, mpv_path)
     player.run()
