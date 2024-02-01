@@ -9,10 +9,12 @@ from cloup.constraints import constraint, require_any
 from python_mpv_jsonipc import MPV
 
 from ytpb.actions.compose import compose_dynamic_mpd
-from ytpb.cli.common import create_playback, stream_argument
+from ytpb.cli.common import create_playback, query_streams_or_exit, stream_argument
 from ytpb.cli.options import cache_options, interval_option, yt_dlp_option
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
+from ytpb.playback import Playback
 from ytpb.streams import Streams
+from ytpb.types import AudioOrVideoStream
 from ytpb.utils.remote import request_reference_sequence
 
 logger = structlog.get_logger(__name__)
@@ -21,13 +23,16 @@ YTPB_CLIENT_NAME = "yp"
 
 
 class StreamPlayer:
-    def __init__(self, playback, mpv_path: Path):
+    def __init__(
+        self, playback: Playback, streams: list[AudioOrVideoStream], mpv_path: Path
+    ):
         self._playback = playback
+        self._streams = Streams(streams)
+
         self._mpv = MPV(mpv_location=mpv_path)
 
     def run(self):
-        streams = Streams([self._playback.streams.get_by_itag("244")])
-        some_base_url = next(iter(streams)).base_url
+        some_base_url = next(iter(self._streams)).base_url
 
         latest_sequence = request_reference_sequence(
             some_base_url, self._playback.session
@@ -36,10 +41,11 @@ class StreamPlayer:
             latest_sequence, some_base_url
         )
 
-        manifest = compose_dynamic_mpd(self._playback, rewind_segment.metadata, streams)
-        with NamedTemporaryFile("w", suffix=".mpd", delete=False) as f:
+        manifest = compose_dynamic_mpd(
+            self._playback, rewind_segment.metadata, self._streams
+        )
+        with NamedTemporaryFile("w", prefix="ytpb-", suffix=".mpd", delete=False) as f:
             manifest_path = Path(f.name)
-            print(manifest_path)
             f.write(manifest)
 
         self._mpv.play(str(manifest_path))
@@ -86,5 +92,28 @@ def play_command(
     stream_url: str,
 ) -> int:
     playback = create_playback(ctx)
-    player = StreamPlayer(playback, mpv_path)
+
+    queried_streams: list[AudioOrVideoStream] = []
+
+    if audio_format:
+        logger.debug("Query audio streams by format spec", spec=audio_format)
+        queried_streams.extend(
+            list(
+                query_streams_or_exit(
+                    playback.streams, audio_format, "--audio-format", allow_many=False
+                )
+            )
+        )
+
+    if video_format:
+        logger.debug("Query video stream by format spec", spec=video_format)
+        queried_streams.extend(
+            list(
+                query_streams_or_exit(
+                    playback.streams, video_format, "--video-format", allow_many=False
+                )
+            )
+        )
+
+    player = StreamPlayer(playback, queried_streams, mpv_path)
     player.run()
