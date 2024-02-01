@@ -117,9 +117,7 @@ DEFAULT_CONFIG = AddressableDict(
             "play": {
                 "audio_format": "itag eq 140",
                 "video_format": (
-                    "format eq webm and "
-                    "[height eq 720 or height eq 1080] and "
-                    "frame_rate eq 30"
+                    "format eq webm and height eq 720 and frame_rate eq 30"
                 ),
             },
         },
