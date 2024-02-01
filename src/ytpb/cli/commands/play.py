@@ -8,11 +8,12 @@ import structlog
 from cloup.constraints import constraint, require_any
 from python_mpv_jsonipc import MPV
 
-from ytpb.actions.compose import compose_static_mpd
+from ytpb.actions.compose import compose_dynamic_mpd
 from ytpb.cli.common import create_playback, stream_argument
 from ytpb.cli.options import cache_options, interval_option, yt_dlp_option
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
 from ytpb.streams import Streams
+from ytpb.utils.remote import request_reference_sequence
 
 logger = structlog.get_logger(__name__)
 
@@ -25,15 +26,22 @@ class StreamPlayer:
         self._mpv = MPV(mpv_location=mpv_path)
 
     def run(self):
-        now = datetime.now(timezone.utc)
-        interval = self._playback.locate_interval(
-            start_point=timedelta(minutes=30), end_point=now
-        )
         streams = Streams([self._playback.streams.get_by_itag("244")])
-        manifest = compose_static_mpd(self._playback, interval, streams)
+        some_base_url = next(iter(streams)).base_url
+
+        latest_sequence = request_reference_sequence(
+            some_base_url, self._playback.session
+        )
+        rewind_segment = self._playback.get_downloaded_segment(
+            latest_sequence, some_base_url
+        )
+
+        manifest = compose_dynamic_mpd(self._playback, rewind_segment.metadata, streams)
         with NamedTemporaryFile("w", suffix=".mpd", delete=False) as f:
             manifest_path = Path(f.name)
+            print(manifest_path)
             f.write(manifest)
+
         self._mpv.play(str(manifest_path))
 
 

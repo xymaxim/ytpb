@@ -6,7 +6,8 @@ from lxml.builder import E
 
 from ytpb.exceptions import YtpbError
 from ytpb.mpd import NAMESPACES as NS
-from ytpb.playback import Playback, RewindInterval
+from ytpb.playback import Playback, RewindInterval, RewindMoment
+from ytpb.segment import SegmentMetadata
 from ytpb.streams import SetOfStreams
 from ytpb.utils.other import S_TO_MS
 from ytpb.utils.url import extract_parameter_from_url
@@ -120,6 +121,53 @@ def compose_static_mpd(
             "duration": str(int(segment_duration_s) * int(S_TO_MS)),
             "timescale": "1000",
         }
+    )
+
+    for element in period_element.findall(".//AdaptationSet", namespaces=NS):
+        element.insert(0, copy.deepcopy(segment_template_element))
+
+    output = etree.tostring(
+        etree.ElementTree(mpd_element),
+        xml_declaration=True,
+        encoding="UTF-8",
+        pretty_print=True,
+    )
+
+    return output.decode()
+
+
+def compose_dynamic_mpd(
+    playback: Playback, rewind_metadata: SegmentMetadata, streams: SetOfStreams
+) -> str:
+    mpd_element = _compose_mpd_skeleton(playback, streams)
+    mpd_element.attrib["profiles"] = "urn:mpeg:dash:profile:isoff-live:2011"
+
+    some_base_url = next(iter(streams)).base_url
+
+    mpd_element.attrib.update(
+        {
+            "type": "dynamic",
+            "availabilityStartTime": datetime.fromtimestamp(
+                rewind_metadata.ingestion_walltime, timezone.utc
+            ).isoformat(timespec="seconds"),
+        }
+    )
+
+    period_element = mpd_element.find(".//Period", namespaces=NS)
+    period_element.attrib["start"] = f"PT{rewind_metadata.stream_duration}S"
+
+    segment_template_element = etree.Element("SegmentTemplate")
+    segment_template_element.attrib.update(
+        {
+            "media": "sq/$Number$",
+            "startNumber": str(rewind_metadata.sequence_number),
+            "timescale": "1000",
+        }
+    )
+
+    segment_duration_ms = int(rewind_metadata.target_duration * S_TO_MS)
+    segment_template_element.append(
+        E("SegmentTimeline", E("S", d=str(segment_duration_ms), r="-1"))
     )
 
     for element in period_element.findall(".//AdaptationSet", namespaces=NS):
