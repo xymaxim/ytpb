@@ -27,7 +27,7 @@ class StreamPlayer:
         self._playback = playback
         self._streams = streams
 
-        self._mpv = MPV(mpv_location=mpv_path)
+        self._mpv = MPV(mpv_location=mpv_path, terminal=True, input_terminal=True)
 
     def run(self):
         some_base_url = next(iter(self._streams)).base_url
