@@ -26,8 +26,20 @@ class StreamPlayer:
     def __init__(self, playback: Playback, streams: SetOfStreams, mpv_path: Path):
         self._playback = playback
         self._streams = streams
+        self._mpd_start_time: datetime | None = None
 
         self._mpv = MPV(mpv_location=mpv_path, terminal=True, input_terminal=True)
+
+        @self._mpv.on_key_press("s")
+        def handle_take_screenshot():
+            time_pos = self._mpv.command("get_property", "time-pos")
+            captured_date = self._mpd_start_time + timedelta(seconds=time_pos)
+            output_path = "{}_{}.jpg".format(
+                self._playback.video_id, captured_date.isoformat(timespec="seconds")
+            )
+            output_path = output_path.replace("-", "").replace(":", "")
+            output_path = output_path.replace("00.", ".")
+            self._mpv.command("osd-msg", "screenshot-to-file", output_path, "video")
 
     def run(self):
         some_base_url = next(iter(self._streams)).base_url
@@ -39,14 +51,18 @@ class StreamPlayer:
             latest_sequence, some_base_url
         )
 
+        self._mpd_start_time = datetime.fromtimestamp(
+            rewind_segment.metadata.ingestion_walltime, timezone.utc
+        )
+
         manifest = compose_dynamic_mpd(
             self._playback, rewind_segment.metadata, self._streams
         )
         with NamedTemporaryFile("w", prefix="ytpb-", suffix=".mpd", delete=False) as f:
-            manifest_path = Path(f.name)
+            manifest_path = f.name
             f.write(manifest)
 
-        self._mpv.play(str(manifest_path))
+        self._mpv.play(manifest_path)
 
 
 @cloup.command(
