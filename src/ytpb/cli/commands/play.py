@@ -40,7 +40,10 @@ class StreamPlayer:
         self._mpv.bind_event("client-message", self._client_message_handler)
 
     def _cleanup_on_quit(self):
-        self._mpd_path.unlink()
+        self._remove_playback_mpd()
+
+    def _remove_playback_mpd(self):
+        self._mpd_path.unlink(missing_ok=True)
         logger.debug("Removed playback MPD file: %s", self._mpd_path)
 
     def _client_message_handler(self, event: dict) -> None:
@@ -89,6 +92,8 @@ class StreamPlayer:
         self._mpv.command("osd-msg", "screenshot-to-file", output_path, "video")
 
     def rewind(self, rewind_date: datetime) -> None:
+        self._remove_playback_mpd()
+
         some_stream = next(iter(self._streams))
         rewind_moment = self._playback.locate_moment(rewind_date, some_stream.itag)
         rewind_segment = self._playback.get_downloaded_segment(
