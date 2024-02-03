@@ -141,9 +141,9 @@ the configuration file by setting the ``options.play.mpv_path`` value.
 Rewinding
 ---------
 
-``script-message yp:rewind <date>``, :kbd:`y`
+``script-message yp:rewind <date>``
     Rewind to a ``<date>`` and continue playing. Small disrepancy within one
-    DASH media segment is possible.
+    DASH media segment is possible. See also the :kbd:`y` key binding.
 
 Seeking
 -------
