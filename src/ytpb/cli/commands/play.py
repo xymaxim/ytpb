@@ -13,6 +13,7 @@ from ytpb.cli.common import create_playback, query_streams_or_exit, stream_argum
 from ytpb.cli.options import cache_options, interval_option, yt_dlp_option
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
 from ytpb.playback import Playback
+from ytpb.segment import SegmentMetadata
 from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, SetOfStreams
 from ytpb.utils.remote import request_reference_sequence
@@ -34,14 +35,33 @@ class StreamPlayer:
             input_terminal=True,
             quit_callback=self._cleanup_on_quit,
         )
+
         self._mpv.bind_key_press("s", self._take_screenshot)
+        self._mpv.bind_event("client-message", self._client_message_handler)
 
     def _cleanup_on_quit(self):
         self._mpd_path.unlink()
         logger.debug("Removed playback MPD file: %s", self._mpd_path)
 
+    def _compose_mpd(self, rewind_segment_metadata: SegmentMetadata) -> Path:
+        mpd = compose_dynamic_mpd(
+            self._playback, rewind_segment_metadata, self._streams
+        )
+        with NamedTemporaryFile("w", prefix="ytpb-", suffix=".mpd", delete=False) as f:
+            self._mpd_path = Path(f.name)
+            f.write(mpd)
+            logger.debug("Saved playback MPD file to %s", f.name)
+
+        self._mpd_start_time = datetime.fromtimestamp(
+            rewind_segment_metadata.ingestion_walltime, timezone.utc
+        )
+
+        return self._mpd_path
+
     def _take_screenshot(self):
         time_pos = self._mpv.command("get_property", "time-pos")
+        logger.debug("Got property from player", property="time-pos", value=time_pos)
+
         captured_date = self._mpd_start_time + timedelta(seconds=time_pos)
         output_path = "{}_{}.jpg".format(
             self._playback.video_id, captured_date.isoformat(timespec="seconds")
@@ -49,6 +69,35 @@ class StreamPlayer:
         output_path = output_path.replace("-", "").replace(":", "")
         output_path = output_path.replace("00.", ".")
         self._mpv.command("osd-msg", "screenshot-to-file", output_path, "video")
+
+    def _client_message_handler(self, event: dict) -> None:
+        try:
+            targeted_command, *args = event["args"]
+        except ValueError:
+            return
+        else:
+            target, command = targeted_command.split(":")
+            if target != YTPB_CLIENT_NAME:
+                return
+
+        match command:
+            case "rewind":
+                try:
+                    (rewind_value,) = args
+                    self._rewind(datetime.fromisoformat(rewind_value))
+                except ValueError:
+                    pass
+
+    def _rewind(self, rewind_date: datetime) -> None:
+        some_stream = next(iter(self._streams))
+        rewind_moment = self._playback.locate_moment(rewind_date, some_stream.itag)
+        rewind_segment = self._playback.get_downloaded_segment(
+            rewind_moment.sequence, some_stream.base_url
+        )
+
+        composed_mpd_path = self._compose_mpd(rewind_segment.metadata)
+
+        self._mpv.play(str(composed_mpd_path))
 
     def run(self):
         some_base_url = next(iter(self._streams)).base_url
@@ -60,19 +109,9 @@ class StreamPlayer:
             latest_sequence, some_base_url
         )
 
-        self._mpd_start_time = datetime.fromtimestamp(
-            rewind_segment.metadata.ingestion_walltime, timezone.utc
-        )
+        composed_mpd_path = self._compose_mpd(rewind_segment.metadata)
 
-        mpd = compose_dynamic_mpd(
-            self._playback, rewind_segment.metadata, self._streams
-        )
-        with NamedTemporaryFile("w", prefix="ytpb-", suffix=".mpd", delete=False) as f:
-            self._mpd_path = Path(f.name)
-            f.write(mpd)
-            logger.debug("Saved playback MPD file to %s", f.name)
-
-        self._mpv.play(str(self._mpd_path))
+        self._mpv.play(str(composed_mpd_path))
 
 
 @cloup.command(
