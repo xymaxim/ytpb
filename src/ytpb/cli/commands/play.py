@@ -48,6 +48,7 @@ class StreamPlayer:
 
     def _cleanup_on_quit(self):
         self._mpd_path.unlink()
+        logger.debug("Removed playback MPD file: %s", self._mpd_path)
 
     def run(self):
         some_base_url = next(iter(self._streams)).base_url
@@ -69,6 +70,7 @@ class StreamPlayer:
         with NamedTemporaryFile("w", prefix="ytpb-", suffix=".mpd", delete=False) as f:
             self._mpd_path = Path(f.name)
             f.write(mpd)
+            logger.debug("Saved playback MPD file to %s", f.name)
 
         self._mpv.play(str(self._mpd_path))
 
