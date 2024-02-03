@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from tempfile import NamedTemporaryFile
+from xml.etree import ElementTree
 
 import click
 import cloup
@@ -73,9 +74,10 @@ class StreamPlayer:
             f.write(mpd)
             logger.debug("Saved playback MPD file to %s", f.name)
 
-        self._mpd_start_time = datetime.fromtimestamp(
-            rewind_segment_metadata.ingestion_walltime, timezone.utc
-        )
+        mpd_etree = ElementTree.fromstring(mpd)
+        mpd_start_time_string = mpd_etree.attrib["availabilityStartTime"]
+        self._mpd_start_time = datetime.fromisoformat(mpd_start_time_string)
+        logger.debug("MPD@availabilityStartTime=%s", mpd_start_time_string)
 
         return self._mpd_path
 
