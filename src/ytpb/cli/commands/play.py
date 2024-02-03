@@ -34,21 +34,21 @@ class StreamPlayer:
             input_terminal=True,
             quit_callback=self._cleanup_on_quit,
         )
-
-        @self._mpv.on_key_press("s")
-        def handle_take_screenshot():
-            time_pos = self._mpv.command("get_property", "time-pos")
-            captured_date = self._mpd_start_time + timedelta(seconds=time_pos)
-            output_path = "{}_{}.jpg".format(
-                self._playback.video_id, captured_date.isoformat(timespec="seconds")
-            )
-            output_path = output_path.replace("-", "").replace(":", "")
-            output_path = output_path.replace("00.", ".")
-            self._mpv.command("osd-msg", "screenshot-to-file", output_path, "video")
+        self._mpv.bind_key_press("s", self._take_screenshot)
 
     def _cleanup_on_quit(self):
         self._mpd_path.unlink()
         logger.debug("Removed playback MPD file: %s", self._mpd_path)
+
+    def _take_screenshot(self):
+        time_pos = self._mpv.command("get_property", "time-pos")
+        captured_date = self._mpd_start_time + timedelta(seconds=time_pos)
+        output_path = "{}_{}.jpg".format(
+            self._playback.video_id, captured_date.isoformat(timespec="seconds")
+        )
+        output_path = output_path.replace("-", "").replace(":", "")
+        output_path = output_path.replace("00.", ".")
+        self._mpv.command("osd-msg", "screenshot-to-file", output_path, "video")
 
     def run(self):
         some_base_url = next(iter(self._streams)).base_url
