@@ -36,12 +36,30 @@ class StreamPlayer:
             quit_callback=self._cleanup_on_quit,
         )
 
-        self._mpv.bind_key_press("s", self._take_screenshot)
+        self._mpv.bind_key_press("s", self.take_screenshot)
         self._mpv.bind_event("client-message", self._client_message_handler)
 
     def _cleanup_on_quit(self):
         self._mpd_path.unlink()
         logger.debug("Removed playback MPD file: %s", self._mpd_path)
+
+    def _client_message_handler(self, event: dict) -> None:
+        try:
+            targeted_command, *args = event["args"]
+            target, command = targeted_command.split(":")
+        except ValueError:
+            return
+        else:
+            if target != YTPB_CLIENT_NAME:
+                return
+
+        match command:
+            case "rewind":
+                try:
+                    (rewind_value,) = args
+                    self.rewind(datetime.fromisoformat(rewind_value))
+                except ValueError:
+                    pass
 
     def _compose_mpd(self, rewind_segment_metadata: SegmentMetadata) -> Path:
         mpd = compose_dynamic_mpd(
@@ -58,7 +76,7 @@ class StreamPlayer:
 
         return self._mpd_path
 
-    def _take_screenshot(self):
+    def take_screenshot(self):
         time_pos = self._mpv.command("get_property", "time-pos")
         logger.debug("Got property from player", property="time-pos", value=time_pos)
 
@@ -70,25 +88,7 @@ class StreamPlayer:
         output_path = output_path.replace("00.", ".")
         self._mpv.command("osd-msg", "screenshot-to-file", output_path, "video")
 
-    def _client_message_handler(self, event: dict) -> None:
-        try:
-            targeted_command, *args = event["args"]
-        except ValueError:
-            return
-        else:
-            target, command = targeted_command.split(":")
-            if target != YTPB_CLIENT_NAME:
-                return
-
-        match command:
-            case "rewind":
-                try:
-                    (rewind_value,) = args
-                    self._rewind(datetime.fromisoformat(rewind_value))
-                except ValueError:
-                    pass
-
-    def _rewind(self, rewind_date: datetime) -> None:
+    def rewind(self, rewind_date: datetime) -> None:
         some_stream = next(iter(self._streams))
         rewind_moment = self._playback.locate_moment(rewind_date, some_stream.itag)
         rewind_segment = self._playback.get_downloaded_segment(
