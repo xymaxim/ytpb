@@ -6,7 +6,8 @@ from lxml.builder import E
 
 from ytpb.exceptions import YtpbError
 from ytpb.mpd import NAMESPACES as NS
-from ytpb.playback import Playback, RewindInterval
+from ytpb.playback import Playback, RewindInterval, RewindMoment
+from ytpb.segment import SegmentMetadata
 from ytpb.streams import SetOfStreams
 from ytpb.utils.other import S_TO_MS
 from ytpb.utils.url import extract_parameter_from_url
@@ -21,9 +22,7 @@ def _build_top_level_comment_text(base_url: str) -> str:
     return result
 
 
-def compose_mpd(
-    playback: Playback, rewind_interval: RewindInterval, streams: SetOfStreams
-) -> str:
+def _compose_mpd_skeleton(playback, streams):
     nsmap = {
         "xsi": "http://www.w3.org/2001/XMLSchema-instance",
         None: "urn:mpeg:DASH:schema:MPD:2011",
@@ -31,23 +30,16 @@ def compose_mpd(
     # Create the MPD tag
     mpd_element = etree.Element("MPD", nsmap=nsmap)
 
-    some_base_url = next(iter(streams)).base_url
-
-    segment_duration_s = float(extract_parameter_from_url("dur", some_base_url))
-    segment_duration_ms = int(segment_duration_s) * int(S_TO_MS)
-    rewind_length = rewind_interval.end.sequence - rewind_interval.start.sequence + 1
-    range_duration_s = rewind_length * int(segment_duration_s)
-
     mpd_element.attrib.update(
         {
             f"{{{nsmap['xsi']}}}schemaLocation": (
                 "urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd"
             ),
             "profiles": "urn:mpeg:dash:profile:isoff-main:2011",
-            "type": "static",
-            "mediaPresentationDuration": f"PT{range_duration_s}S",
         }
     )
+
+    some_base_url = next(iter(streams)).base_url
 
     comment_element = etree.Comment(_build_top_level_comment_text(some_base_url))
     mpd_element.addprevious(comment_element)
@@ -59,18 +51,6 @@ def compose_mpd(
 
     # Create the Period tag
     period_element = etree.Element("Period")
-    period_element.attrib["duration"] = f"PT{range_duration_s}S"
-
-    # Create the SegmentTemplate tag inside Period
-    segment_template_element = etree.Element("SegmentTemplate")
-    segment_template_element.attrib.update(
-        {
-            "media": "sq/$Number$",
-            "startNumber": str(rewind_interval.start.sequence),
-            "duration": str(segment_duration_ms),
-            "timescale": "1000",
-        }
-    )
 
     mime_types_of_streams = sorted({s.mime_type for s in streams})
     for i, mime_type in enumerate(mime_types_of_streams):
@@ -78,9 +58,6 @@ def compose_mpd(
         adaptation_set_element.attrib.update(
             {"id": str(i), "mimeType": mime_type, "subsegmentAlignment": "true"}
         )
-
-        # Append the SegmentTemplate tag into AdaptationSet
-        adaptation_set_element.append(copy.deepcopy(segment_template_element))
 
         filtered_by_mime_type = streams.filter(lambda s: s.mime_type == mime_type)
         for stream in sorted(filtered_by_mime_type, key=lambda s: s.itag):
@@ -115,12 +92,94 @@ def compose_mpd(
         # Finally, append the Period tag into MPD
         mpd_element.append(period_element)
 
+    return mpd_element
+
+
+def compose_static_mpd(
+    playback: Playback, rewind_interval: RewindInterval, streams: SetOfStreams
+) -> str:
+    mpd_element = _compose_mpd_skeleton(playback, streams)
+
+    some_base_url = next(iter(streams)).base_url
+
+    rewind_length = rewind_interval.end.sequence - rewind_interval.start.sequence + 1
+    segment_duration_s = float(extract_parameter_from_url("dur", some_base_url))
+    range_duration_s = rewind_length * int(segment_duration_s)
+
+    mpd_element.attrib.update(
+        {"type": "static", "mediaPresentationDuration": f"PT{range_duration_s}S"}
+    )
+
+    period_element = mpd_element.find(".//Period", namespaces=NS)
+    period_element.attrib["duration"] = f"PT{range_duration_s}S"
+
+    segment_template_element = etree.Element("SegmentTemplate")
+    segment_template_element.attrib.update(
+        {
+            "media": "sq/$Number$",
+            "startNumber": str(rewind_interval.start.sequence),
+            "duration": str(int(segment_duration_s) * int(S_TO_MS)),
+            "timescale": "1000",
+        }
+    )
+
+    for element in period_element.findall(".//AdaptationSet", namespaces=NS):
+        element.insert(0, copy.deepcopy(segment_template_element))
+
     output = etree.tostring(
         etree.ElementTree(mpd_element),
         xml_declaration=True,
         encoding="UTF-8",
         pretty_print=True,
     )
+
+    return output.decode()
+
+
+def compose_dynamic_mpd(
+    playback: Playback, rewind_metadata: SegmentMetadata, streams: SetOfStreams
+) -> str:
+    mpd_element = _compose_mpd_skeleton(playback, streams)
+    mpd_element.attrib["profiles"] = "urn:mpeg:dash:profile:isoff-live:2011"
+
+    some_base_url = next(iter(streams)).base_url
+
+    mpd_element.attrib.update(
+        {
+            "type": "dynamic",
+            "availabilityStartTime": datetime.fromtimestamp(
+                rewind_metadata.ingestion_walltime, timezone.utc
+            ).isoformat(timespec="seconds"),
+        }
+    )
+
+    period_element = mpd_element.find(".//Period", namespaces=NS)
+    period_element.attrib["start"] = f"PT{rewind_metadata.stream_duration}S"
+
+    segment_template_element = etree.Element("SegmentTemplate")
+    segment_template_element.attrib.update(
+        {
+            "media": "sq/$Number$",
+            "startNumber": str(rewind_metadata.sequence_number),
+            "timescale": "1000",
+        }
+    )
+
+    segment_duration_ms = int(rewind_metadata.target_duration * S_TO_MS)
+    segment_template_element.append(
+        E("SegmentTimeline", E("S", d=str(segment_duration_ms), r="-1"))
+    )
+
+    for element in period_element.findall(".//AdaptationSet", namespaces=NS):
+        element.insert(0, copy.deepcopy(segment_template_element))
+
+    output = etree.tostring(
+        etree.ElementTree(mpd_element),
+        xml_declaration=True,
+        encoding="UTF-8",
+        pretty_print=True,
+    )
+
     return output.decode()
 
 

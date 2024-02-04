@@ -7,9 +7,10 @@ from freezegun import freeze_time
 
 from helpers import patched_freezgun_astimezone
 
-from ytpb.actions.compose import compose_mpd, refresh_mpd
+from ytpb.actions.compose import compose_dynamic_mpd, compose_static_mpd, refresh_mpd
 from ytpb.exceptions import YtpbError
 from ytpb.playback import Playback
+from ytpb.segment import SegmentMetadata
 from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, AudioStream, VideoStream
 
@@ -28,7 +29,7 @@ class FakeRewindInterval:
 
 
 @pytest.fixture()
-def testing_manifest(audio_base_url: str, video_base_url: str) -> str:
+def testing_static_mpd(audio_base_url: str, video_base_url: str) -> str:
     return f"""<?xml version='1.0' encoding='UTF-8'?>
 <!--This file is created with ytpb, and expires at 2023-09-28T21:17:50+02:00-->
 <MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:DASH:schema:MPD:2011" xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd" profiles="urn:mpeg:dash:profile:isoff-main:2011" type="static" mediaPresentationDuration="PT66S">
@@ -54,28 +55,94 @@ def testing_manifest(audio_base_url: str, video_base_url: str) -> str:
 """
 
 
+@pytest.fixture()
+def testing_dynamic_mpd(audio_base_url: str, video_base_url: str) -> str:
+    return f"""<?xml version='1.0' encoding='UTF-8'?>
+<!--This file is created with ytpb, and expires at 2023-09-28T21:17:50+02:00-->
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:DASH:schema:MPD:2011" xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="dynamic" availabilityStartTime="2023-03-25T23:33:54+00:00">
+  <ProgramInformation>
+    <Title>Webcam Zürich HB</Title>
+    <Source>https://www.youtube.com/watch?v=kHwmzef842g</Source>
+  </ProgramInformation>
+  <Period start="PT15917833.539S">
+    <AdaptationSet id="0" mimeType="audio/mp4" subsegmentAlignment="true">
+      <SegmentTemplate media="sq/$Number$" startNumber="7959120" timescale="1000">
+        <SegmentTimeline>
+          <S d="2000" r="-1"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="140" codecs="mp4a.40.2" startWithSAP="1" audioSamplingRate="44100">
+        <BaseURL>{audio_base_url}</BaseURL>
+      </Representation>
+    </AdaptationSet>
+    <AdaptationSet id="1" mimeType="video/webm" subsegmentAlignment="true">
+      <SegmentTemplate media="sq/$Number$" startNumber="7959120" timescale="1000">
+        <SegmentTimeline>
+          <S d="2000" r="-1"/>
+        </SegmentTimeline>
+      </SegmentTemplate>
+      <Representation id="244" codecs="vp9" startWithSAP="1" width="854" height="480" maxPlayoutRate="1" frameRate="30">
+        <BaseURL>{video_base_url}</BaseURL>
+      </Representation>
+    </AdaptationSet>
+  </Period>
+</MPD>
+"""
+
+
 @freeze_time(tz_offset=2)
-def test_compose_mpd(
+def test_compose_static_mpd(
     stream_url: str,
     fake_info_fetcher: "FakeInfoFetcher",
     streams_in_list: list[AudioOrVideoStream],
-    testing_manifest: str,
+    testing_static_mpd: str,
 ):
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
 
     streams = Streams(streams_in_list)
 
-    output = compose_mpd(
+    output = compose_static_mpd(
         playback,
         FakeRewindInterval(FakeRewindMoment(7959120), FakeRewindMoment(7959120 + 32)),
         streams.filter(lambda x: x.itag in ("140", "244")),
     )
-    assert output == testing_manifest
+    assert output == testing_static_mpd
 
 
 @freeze_time(tz_offset=2)
-def test_refresh_mpd(streams_in_list: list[dict], testing_manifest: str):
+def test_compose_dynamic_mpd(
+    stream_url: str,
+    fake_info_fetcher: "FakeInfoFetcher",
+    streams_in_list: list[AudioOrVideoStream],
+    testing_dynamic_mpd: str,
+):
+    playback = Playback(stream_url, fetcher=fake_info_fetcher)
+    playback.fetch_and_set_essential()
+
+    streams = Streams(streams_in_list)
+
+    rewind_segment_metadata = SegmentMetadata(
+        sequence_number=7959120,
+        ingestion_walltime=1679787234.491176,
+        ingestion_uncertainty=0,
+        stream_duration=15917833.539,
+        max_dvr_duration=0,
+        target_duration=2,
+        first_frame_time=1679787235.764305,
+        first_frame_uncertainty=0,
+    )
+
+    output = compose_dynamic_mpd(
+        playback,
+        rewind_segment_metadata,
+        streams.filter(lambda x: x.itag in ("140", "244")),
+    )
+    assert output == testing_dynamic_mpd
+
+
+@freeze_time(tz_offset=2)
+def test_refresh_mpd(streams_in_list: list[dict], testing_static_mpd: str):
     selected_streams_list = []
     for stream in streams_in_list:
         if stream.itag in ("140", "244"):
@@ -89,11 +156,11 @@ def test_refresh_mpd(streams_in_list: list[dict], testing_manifest: str):
 
     updated_streams = Streams(selected_streams_list)
 
-    output = refresh_mpd(testing_manifest, updated_streams)
+    output = refresh_mpd(testing_static_mpd, updated_streams)
 
     actual_diff = list(
         unified_diff(
-            testing_manifest.splitlines(keepends=True),
+            testing_static_mpd.splitlines(keepends=True),
             output.splitlines(keepends=True),
             n=0,
         )
@@ -114,9 +181,9 @@ def test_refresh_mpd(streams_in_list: list[dict], testing_manifest: str):
 
 
 def test_refresh_mpd_with_mismatched_streams(
-    streams_in_list: list[AudioOrVideoStream], testing_manifest: str
+    streams_in_list: list[AudioOrVideoStream], testing_static_mpd: str
 ):
     streams = Streams(streams_in_list)
     with pytest.raises(YtpbError) as exc_info:
-        refresh_mpd(testing_manifest, streams.filter(lambda x: x.itag == "140"))
+        refresh_mpd(testing_static_mpd, streams.filter(lambda x: x.itag == "140"))
     assert str(exc_info.value) == "No stream with itag '244' in the streams"

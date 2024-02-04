@@ -13,15 +13,19 @@
 
 *(DISCLAMER: Work in progress. Any ideas and contributions are welcome.)*
 
-*Ytpb* is a playback for YouTube live streams written in Python. It lets you go back to past moments beyond the limit of the standard player. You can keep stream excerpts by downloading audio and/or video and capturing images or play them instantly (without downloading) in your video player via MPEG-DASH.
+*Ytpb* is a playback for YouTube live streams written in Python. It lets you go
+back to past moments beyond the limit of the standard player. You can keep
+stream excerpts by downloading audio and/or video and capturing images or play
+them instantly (without downloading) in your video player via MPEG-DASH.
 
 **Features**
 
 - Command line interface (CLI) and Python library
 - Download audio and/or video excerpts of live streams
 - Precisely cut to exact moments without slow re-encoding
-- Compose MPEG-DASH manifests to play excerpts instantly
 - Capture a single frame or create time-lapse images
+- Compose MPEG-DASH manifests to play excerpts instantly
+- Play and rewind streams interactively (mpv only)
 - Makes use of `yt-dlp <https://github.com/yt-dlp/yt-dlp/>`_ to reliably extract
   information about videos
 
@@ -90,7 +94,7 @@ Download
 Let's start with downloading a 30-second excerpt of audio and video by
 specifying start and end dates and stream URL or ID:
 
-.. code:: sh
+.. code::
 
 	  $ ytpb download -i 2024-01-02T10:20:00+00/PT30S <STREAM>
 	  $ ls
@@ -110,14 +114,59 @@ the ``-p/--preview`` option:
 
 	  $ ytpb download -i 2024-01-02T10:20:00+00/.. -p <STREAM>
 
+Play
+====
+
+  Note: Currently, playing works only with FFmpeg <= 5.1.4. See issue `#4
+  <https://github.com/xymaxim/ytpb/issues/4>`__.
+
+  Note 2: This command is experimental and feedback is most welcome.
+
+You can play and rewind a live stream without downloading.
+
+.. code::
+
+   $ ytpb play <STREAM> --mpv-path=<mpv-path>
+
+It opens an instance[*] of the mpv player with an MPEG-DASH stream
+playing. Communication with our custom-made client affords reactivity and some
+degree of interactivity: rewinding back and forward plus nearby seeking (within
+cached ranges). Your user configuration is available while the same `Key
+bindings`_ will be overwritten.
+
+[\*] As stated in `#4 <https://github.com/xymaxim/ytpb/issues/4>`__, playing
+requires a custom mpv build. The location can be specified via the option or in
+the configuration file by setting the ``options.play.mpv_path`` value.
+
+Rewinding
+---------
+
+``script-message yp:rewind <date>``
+    Rewind to a ``<date>`` and continue playing. Small disrepancy within one
+    DASH media segment is possible. See also the :kbd:`y` key binding.
+
+Seeking
+-------
+
+If ``cache=yes`` is set in ``mpv.conf`` (recommended), seeking works smoothly
+within cached ranges as well as the A-B loop functionality.
+
+Key bindings
+------------
+
+:kbd:`s` — take a screenshot and save it as ``<id>_<date-and-time>.jpg``
+
+:kbd:`y` — open console with the rewind command
+
 Compose and play
 ================
 
-  Note: Currently, playing works only with FFmpeg <= 5.1.4. See issue `#4 <https://github.com/xymaxim/ytpb/issues/4>`__.
+  Note: Currently, playing works only with FFmpeg <= 5.1.4. See issue `#4
+  <https://github.com/xymaxim/ytpb/issues/4>`__.
 
-If you want to play the excerpt without downloading it, you can compose a
-MPEG-DASH manifest (MPD) file and then play it in a player that supports DASH
-streams: ::
+This command takes a bit of the previous two commands. If you want to play the
+excerpt without downloading it, you can compose an MPEG-DASH manifest (MPD) file
+and then play it in a player that supports DASH streams: ::
 
   $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT30S <STREAM>
   $ mpv Stream-Title_20240102T102000+00.mpd
