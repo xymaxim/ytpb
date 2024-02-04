@@ -1,6 +1,6 @@
 .. raw:: html
 
-	<h1 align="center">(<<) Ytpb — YouTube Live Playback</h1>
+	<h1 align="center">〔<<〕 Ytpb — YouTube Live Playback</h1>
 
 .. image:: https://github.com/xymaxim/ytpb/actions/workflows/ci.yml/badge.svg
     :target: https://github.com/xymaxim/ytpb/actions/workflows/ci.yml
