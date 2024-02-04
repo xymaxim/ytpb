@@ -14,20 +14,35 @@
 *(DISCLAMER: Work in progress. Any ideas and contributions are welcome.)*
 
 *Ytpb* is a playback for YouTube live streams written in Python. It lets you go
-back to past moments beyond the limit of the standard player. You can keep
+back to past moments beyond the limits of the standard web player. You can keep
 stream excerpts by downloading audio and/or video and capturing images or play
 them instantly (without downloading) in your video player via MPEG-DASH.
+
+*Ytpb* is a playback for YouTube live streams written in Python. It lets you go
+back to past moments beyond the limits of the web player. You can keep stream
+excerpts by downloading audio and/or video and capturing images or play them
+instantly (without downloading) in your video player via MPEG-DASH.
 
 **Features**
 
 - Command line interface (CLI) and Python library
-- Download audio and/or video excerpts of live streams
-- Precisely cut to exact moments without slow re-encoding
+
+- Rewind live streams far beyond the limits of the web player
+
+- *Download audio and/or video excerpts*
+
+  - Save excerpts in different available audio and video formats
+  - Precisely cut to exact moments without slow re-encoding
+
+- *Play and rewind instantly via MPEG-DASH*
+
+  - Compose MPEG-DASH manifests to play it in your favorite player
+  - Transcode/download excerpts into local files with FFmpeg
+  - Play and rewind streams reactively and interactively (mpv only)
+
 - Capture a single frame or create time-lapse images
-- Compose MPEG-DASH manifests to play excerpts instantly
-- Play and rewind streams interactively (mpv only)
-- Makes use of `yt-dlp <https://github.com/yt-dlp/yt-dlp/>`_ to reliably extract
-  information about videos
+
+- Makes use of yt-dlp to reliably extract information about videos
 
 .. contents:: **Table of contents**
    :depth: 2
