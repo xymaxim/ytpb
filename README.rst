@@ -117,7 +117,7 @@ the ``-p/--preview`` option:
 Play
 ====
 
-  Note: Currently, playing works only with FFmpeg <= 5.1.4. See issue `#4
+  Note: Currently, playing requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
   <https://github.com/xymaxim/ytpb/issues/4>`__.
 
   Note 2: This command is experimental and feedback is most welcome.
@@ -161,7 +161,7 @@ Key bindings
 Compose and play
 ================
 
-  Note: Currently, playing works only with FFmpeg <= 5.1.4. See issue `#4
+  Note: Currently, playing requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
   <https://github.com/xymaxim/ytpb/issues/4>`__.
 
 This command takes a bit of the previous two commands. If you want to play the
