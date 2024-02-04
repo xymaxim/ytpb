@@ -14,14 +14,9 @@
 *(DISCLAMER: Work in progress. Any ideas and contributions are welcome.)*
 
 *Ytpb* is a playback for YouTube live streams written in Python. It lets you go
-back to past moments beyond the limits of the standard web player. You can keep
-stream excerpts by downloading audio and/or video and capturing images or play
-them instantly (without downloading) in your video player via MPEG-DASH.
-
-*Ytpb* is a playback for YouTube live streams written in Python. It lets you go
-back to past moments beyond the limits of the web player. You can keep stream
-excerpts by downloading audio and/or video and capturing images or play them
-instantly (without downloading) in your video player via MPEG-DASH.
+back to past moments beyond the limits of the web player. You can keep selected
+moments by downloading excerpts or play them instantly (without downloading) in
+your video player via MPEG-DASH.
 
 **Features**
 
