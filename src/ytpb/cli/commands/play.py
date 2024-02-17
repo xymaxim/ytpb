@@ -96,17 +96,23 @@ class StreamPlayer:
         self._mpv.command("osd-msg", "screenshot-to-file", output_path, "video")
 
     def rewind(self, rewind_date: datetime) -> None:
-        self._remove_playback_mpd()
-
         some_stream = next(iter(self._streams))
         rewind_moment = self._playback.locate_moment(rewind_date, some_stream.itag)
+
         rewind_segment = self._playback.get_downloaded_segment(
             rewind_moment.sequence, some_stream.base_url
         )
 
         composed_mpd_path = self._compose_mpd(rewind_segment.metadata)
 
-        self._mpv.play(str(composed_mpd_path))
+        self._mpv.command("loadfile", str(composed_mpd_path))
+        self._mpv.command("set_property", "pause", "yes")
+        self._mpv.command(
+            "script-message",
+            "yp:rewind-completed",
+            str(composed_mpd_path),
+            str(rewind_moment.cut_at),
+        )
 
     def run(self):
         some_base_url = next(iter(self._streams)).base_url
