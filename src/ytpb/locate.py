@@ -149,7 +149,8 @@ class SegmentLocator:
         logger.debug("Start a binary search", left=left, right=right)
 
         bisect_key = partial(self._get_bisected_segment_timestamp, target=desired_time)
-        bisect_left(search_domain, desired_time, key=bisect_key)
+        found_index = bisect_left(search_domain, desired_time, key=bisect_key)
+        self.candidate.sequence = search_domain[found_index - 1]
 
         refined_sequence: SegmentSequence
 
