@@ -41,11 +41,7 @@ class StreamPlayer:
         self._mpv.bind_event("client-message", self._client_message_handler)
 
     def _cleanup_on_quit(self):
-        self._remove_playback_mpd()
-
-    def _remove_playback_mpd(self):
-        self._mpd_path.unlink(missing_ok=True)
-        logger.debug("Removed playback MPD file: %s", self._mpd_path)
+        pass
 
     def _client_message_handler(self, event: dict) -> None:
         try:
@@ -69,7 +65,13 @@ class StreamPlayer:
         mpd = compose_dynamic_mpd(
             self._playback, rewind_segment_metadata, self._streams
         )
-        with NamedTemporaryFile("w", prefix="ytpb-", suffix=".mpd", delete=False) as f:
+        with NamedTemporaryFile(
+            "w",
+            prefix="ytpb-",
+            suffix=".mpd",
+            dir=self._playback.get_temp_directory(),
+            delete=False,
+        ) as f:
             self._mpd_path = Path(f.name)
             f.write(mpd)
             logger.debug("Saved playback MPD file to %s", f.name)
