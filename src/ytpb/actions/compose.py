@@ -149,7 +149,7 @@ def compose_dynamic_mpd(
             "type": "dynamic",
             "availabilityStartTime": datetime.fromtimestamp(
                 rewind_metadata.ingestion_walltime, timezone.utc
-            ).isoformat(timespec="seconds"),
+            ).isoformat(timespec="milliseconds"),
         }
     )
 

@@ -59,7 +59,7 @@ def testing_static_mpd(audio_base_url: str, video_base_url: str) -> str:
 def testing_dynamic_mpd(audio_base_url: str, video_base_url: str) -> str:
     return f"""<?xml version='1.0' encoding='UTF-8'?>
 <!--This file is created with ytpb, and expires at 2023-09-28T21:17:50+02:00-->
-<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:DASH:schema:MPD:2011" xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="dynamic" availabilityStartTime="2023-03-25T23:33:54+00:00">
+<MPD xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:mpeg:DASH:schema:MPD:2011" xsi:schemaLocation="urn:mpeg:DASH:schema:MPD:2011 DASH-MPD.xsd" profiles="urn:mpeg:dash:profile:isoff-live:2011" type="dynamic" availabilityStartTime="2023-03-25T23:33:54.491+00:00">
   <ProgramInformation>
     <Title>Webcam Zürich HB</Title>
     <Source>https://www.youtube.com/watch?v=kHwmzef842g</Source>
