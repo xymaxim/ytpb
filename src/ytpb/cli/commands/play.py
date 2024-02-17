@@ -13,6 +13,7 @@ from ytpb.actions.compose import compose_dynamic_mpd
 from ytpb.cli.common import create_playback, query_streams_or_exit, stream_argument
 from ytpb.cli.options import cache_options, interval_option, yt_dlp_option
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
+from ytpb.locate import SegmentLocator
 from ytpb.playback import Playback
 from ytpb.segment import SegmentMetadata
 from ytpb.streams import Streams
@@ -95,15 +96,20 @@ class StreamPlayer:
         output_path = output_path.replace("00.", ".")
         self._mpv.command("osd-msg", "screenshot-to-file", output_path, "video")
 
-    def rewind(self, rewind_date: datetime) -> None:
-        some_stream = next(iter(self._streams))
-        rewind_moment = self._playback.locate_moment(rewind_date, some_stream.itag)
-
-        rewind_segment = self._playback.get_downloaded_segment(
-            rewind_moment.sequence, some_stream.base_url
+    def rewind(self, target_date: datetime) -> None:
+        some_base_url = next(iter(self._streams)).base_url
+        sl = SegmentLocator(
+            some_base_url,
+            temp_directory=self._playback.get_temp_directory(),
+            session=self._playback.session,
         )
 
-        composed_mpd_path = self._compose_mpd(rewind_segment.metadata)
+        target = target_date.timestamp()
+        sequence, falls_into_gap = sl.find_sequence_by_time(target)
+        rewound_segment = self._playback.get_downloaded_segment(sequence, some_base_url)
+        target_date_diff = target_date - rewound_segment.ingestion_start_date
+
+        composed_mpd_path = self._compose_mpd(rewound_segment.metadata)
 
         self._mpv.command("loadfile", str(composed_mpd_path))
         self._mpv.command("set_property", "pause", "yes")
@@ -111,7 +117,7 @@ class StreamPlayer:
             "script-message",
             "yp:rewind-completed",
             str(composed_mpd_path),
-            str(rewind_moment.cut_at),
+            str(target_date_diff.total_seconds()),
         )
 
     def run(self):
