@@ -33,7 +33,8 @@ your video player via MPEG-DASH.
 
   - Compose MPEG-DASH manifests to play it in your favorite player
   - Transcode/download excerpts into local files with FFmpeg
-  - Play and rewind streams reactively and interactively (mpv only)
+  - Play and rewind streams reactively and interactively (mpv + `mpv-ytpb
+    <https://github.com/xymaxim/mpv-ytpb>`__ only)
 
 - Capture a single frame or create time-lapse images
 
@@ -132,7 +133,9 @@ Play
 
   Note 2: This command is experimental and feedback is most welcome.
 
-You can play and rewind a live stream without downloading.
+You can play and rewind a live stream in mpv player without downloading. See
+also `mpv-ytpb <https://github.com/xymaxim/mpv-ytpb>`__ to enhance the
+experience.
 
 .. code::
 
@@ -141,8 +144,7 @@ You can play and rewind a live stream without downloading.
 It opens an instance[*] of the mpv player with an MPEG-DASH stream
 playing. Communication with our custom-made client affords reactivity and some
 degree of interactivity: rewinding back and forward plus nearby seeking (within
-cached ranges). Your user configuration is available while the same `Key
-bindings`_ will be overwritten.
+cached ranges). Your user configuration is available.
 
 [\*] As stated in `#4 <https://github.com/xymaxim/ytpb/issues/4>`__, playing
 requires a custom mpv build. The location can be specified via the option or in
@@ -152,21 +154,25 @@ Rewinding
 ---------
 
 ``script-message yp:rewind <date>``
-    Rewind to a ``<date>`` and continue playing. Small disrepancy within one
-    DASH media segment is possible. See also the :kbd:`y` key binding.
+    Rewind to a ``<date>`` (e.g., ``20240102T102030+00``) and continue
+    playing. Small disrepancy within one DASH media segment is possible.
 
 Seeking
 -------
 
-If ``cache=yes`` is set in ``mpv.conf`` (recommended), seeking works smoothly
-within cached ranges as well as the A-B loop functionality.
+Nearby seeking
+^^^^^^^^^^^^^^
 
-Key bindings
-------------
+If ``cache=yes`` is set in ``mpv.conf`` (highly recommended), seeking works
+smoothly within cached ranges as well as the A-B loop functionality.
 
-:kbd:`s` — take a screenshot and save it as ``<id>_<date-and-time>.jpg``
+Seek by rewinding
+^^^^^^^^^^^^^^^^^
 
-:kbd:`y` — open console with the rewind command
+``script-message yp:seek <offset>``
+    Seek back or forward to ``<offset>`` (in relative seconds) by rewinding and
+    continue playing.
+
 
 Compose and play
 ================
