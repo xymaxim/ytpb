@@ -23,6 +23,11 @@ logger = structlog.get_logger(__name__)
 # value was determined empirically for all available formats.
 PARTIAL_SEGMENT_SIZE_BYTES = 2000
 
+# Absolute time difference tolerance (in seconds). Chosen considering the
+# standard deviation of the discrete differences of the Ingestion-Walltime-Us
+# values. See issue #5.
+TIME_DIFF_TOLERANCE = 3e-2
+
 
 class SequenceMetadataPair:
     def __init__(self, sequence: SegmentSequence, locator: "SegmentLocator"):
@@ -170,7 +175,7 @@ class SegmentLocator:
 
         # Finally, check if the desired date falls into a gap.
         falls_into_gap = False
-        if candidate_duration < abs(candidate_diff_in_s):
+        if candidate_duration < candidate_diff_in_s - TIME_DIFF_TOLERANCE:
             falls_into_gap = True
             logger.debug("Input target time falls into a gap")
             changed_to_adjacent = False

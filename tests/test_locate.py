@@ -104,11 +104,10 @@ class TestGapCase1(BaseGapCase):
             1679788193.600278, end=True
         )
 
-    @pytest.mark.xfail
     @pytest.mark.parametrize("reference", [None, 7959600, 7959601, 7959602])
     def test_S2(self, reference: int | None):
         target_time = 1679788196.600287
-        expected_sequence = 7959601
+        expected_sequence = 7959600
         if reference is None:
             assert (expected_sequence, False) == self.ssl.find_sequence_by_time(
                 target_time
@@ -117,11 +116,15 @@ class TestGapCase1(BaseGapCase):
             sl = SegmentLocator(self.test_base_url, reference)
             assert (expected_sequence, False) == sl.find_sequence_by_time(target_time)
 
-    @pytest.mark.xfail
     @pytest.mark.parametrize("reference", [None, 7959600, 7959601, 7959602])
     def test_S3(self, reference: int | None):
+        """For this case, two segments are possibly valid formally, depending on
+        the chosen reference."""
         target_time = 1679788198.599000
-        expected_sequence = 7959601
+        if reference in [None, 7959601]:
+            expected_sequence = 7959601
+        else:
+            expected_sequence = 7959602
         if reference is None:
             assert (expected_sequence, False) == self.ssl.find_sequence_by_time(
                 target_time
