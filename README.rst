@@ -131,7 +131,7 @@ Play
   Note: Currently, playing requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
   <https://github.com/xymaxim/ytpb/issues/4>`__.
 
-  Note 2: This command is experimental and feedback is most welcome.
+*(This command is experimental and feedback is most welcome.)*
 
 You can play and rewind a live stream in mpv player without downloading. See
 also `mpv-ytpb <https://github.com/xymaxim/mpv-ytpb>`__ to enhance the
