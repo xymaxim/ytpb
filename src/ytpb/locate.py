@@ -240,7 +240,7 @@ class SegmentLocator:
                 time=current_ingestion_time,
             )
 
-            if current_diff_in_s >= 0 and current_diff_in_s <= self.segment_duration:
+            if 0 <= current_diff_in_s <= self.segment_duration:
                 break
         else:
             need_to_refine = True
