@@ -152,54 +152,50 @@ class SegmentLocator:
         found_index = bisect_left(search_domain, desired_time, key=bisect_key)
         self.candidate.sequence = search_domain[found_index - 1]
 
-        refined_sequence: SegmentSequence
-
-        falls_into_gap = False
         candidate_diff_in_s = self._find_time_diff(self.candidate, desired_time)
         if candidate_diff_in_s == 0:
-            refined_sequence = self.candidate.sequence
-        else:
-            # Download a full candidate segment and check its duration:
-            downloaded_path = self._download_full_segment(self.candidate.sequence)
-            candidate_segment = Segment.from_file(downloaded_path)
-            candidate_duration = candidate_segment.get_actual_duration()
+            return self.candidate.sequence, False
 
-            logger.debug(
-                "Candidate time difference: %+f s, actual duration: %f s",
-                candidate_diff_in_s,
-                candidate_duration,
-            )
+        # Download a full candidate segment and check its duration:
+        downloaded_path = self._download_full_segment(self.candidate.sequence)
+        candidate_segment = Segment.from_file(downloaded_path)
+        candidate_duration = candidate_segment.get_actual_duration()
 
-            # Finally, check if the desired date falls into a gap.
-            if candidate_duration < abs(candidate_diff_in_s):
-                falls_into_gap = True
-                logger.debug("Input target time falls into a gap")
-                changed_to_adjacent = False
-                if candidate_diff_in_s < 0:
-                    if end:
-                        self.candidate.sequence -= 1
-                        changed_to_adjacent = True
-                else:
-                    if not end:
-                        self.candidate.sequence += 1
-                        changed_to_adjacent = True
-                if changed_to_adjacent:
-                    self.track.append(
-                        (
-                            self.candidate.sequence,
-                            self._find_time_diff(self.candidate, desired_time),
-                        )
+        logger.debug(
+            "Candidate time difference: %+f s, actual duration: %f s",
+            candidate_diff_in_s,
+            candidate_duration,
+        )
+
+        # Finally, check if the desired date falls into a gap.
+        falls_into_gap = False
+        if candidate_duration < abs(candidate_diff_in_s):
+            falls_into_gap = True
+            logger.debug("Input target time falls into a gap")
+            changed_to_adjacent = False
+            if candidate_diff_in_s < 0:
+                if end:
+                    self.candidate.sequence -= 1
+                    changed_to_adjacent = True
+            else:
+                if not end:
+                    self.candidate.sequence += 1
+                    changed_to_adjacent = True
+            if changed_to_adjacent:
+                self.track.append(
+                    (
+                        self.candidate.sequence,
+                        self._find_time_diff(self.candidate, desired_time),
                     )
-                    logger.debug(
-                        "Step to adjacent segment, time difference: %+f s",
-                        self.track[-1][1],
-                        seq=self.candidate.sequence,
-                        time=self.candidate.metadata.ingestion_walltime,
-                    )
+                )
+                logger.debug(
+                    "Step to adjacent segment, time difference: %+f s",
+                    self.track[-1][1],
+                    seq=self.candidate.sequence,
+                    time=self.candidate.metadata.ingestion_walltime,
+                )
 
-            refined_sequence = self.candidate.sequence
-
-        return refined_sequence, falls_into_gap
+        return self.candidate.sequence, falls_into_gap
 
     def find_sequence_by_time(
         self, desired_time: Timestamp, end: bool = False
