@@ -158,6 +158,7 @@ class SegmentLocator:
         found_index = bisect_left(search_domain, desired_time, key=bisect_key)
         self.candidate.sequence = search_domain[found_index - 1]
 
+        # After the previous step the time difference is always positive.
         candidate_diff_in_s = self._find_time_diff(self.candidate, desired_time)
         if candidate_diff_in_s == 0:
             return self.candidate.sequence, False
@@ -180,15 +181,11 @@ class SegmentLocator:
             logger.debug("Input target time falls into a gap")
             if not end:
                 self.candidate.sequence += 1
-                self.track.append(
-                    (
-                        self.candidate.sequence,
-                        self._find_time_diff(self.candidate, desired_time),
-                    )
-                )
+                current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
+                self.track.append((self.candidate.sequence, current_diff_in_s))
                 logger.debug(
                     "Step to adjacent segment, time difference: %+f s",
-                    self.track[-1][1],
+                    current_diff_in_s,
                     seq=self.candidate.sequence,
                     time=self.candidate.metadata.ingestion_walltime,
                 )
