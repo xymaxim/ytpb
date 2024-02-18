@@ -214,10 +214,9 @@ class SegmentLocator:
         current_sequence = self.reference.sequence
         current_ingestion_time = self.reference.metadata.ingestion_walltime
 
-        need_to_refine = True
-        for jump_number in range(1, 3):
+        need_to_refine = False
+        for jump_number in [1, 2]:
             estimated_diff_in_s = desired_time - current_ingestion_time
-            # The jump length value could be negative or positive.
             jump_length_in_seq = int(estimated_diff_in_s // self.segment_duration)
 
             self.candidate = SequenceMetadataPair(
@@ -237,8 +236,9 @@ class SegmentLocator:
             )
 
             if current_diff_in_s >= 0 and current_diff_in_s <= self.segment_duration:
-                need_to_refine = False
                 break
+        else:
+            need_to_refine = True
 
         if need_to_refine:
             try:
