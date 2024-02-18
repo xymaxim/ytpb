@@ -130,20 +130,21 @@ class SegmentLocator:
         """Refine an estimated sequence number using a binary search and perform
         gap check.
         """
-        current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
+        first_jump_sequence, first_jump_diff = self.track[0]
+        second_jump_sequence, second_jump_diff = self.track[1]
 
         # The direction of iteration: to the right (1) or left (-1).
-        direction = int(math.copysign(1, current_diff_in_s))
+        direction = int(math.copysign(1, second_jump_diff))
 
-        # Expand a search domain if it doesn't include a target:
-        candidate_sequence = self.candidate.sequence
-        next_to_last = self.track[-2]
-        if current_diff_in_s * next_to_last[1] > 0:
+        # Expand a search domain if it doesn't include a target (a case when
+        # time differences of two preliminary jumps have same sign):
+        candidate_sequence = second_jump_sequence
+        if first_jump_diff * second_jump_diff > 0:
             last_hope_jump = 4
             candidate_sequence += direction * last_hope_jump
             logger.debug("Search domain expanded to segment %d", candidate_sequence)
 
-        domain_sequences = (candidate_sequence, next_to_last[0])
+        domain_sequences = (first_jump_sequence, candidate_sequence)
         left, right = min(domain_sequences), max(domain_sequences)
         search_domain = range(left, right + 1)
         logger.debug("Start a binary search", left=left, right=right)
