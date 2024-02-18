@@ -72,10 +72,12 @@ class SequenceMetadataPair:
 class SegmentLocator:
     """A locator which finds a segment with the desired time.
 
-    The location algorithm contains three steps: (1) roughly estimate a sequence
-    number based on the constant duration of segments; (2) refine an estimated
-    sequence using a binary search; (3) check whether it falls into a gap or
-    not.
+    The locating algorithm consists of three steps: (1) make one or two trial
+    jumps based on the constant duration of segments (timeline may contain gaps,
+    which leads to overestimation); (2) refine an estimated sequence number
+    using a binary search if a candidate is not found (search domain is
+    determined by two previous jumps); (3) check whether a refined sequence
+    number falls into a gap or not.
     """
 
     def __init__(
@@ -132,17 +134,16 @@ class SegmentLocator:
     def _refine_candidate_sequence(
         self, desired_time: Timestamp, end: bool
     ) -> tuple[SegmentSequence, bool]:
-        """Refine an estimated sequence number using a binary search and perform
-        gap check.
-        """
+        """Refine an estimated sequence number and perform gap check."""
         first_jump_sequence, first_jump_diff = self.track[0]
         second_jump_sequence, second_jump_diff = self.track[1]
 
-        # The direction of iteration: to the right (1) or left (-1).
+        # The direction of iteration: to the right (+1) or left (-1).
         direction = int(math.copysign(1, second_jump_diff))
 
-        # Expand a search domain if it doesn't include a target (a case when
-        # time differences of two preliminary jumps have same sign):
+        # Expand a search domain if it doesn't include a target. This can be
+        # observed when the duration of segments just after a gap is
+        # unexpectedly small, which brings underestimation:
         candidate_sequence = second_jump_sequence
         if first_jump_diff * second_jump_diff > 0:
             last_hope_jump = 4
@@ -163,7 +164,6 @@ class SegmentLocator:
         if candidate_diff_in_s == 0:
             return self.candidate.sequence, False
 
-        # Download a full candidate segment and check its duration:
         downloaded_path = self._download_full_segment(self.candidate.sequence)
         candidate_segment = Segment.from_file(downloaded_path)
         candidate_duration = candidate_segment.get_actual_duration()
@@ -174,7 +174,6 @@ class SegmentLocator:
             candidate_duration,
         )
 
-        # Finally, check if the desired date falls into a gap.
         falls_into_gap = False
         if candidate_duration < candidate_diff_in_s - TIME_DIFF_TOLERANCE:
             falls_into_gap = True
