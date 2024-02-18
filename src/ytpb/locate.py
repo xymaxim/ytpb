@@ -178,16 +178,8 @@ class SegmentLocator:
         if candidate_duration < candidate_diff_in_s - TIME_DIFF_TOLERANCE:
             falls_into_gap = True
             logger.debug("Input target time falls into a gap")
-            changed_to_adjacent = False
-            if candidate_diff_in_s < 0:
-                if end:
-                    self.candidate.sequence -= 1
-                    changed_to_adjacent = True
-            else:
-                if not end:
-                    self.candidate.sequence += 1
-                    changed_to_adjacent = True
-            if changed_to_adjacent:
+            if not end:
+                self.candidate.sequence += 1
                 self.track.append(
                     (
                         self.candidate.sequence,
