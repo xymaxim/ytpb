@@ -11,7 +11,6 @@ import toml
 from ytpb.cli.commands.capture import capture_group
 from ytpb.cli.commands.download import download_command
 from ytpb.cli.commands.mpd import mpd_group
-from ytpb.cli.commands.play import play_command
 from ytpb.cli.options import config_options, logging_options
 from ytpb.config import (
     DEFAULT_CONFIG,
