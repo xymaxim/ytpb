@@ -1,6 +1,6 @@
 .. raw:: html
 
-	<h1 align="center">〔<<〕 Ytpb — YouTube Live Playback</h1>
+	<h1 align="center">(<<) Ytpb — YouTube Live Playback</h1>
 
 .. image:: https://github.com/xymaxim/ytpb/actions/workflows/ci.yml/badge.svg
     :target: https://github.com/xymaxim/ytpb/actions/workflows/ci.yml
@@ -34,7 +34,7 @@ your video player via MPEG-DASH.
   - Compose MPEG-DASH manifests to play it in your favorite player
   - Transcode/download excerpts into local files with FFmpeg
   - Play and rewind streams reactively and interactively (mpv + `mpv-ytpb
-    <https://github.com/xymaxim/mpv-ytpb>`__ only)
+    <https://github.com/xymaxim/mpv-ytpb>`__)
 
 - Capture a single frame or create time-lapse images
 
@@ -52,33 +52,32 @@ What is Ytpb?
 
 YouTube allows viewers to pause, rewind, and continue playing live streams if
 the DVR feature is enabled by an uploader. The seek-back limit is up to 12
-hours. There are some ways exist to record live streams that are live in
-real-time (e.g., with `FFmpeg <https://ffmpeg.org/>`_ + `yt-dlp`_) or play it
-(e.g., with mpv + `yt-dlp`_ or `Streamlink <https://streamlink.github.io/>`_).
+hours. Several ways exist to record (e.g., `FFmpeg <https://ffmpeg.org/>`_ +
+`yt-dlp`_) or play (e.g., mpv + `yt-dlp`_ or `Streamlink
+<https://streamlink.github.io/>`_) live streams.
 
-What if you want (`link 1
-<https://www.reddit.com/r/youtube/comments/xnndkb/rewind_a_live_stream_more_than_12_hours/>`_,
-`link 2 <https://github.com/streamlink/streamlink/issues/2936/>`_) to seek back
-beyond the limit of the player? Some projects (see, for example, `link 1
+What if you want to seek back in a stream (especially beyond the limit of the
+player)? Some projects (see, for example, `link 1
 <https://github.com/jmf1988/ytdash>`__, `link 2
 <https://github.com/rytsikau/ee.Yrewind>`__, `link 3
-<https://github.com/yt-dlp/yt-dlp/pull/6498>`__) try to provide ways to save the
-entire stream from the start or by defining the relative offset from
-now. However, all solutions, to our knowledge, don't take into account the
-streaming instability causing from intermittent stutters to large gaps. It
-results in not accurate rewind timings: the desired moment could be shifted to
-seconds, minutes, or even `hours <https://github.com/xymaxim/ytpb/issues/2>`__.
+<https://github.com/yt-dlp/yt-dlp/pull/6498>`__) try to provide ways to save an
+entire stream from the beginning, by defining the relative offset from now, or
+by specifying timestamps. However, all solutions, to our knowledge, don't take
+into account the streaming instability causing from intermittent stutters to
+large gaps. It results in inaccurate rewind timings: the desired moment could be
+shifted to seconds, minutes, or even `hours
+<https://github.com/xymaxim/ytpb/issues/2>`__.
 
-*Ytpb* will help you to locate the rewind interval precisely and bring the desired
-excerpt back in two ways: by downloading or playing it instantly (without
-downloading) in a player (via MPEG-DASH).
+*Ytpb* will help you to locate the rewind interval precisely and bring the
+desired excerpt back in two ways: by downloading or playing it instantly in a
+player (via MPEG-DASH).
 
 **\*\*\***
 
-After installing, take a look at the `Quick start`_ section describing the
-first try. The next two sections describe the `Command line application`_ and
-`Python package`_ in depth. The `Reference`_ explains somex general aspects and
-terms. The `Contributing`_ describes how to participate.
+After installing, take a look at the `Quick start`_ section describing the first
+try. The following secion describes the `Command line application`_. The
+`Reference`_ explains some general aspects and terms. The `Contributing`_
+describes how to participate.
 
 Installation
 ************
@@ -103,13 +102,11 @@ Download
 ========
 
 Let's start with downloading a 30-second excerpt of audio and video by
-specifying start and end dates and stream URL or ID:
+specifying start and end dates and stream URL or ID: ::
 
-.. code::
-
-	  $ ytpb download -i 2024-01-02T10:20:00+00/PT30S <STREAM>
-	  $ ls
-	  Stream-Title_20240102T102000+00.mp4
+  $ ytpb download -i 2024-01-02T10:20:00+00/PT30S <STREAM>
+  $ ls
+  Stream-Title_20240102T102000+00.mp4
 
 By default, it will download an excerpt in the best `pre-defined <Default format values>`_
 quality: 128k AAC audio and 1080p30 (or less) H.264 video. See the
@@ -119,82 +116,49 @@ As for the start and end, they can be also defined in other ways (see the
 `Specifying rewind interval`_ subsection). For example, it would be handy to
 locate the desired moments first by previewing them and only after download a
 full excerpt. To run downloading in the `preview mode <3. Preview mode>`_, use
-the ``-p/--preview`` option:
+the ``-p/--preview`` option: ::
 
-.. code:: sh
-
-	  $ ytpb download -i 2024-01-02T10:20:00+00/.. -p <STREAM>
-
-Play
-====
-
-  Note: Currently, playing requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
-  <https://github.com/xymaxim/ytpb/issues/4>`__.
-
-*(This command is experimental and feedback is most welcome.)*
-
-You can play and rewind a live stream in mpv player without downloading. See
-also `mpv-ytpb <https://github.com/xymaxim/mpv-ytpb>`__ to enhance the
-experience.
-
-.. code::
-
-   $ ytpb play <STREAM> --mpv-path=<mpv-path>
-
-It opens an instance[*] of the mpv player with an MPEG-DASH stream
-playing. Communication with our custom-made client affords reactivity and some
-degree of interactivity: rewinding back and forward plus nearby seeking (within
-cached ranges). Your user configuration is available.
-
-[\*] As stated in `#4 <https://github.com/xymaxim/ytpb/issues/4>`__, playing
-requires a custom mpv build. The location can be specified via the option or in
-the configuration file by setting the ``options.play.mpv_path`` value.
-
-Rewinding
----------
-
-``script-message yp:rewind <date>``
-    Rewind to a ``<date>`` (e.g., ``20240102T102030+00``) and continue
-    playing. Small disrepancy within one DASH media segment is possible.
-
-Seeking
--------
-
-Nearby seeking
-^^^^^^^^^^^^^^
-
-If ``cache=yes`` is set in ``mpv.conf`` (highly recommended), seeking works
-smoothly within cached ranges as well as the A-B loop functionality.
-
-Seek by rewinding
-^^^^^^^^^^^^^^^^^
-
-``script-message yp:seek <offset>``
-    Seek back or forward to ``<offset>`` (in relative seconds) by rewinding and
-    continue playing.
-
+  $ ytpb download -i 2024-01-02T10:20:00+00/.. -p <STREAM>
 
 Compose and play
 ================
 
-  Note: Currently, playing requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
+  Note: Playing requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
   <https://github.com/xymaxim/ytpb/issues/4>`__.
 
 This command takes a bit of the previous two commands. If you want to play the
-excerpt without downloading it, you can compose an MPEG-DASH manifest (MPD) file
-and then play it in a player that supports DASH streams: ::
+excerpt without downloading it, you can compose a static MPEG-DASH manifest
+(MPD) file and then play it in a player that supports DASH streams: ::
 
   $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT30S <STREAM>
   $ mpv Stream-Title_20240102T102000+00.mpd
 
-By default, a manifest will contain all available audio tracks and VP9 video
-channels.
+By default, a manifest will contain a 128k AAC audio track and 720p (or better)
+30 fps VP9 video channels.
+
+Fetch and demux
+---------------
+
+Once you have a composed MPD, you can not only play it, but also convert
+selected streams to a video file (with stream copy to avoid transcoding actual
+audio and video). First, list all available streams and then select the desired
+streams with the ``-map`` option ::
+
+  $ ffprobe Stream-Title_20240102T102000+00.mpd
+  $ ffmpeg -i Stream-Title_20240102T102000+00.mpd -map 0:0 -map 0:1 -c copy out.mp4
+
+Play
+====
+
+If you want to play and rewind a live stream without downloading or composing,
+take a look at `mpv-ytpb <https://github.com/xymaxim/mpv-ytpb>`__. It provides
+interactive experience without leaving the mpv player.
 
 Capture
 =======
 
-You can also capture a frame (screenshot) of a moment or frames within an
-interval without making a video.
+Capturing a frame (screenshot) of a moment or frames within an interval is
+possible without making a video.
 
 One frame
 ---------
@@ -208,8 +172,8 @@ For example, let's take a picture of the moment happening right now: ::
 Timelapse
 ---------
 
-Not just a single frame, but a whole timelapse with one frame every period of
-time: ::
+Capture not just a single frame, but a whole timelapse with one frame every
+period of time: ::
 
   $ ytpb capture timelapse --interval 2024-01-02T10:20:00+00/PT30S --every 15S <STREAM>
   $ tree Stream-Title
