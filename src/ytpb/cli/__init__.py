@@ -1,4 +1,5 @@
 import logging
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -59,8 +60,9 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
     logging_options,
 )
 @click.pass_context
-def cli(ctx: click.Context, config_path: Path, no_config: bool, debug: bool) -> None:
-    """This is a main entry point of the CLI."""
+def base_cli(
+    ctx: click.Context, config_path: Path, no_config: bool, debug: bool
+) -> None:
     ctx.ensure_object(ContextObject)
     ctx.default_map = ctx.obj.config["options"]
 
@@ -80,10 +82,11 @@ def cli(ctx: click.Context, config_path: Path, no_config: bool, debug: bool) -> 
             raise click.UsageError("Conflicting --config and --no-config options given")
 
 
+cli = deepcopy(base_cli)
+
 cli.section(
     "Top-level commands",
-    capture_group,
     download_command,
+    capture_group,
     mpd_group,
-    play_command,
 )
