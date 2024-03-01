@@ -1,5 +1,9 @@
 from ytpb.cli import cli
 
 
-if __name__ == "__main__":
+def main() -> None:
     cli()
+
+
+if __name__ == "__main__":
+    main()
