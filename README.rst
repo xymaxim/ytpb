@@ -201,37 +201,58 @@ Commands
 
 .. code:: ini
 
-  Usage: python -m ytpb [OPTIONS] COMMAND [ARGS]...
+  Usage: ytpb [OPTIONS] COMMAND [ARGS]...
+
+  Global options:
+    --no-config    Do not load any configuration files.
+    --config PATH  Specifies a path to a configuration file.
+    --debug        Enable verbose output for debugging.
+
+  Other options:
+    --help         Show this message and exit.
+
+  Top-level commands:
+    download  Download excerpts.
+    capture   Capture a single or many frames.
+    mpd       Compose MPEG-DASH manifests.
+
+Subcommands
+^^^^^^^^^^^
+
+``capture``
+"""""""""""
+
+  Usage: ytpb capture [OPTIONS] COMMAND [ARGS]...
+
+    Capture a single or many frames.
 
   Options:
     --help  Show this message and exit.
 
   Commands:
-    download  Download stream excerpt.
-    capture   Take video frame capture.
-    mpd       Compose and play DASH manifests.
-
-Subcommands
-^^^^^^^^^^^
+    frame      Capture a single frame.
+    timelapse  Capture time-lapse frames.
 
 ``mpd``
 """""""
 
 .. code:: ini
 
-  Usage: python -m ytpb mpd [OPTIONS] COMMAND [ARGS]...
+  Usage: ytpb mpd [OPTIONS] COMMAND [ARGS]...
 
   Options:
     --help  Show this message and exit.
 
   Commands:
-    compose  Compose DASH manfiest
-    refresh  Refresh composed DASH manfiest
+    compose  Compose an MPEG-DASH manifest.
+    refresh  Refresh a composed MPEG-DASH manifest.
+
 
 Getting help
 ------------
 
-To show a list of available options, type ``--help`` after commands or subcommands:
+To show a list of available options, type ``--help`` after commands or
+subcommands:
 
 .. code:: sh
 

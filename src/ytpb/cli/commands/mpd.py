@@ -77,7 +77,7 @@ def print_video_table(console, streams, **table_kwargs):
     console.print(table)
 
 
-@cloup.group("mpd", short_help="Compose and play MPEG-DASH manifests.")
+@cloup.group("mpd", short_help="Compose MPEG-DASH manifests.")
 def mpd_group():
     pass
 
