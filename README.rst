@@ -75,7 +75,7 @@ player (via MPEG-DASH).
 **\*\*\***
 
 After installing, take a look at the `Quick start`_ section describing the first
-try. The following secion describes the `Command line application`_. The
+try. The following section tells about the `Command line application`_. The
 `Reference`_ explains some general aspects and terms. The `Contributing`_
 describes how to participate.
 
@@ -123,7 +123,7 @@ the ``-p/--preview`` option: ::
 Compose and play
 ================
 
-  Note: Playing requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
+  Note: Requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
   <https://github.com/xymaxim/ytpb/issues/4>`__.
 
 This command takes a bit of the previous two commands. If you want to play the
@@ -142,15 +142,15 @@ Fetch and demux
 Once you have a composed MPD, you can not only play it, but also convert
 selected streams to a video file (with stream copy to avoid transcoding actual
 audio and video). First, list all available streams and then select the desired
-streams with the ``-map`` option ::
+streams with the ``-map`` option: ::
 
-  $ ffprobe Stream-Title_20240102T102000+00.mpd
-  $ ffmpeg -i Stream-Title_20240102T102000+00.mpd -map 0:0 -map 0:1 -c copy out.mp4
+  $ ffprobe <MPD>
+  $ ffmpeg -i <MPD> -map 0:0 -map 0:1 -c copy out.mp4
 
 Play
 ====
 
-If you want to play and rewind a live stream without downloading or composing,
+If you want to play and rewind live streams without downloading or composing,
 take a look at `mpv-ytpb <https://github.com/xymaxim/mpv-ytpb>`__. It provides
 interactive experience without leaving the mpv player.
 
