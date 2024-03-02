@@ -1,5 +1,6 @@
 import logging
 import operator
+import os
 import tomllib
 from collections import ChainMap
 from functools import reduce
@@ -142,7 +143,9 @@ def setup_logging(level: int) -> None:
             structlog.processors.StackInfoRenderer(),
             structlog.processors.TimeStamper(fmt="%s.%f", utc=True),
             structlog.dev.ConsoleRenderer(
-                exception_formatter=structlog.dev.plain_traceback
+                exception_formatter=structlog.dev.plain_traceback,
+                # For details about NO_COLOR, see https://no-color.org/
+                colors="NO_COLOR" not in os.environ,
             ),
             structlog.dev.set_exc_info,
         ],

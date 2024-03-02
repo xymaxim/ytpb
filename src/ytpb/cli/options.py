@@ -128,6 +128,14 @@ def logging_options(f):
         is_flag=True,
         is_eager=True,
     )(f)
+
+    f = click.option(
+        "--report",
+        help="Dump all output to a file. It implies --debug.",
+        is_flag=True,
+        is_eager=True,
+    )(f)
+
     return f
 
 

@@ -1,7 +1,10 @@
 import logging
+import sys
 from copy import deepcopy
 from dataclasses import dataclass
+from datetime import datetime, timezone
 from pathlib import Path
+from typing import Any, cast, TextIO
 
 import click
 import cloup
@@ -22,6 +25,19 @@ from ytpb.config import (
 from ytpb.types import ConfigMap
 
 logger = structlog.get_logger(__name__)
+
+
+class ReportStreamWrapper:
+    def __init__(self, stream: TextIO, path: Path) -> None:
+        self.stream = stream
+        self.file = open(path, "a")
+
+    def write(self, message: str) -> None:
+        self.stream.write(message)
+        self.file.write(message)
+
+    def __getattr__(self, attr: str) -> Any:
+        return getattr(self.stream, attr)
 
 
 @dataclass
@@ -60,10 +76,17 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
 )
 @click.pass_context
 def base_cli(
-    ctx: click.Context, config_path: Path, no_config: bool, debug: bool
+    ctx: click.Context, config_path: Path, no_config: bool, debug: bool, report: bool
 ) -> None:
     ctx.ensure_object(ContextObject)
     ctx.default_map = ctx.obj.config["options"]
+
+    if report:
+        debug = True
+        timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d-%H%M%S")
+        report_path = Path.cwd() / f"ytpb-{timestamp}.log"
+        sys.stdout = cast(TextIO, ReportStreamWrapper(sys.stdout, report_path))
+        sys.stderr = cast(TextIO, ReportStreamWrapper(sys.stderr, report_path))
 
     setup_logging(logging.DEBUG if debug else logging.WARNING)
 
