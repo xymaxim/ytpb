@@ -1,5 +1,6 @@
 import atexit
 import logging
+import os
 import re
 import sys
 from copy import deepcopy
@@ -86,6 +87,8 @@ def base_cli(
 
     if report:
         debug = True
+        os.environ["NO_COLOR"] = "1"
+
         timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d-%H%M%S")
         report_handle = open(Path.cwd() / f"ytpb-{timestamp}.log", "a")
         sys.stdout = cast(TextIO, ReportStreamWrapper(sys.stdout, report_handle))
