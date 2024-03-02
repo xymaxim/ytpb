@@ -1,8 +1,11 @@
+import atexit
 import logging
+import re
 import sys
 from copy import deepcopy
 from dataclasses import dataclass
 from datetime import datetime, timezone
+from fileinput import FileInput
 from pathlib import Path
 from typing import Any, cast, TextIO
 
@@ -27,10 +30,10 @@ from ytpb.types import ConfigMap
 logger = structlog.get_logger(__name__)
 
 
+@dataclass
 class ReportStreamWrapper:
-    def __init__(self, stream: TextIO, path: Path) -> None:
-        self.stream = stream
-        self.file = open(path, "a")
+    stream: TextIO
+    file: TextIO
 
     def write(self, message: str) -> None:
         self.stream.write(message)
@@ -84,9 +87,16 @@ def base_cli(
     if report:
         debug = True
         timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d-%H%M%S")
-        report_path = Path.cwd() / f"ytpb-{timestamp}.log"
-        sys.stdout = cast(TextIO, ReportStreamWrapper(sys.stdout, report_path))
-        sys.stderr = cast(TextIO, ReportStreamWrapper(sys.stderr, report_path))
+        report_handle = open(Path.cwd() / f"ytpb-{timestamp}.log", "a")
+        sys.stdout = cast(TextIO, ReportStreamWrapper(sys.stdout, report_handle))
+        sys.stderr = cast(TextIO, ReportStreamWrapper(sys.stderr, report_handle))
+
+        @atexit.register
+        def sanitize_report_file() -> None:
+            report_handle.close()
+            with FileInput(report_handle.name, inplace=True) as fi:
+                for line in fi:
+                    print(re.sub("/ip/([\w.:]+)/", "/ip/0.0.0.0/", line), end="")
 
     setup_logging(logging.DEBUG if debug else logging.WARNING)
 
