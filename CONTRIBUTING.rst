@@ -7,9 +7,8 @@ Reporting a problem
 To report a problem, create a `GitHub issue
 <https://github.com/xymaxim/ytpb/issues>`_.
 
-Before a report, make sure to retrieve some necessary information. Include all
-error messages and tracebacks. One way is to run a command with the ``--report``
-option: ::
+Make sure to retrieve some necessary information. Include all error messages and
+tracebacks. One way is to run a command with the ``--report`` option: ::
 
   $ ytpb --report COMMAND ...
 
