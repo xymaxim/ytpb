@@ -53,8 +53,8 @@ VIDEO_QUALITY_60FPS_ALIASES = {
 }
 
 VIDEO_QUALITY_WITH_OPERATOR_ALIASES = {
-    f"{operator}{width}p": f"width {operator_name} {width}"
-    for (operator, operator_name), width in product(
+    f"{operator}{height}p": f"height {operator_name} {height}"
+    for (operator, operator_name), height in product(
         [("<", "lt"), ("<=", "le"), (">", "gt"), (">=", "ge")], VIDEO_QUALITY_HEIGHTS
     )
 }
