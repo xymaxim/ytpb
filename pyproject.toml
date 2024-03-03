@@ -48,6 +48,12 @@ ytpb = "ytpb.__main__:main"
 [tool.hatch.metadata]
 allow-direct-references = true
 
+[tool.hatch.build.targets.sdist]
+exclude = [
+   "/.github",
+   "/notebooks",
+]
+
 [tool.black]
 line-length = 88
 
