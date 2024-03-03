@@ -222,6 +222,8 @@ Subcommands
 ``capture``
 """""""""""
 
+.. code:: ini
+
   Usage: ytpb capture [OPTIONS] COMMAND [ARGS]...
 
     Capture a single or many frames.
