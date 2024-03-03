@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "ytpb"
 description = "Playback for YouTube live streams"
 readme = "README.rst"
-version = "2024.1.18"
+version = "2024.3.3"
 authors = [ { name = "Maxim Stolyarchuk" } ]
 keywords = [ "youtube" ]
 license = { file = "LICENSE" }
@@ -34,7 +34,7 @@ dependencies = [
 test = [
     "freezegun>=1.4.0",
     "pytest>=7.4.4",
-    "pytest-matcher>=1.5.1",
+    "pytest-matcher>=1.6.0",
     "pytest-socket>=0.6.0",
     "responses>=0.24.1"
 ]
