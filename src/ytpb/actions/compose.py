@@ -6,7 +6,7 @@ from lxml.builder import E
 
 from ytpb.exceptions import YtpbError
 from ytpb.mpd import NAMESPACES as NS
-from ytpb.playback import Playback, RewindInterval, RewindMoment
+from ytpb.playback import Playback, RewindInterval
 from ytpb.segment import SegmentMetadata
 from ytpb.streams import SetOfStreams
 from ytpb.utils.other import S_TO_MS
@@ -141,8 +141,6 @@ def compose_dynamic_mpd(
 ) -> str:
     mpd_element = _compose_mpd_skeleton(playback, streams)
     mpd_element.attrib["profiles"] = "urn:mpeg:dash:profile:isoff-live:2011"
-
-    some_base_url = next(iter(streams)).base_url
 
     mpd_element.attrib.update(
         {
