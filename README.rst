@@ -990,7 +990,7 @@ Contributing
 If you are willing to contribute, you are very welcome. Do you have any ideas or
 suggestions? Or have you experienced a problem? Please `open
 <https://github.com/xymaxim/ytpb/issues/>`_ an issue on GitHub. If you a
-developer and want to help, please refer to `<DEVELOPING.rst>`_.
+developer and want to help, please refer to `<CONTRIBUTING.rst>`_.
 
 License
 *******
