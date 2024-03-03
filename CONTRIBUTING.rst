@@ -4,7 +4,8 @@ How to contribute
 Reporting a problem
 ===================
 
-To report a problem, create a [GitHub issue](https://github.com/xymaxim/ytpb/issues).
+To report a problem, create a `GitHub issue
+<https://github.com/xymaxim/ytpb/issues>`_.
 
 Before a report, make sure to retrieve some necessary information. Include all
 error messages and tracebacks. One way is to run a command with the ``--report``
@@ -13,7 +14,7 @@ option: ::
   $ ytpb --report COMMAND ...
 
 This will create a debug (``--debug`` is automatically implied) log file
-`ytpb-yyyymmdd-HHMMSS.log`. For privacy, actual IP addresses in the output will
+``ytpb-yyyymmdd-HHMMSS.log``. For privacy, actual IP addresses in the output will
 be replaced with '0.0.0.0'.
 
 Contributing code
@@ -67,8 +68,10 @@ To run all tests: ::
 Mocking network calls
 =====================
 
-Any network calls are disabled by the ``pytest-socket`` plugin. Instead, the
-``responses`` package is used for mocking responses from remote sources.
+Any network calls are disabled by the `pytest-socket
+<https://github.com/miketheman/pytest-socket>`_ plugin. Instead, the `responses
+<https://github.com/getsentry/responses>`_ package is used for mocking responses
+from remote sources.
 
 Functional tests
 ================
@@ -77,10 +80,11 @@ Match outputs
 -------------
 
 The actual test outputs are compared to the pre-defined expected ones with the
-help of the ``pytest-matcher`` plugin. Such tests are characterized by the use
-of the plugin's ``expected_out`` fixture. The expected outputs (patterns) are
-stored in ``./tests/data/expected``. Before running tests, patterns should be
-generated (or if needed, updated for existing tests): ::
+help of the `pytest-matcher <https://github.com/zaufi/pytest-matcher>`__
+plugin. Such tests are characterized by the use of the plugin's ``expected_out``
+fixture. The expected outputs (patterns) are stored in
+``./tests/data/expected``. Before running tests, patterns should be generated
+(or if needed, updated for existing tests): ::
 
   $ python -m pytest --pm-save-patterns ...
 
