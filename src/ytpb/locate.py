@@ -1,4 +1,4 @@
-"""Provides locating segments by the desired time."""
+"""Provides locating a segment with the desired time."""
 
 import math
 import tempfile
@@ -23,9 +23,7 @@ logger = structlog.get_logger(__name__)
 # value was determined empirically for all available formats.
 PARTIAL_SEGMENT_SIZE_BYTES = 2000
 
-# Absolute time difference tolerance (in seconds). Chosen considering the
-# standard deviation of the discrete differences of the Ingestion-Walltime-Us
-# values. See issue #5.
+# Absolute time difference tolerance (in seconds). See issue #5.
 TIME_DIFF_TOLERANCE = 3e-2
 
 
@@ -72,12 +70,11 @@ class SequenceMetadataPair:
 class SegmentLocator:
     """A locator which finds a segment with the desired time.
 
-    The locating algorithm consists of three steps: (1) make one or two trial
-    jumps based on the constant duration of segments (timeline may contain gaps,
-    which leads to overestimation); (2) refine an estimated sequence number
-    using a binary search if a candidate is not found (search domain is
-    determined by two previous jumps); (3) check whether a refined sequence
-    number falls into a gap or not.
+    The locating consists of three steps: (1) make one or two trial jumps based
+    on the constant duration of segments (timeline may contain gaps, which leads
+    to overestimation); (2) refine an estimated sequence number using a binary
+    search if a candidate is not found (search domain is determined by two
+    previous jumps); (3) check whether a target time falls into gap or not.
     """
 
     def __init__(
@@ -143,7 +140,7 @@ class SegmentLocator:
 
         # Expand a search domain if it doesn't include a target. This can be
         # observed when the duration of segments just after a gap is
-        # unexpectedly small, which brings underestimation:
+        # unexpectedly small, which brings underestimation.
         candidate_sequence = second_jump_sequence
         if first_jump_diff * second_jump_diff > 0:
             last_hope_jump = 4
@@ -201,9 +198,8 @@ class SegmentLocator:
             reference=self.reference.sequence,
         )
 
-        # Starting from the reference, make one or two trial jumps
-        # (based on the constant segment duration) to find a candidate for a
-        # desired segment.
+        # Starting from the reference, make one or two trial jumps (based on the
+        # constant segment duration) to find a candidate or the desired segment.
         current_sequence = self.reference.sequence
         current_ingestion_time = self.reference.metadata.ingestion_walltime
 
