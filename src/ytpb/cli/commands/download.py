@@ -52,8 +52,9 @@ from ytpb.utils.url import extract_parameter_from_url
 logger = structlog.get_logger(__name__)
 
 
-class DownloadOutputPathContext(MinimalOutputPathContext, IntervalOutputPathContext):
-    ...
+class DownloadOutputPathContext(
+    MinimalOutputPathContext, IntervalOutputPathContext
+): ...
 
 
 def render_download_output_path_context(

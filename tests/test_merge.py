@@ -12,9 +12,9 @@ SEGMENT_BASE_PATH = Path(TEST_DATA_PATH) / "segments"
 
 
 def setup_function():
-    os.environ[
-        "YTPB_VP9_ENCODING_SETTINGS"
-    ] = "libvpx-vp9 -crf 63 -b:v 0 -deadline realtime -cpu-used 8 -row-mt 1 -s 1x1"
+    os.environ["YTPB_VP9_ENCODING_SETTINGS"] = (
+        "libvpx-vp9 -crf 63 -b:v 0 -deadline realtime -cpu-used 8 -row-mt 1 -s 1x1"
+    )
 
 
 def test_merge_with_default_encoding_settings(run_temp_directory: Path, tmp_path: Path):

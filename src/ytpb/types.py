@@ -11,8 +11,7 @@ Timestamp: TypeAlias = float
 SegmentSequence: TypeAlias = int
 
 
-class RelativeSegmentSequence(int):
-    ...
+class RelativeSegmentSequence(int): ...
 
 
 AbsolutePointInStream: TypeAlias = datetime | SegmentSequence
@@ -26,8 +25,7 @@ SetOfStreams: TypeAlias = "Streams[AudioOrVideoStream]"
 
 
 class AddressableMappingProtocol(Protocol):
-    def traverse(self, address: str, default: Any, delimiter: str) -> Any:
-        ...
+    def traverse(self, address: str, default: Any, delimiter: str) -> Any: ...
 
 
 ConfigMap: TypeAlias = AddressableChainMap

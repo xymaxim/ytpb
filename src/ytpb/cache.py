@@ -1,5 +1,6 @@
 """A naive disk-based caching solution via JSON. Invalidation is based on the
 filenaming."""
+
 import json
 import time
 from pathlib import Path
