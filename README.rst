@@ -15,8 +15,8 @@
 
 *Ytpb* is a playback for YouTube live streams written in Python. It lets you go
 back to past moments beyond the limits of the web player. You can keep selected
-moments by downloading excerpts or play them instantly (without downloading) in
-your video player via MPEG-DASH.
+moments by downloading excerpts or play them instantly in your video player via
+MPEG-DASH.
 
 **Features**
 
@@ -57,15 +57,16 @@ hours. Several ways exist to record (e.g., `FFmpeg <https://ffmpeg.org/>`_ +
 <https://streamlink.github.io/>`_) live streams.
 
 What if you want to seek back in a stream (especially beyond the limit of the
-player)? Some projects (see, for example, `link 1
-<https://github.com/jmf1988/ytdash>`__, `link 2
-<https://github.com/rytsikau/ee.Yrewind>`__, `link 3
-<https://github.com/yt-dlp/yt-dlp/pull/6498>`__) try to provide ways to save an
-entire stream from the beginning, by defining the relative offset from now, or
-by specifying timestamps. However, all solutions, to our knowledge, don't take
-into account the streaming instability causing from intermittent stutters to
-large gaps. It results in inaccurate rewind timings: the desired moment could be
-shifted to seconds, minutes, or even `hours
+player)? Some projects (see, for example, `1
+<https://github.com/jmf1988/ytdash>`__, `2
+<https://github.com/Kethsar/ytarchive>`__, `3
+<https://github.com/rytsikau/ee.Yrewind>`__, or `4
+<https://github.com/yt-dlp/yt-dlp/pull/6498>`__) try to accomplish it in
+different ways: by saving an entire stream from the beginning, by defining the
+relative offset from now, or by specifying timestamps. However, all solutions,
+to our knowledge, don't take into account the streaming instability causing from
+intermittent stutters to large gaps. It results in inaccurate rewind timings:
+the desired moment could be shifted to seconds, minutes, or even `hours
 <https://github.com/xymaxim/ytpb/issues/2>`__.
 
 *Ytpb* will help you to locate the rewind interval precisely and bring the
@@ -808,15 +809,11 @@ The expressions have the following grammar:
 
     condition : atom (('and' | 'or' | ...) (atom | condition))*
               | '[' condition ']'
-	      | alias
-              | ellipsis ;
+	      | alias ;
 
     atom : attribute operator value ;
 
     alias : '@' alias-name ;
-
-    ellipsis : '...' ;
-
 
 where ``condition`` is in the form:
 
