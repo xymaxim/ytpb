@@ -91,13 +91,12 @@ describes how to participate.
 Installation
 ************
 
-*Ytpb* requires Python 3.11 or higher. Currently, *Ytpb* isn't available on
-PyPI. You can install it from GitHub. The recommended way is to use `pipx
+*Ytpb* requires Python 3.11 or higher. The recommended way is to use `pipx
 <https://pypa.github.io/pipx/>`_:
 
 .. code:: sh
 
-	  $ pipx install git+https://github.com/xymaxim/ytpb
+	  $ pipx install ytpb
 
 Quick start
 ***********
