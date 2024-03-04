@@ -140,7 +140,6 @@ class Playback:
         session: requests.Session | None = None,
         fetcher: InfoFetcher | None = None,
         write_to_cache: bool = False,
-        temp_directory: Path | None = None,
     ):
         self.video_url = video_url
         self.session = session or PlaybackSession(self)
