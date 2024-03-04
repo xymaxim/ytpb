@@ -66,6 +66,47 @@ def test_retry_on_403_for_segment_url(
     assert response.url == refreshed_segment_url
 
 
+def test_retry_on_404_for_segment_url(
+    mocked_responses: responses.RequestsMock,
+    mock_fetch_and_set_essential,
+    stream_url: str,
+    audio_base_url: str,
+) -> None:
+    # Given:
+    initial_segment_url = urljoin(audio_base_url, "sq/0")
+    mocked_responses.get(initial_segment_url, status=404)
+    mocked_responses.get(initial_segment_url, status=200)
+
+    # When:
+    playback = Playback(stream_url)
+    playback.fetch_and_set_essential()
+
+    response = playback.session.get(initial_segment_url)
+
+    # Then:
+    assert response.status_code == 200
+    assert response.url == initial_segment_url
+
+
+def test_retry_on_unknown_for_segment_url(
+    mocked_responses: responses.RequestsMock,
+    mock_fetch_and_set_essential,
+    stream_url: str,
+    audio_base_url: str,
+) -> None:
+    # Given:
+    initial_segment_url = urljoin(audio_base_url, "sq/0")
+    mocked_responses.get(initial_segment_url, status=401)
+
+    # When:
+    playback = Playback(stream_url)
+    playback.fetch_and_set_essential()
+    response = playback.session.get(initial_segment_url)
+
+    # Then:
+    assert response.status_code == 401
+
+
 def test_max_retries_exceeded_with_segment_url(
     mocked_responses: responses.RequestsMock,
     mock_fetch_and_set_essential,

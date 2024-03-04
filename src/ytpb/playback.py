@@ -75,41 +75,58 @@ class PlaybackSession(requests.Session):
         super().__init__(**kwargs)
 
         self.playback = playback
-        self.hooks["response"].append(self._maybe_refetch_streams)
+        self.hooks["response"].append(self._handle_http_errors)
         self.headers["User-Agent"] = USER_AGENT
 
     def set_playback(self, playback):
         self.playback = playback
 
-    def _maybe_refetch_streams(self, response, *args, **kwargs):
+    def _handle_403_error(self, request: requests.Request) -> None:
+        old_corresponding_stream = next(
+            iter(
+                self.playback.streams.filter(
+                    lambda x: request.url.startswith(x.base_url)
+                )
+            )
+        )
+        old_base_url = old_corresponding_stream.base_url
+
+        self.playback.fetch_and_set_essential()
+        new_corresponding_stream = self.playback.streams.get_by_itag(
+            old_corresponding_stream.itag
+        )
+        new_base_url = new_corresponding_stream.base_url
+
+        request.url = request.url.replace(old_base_url, new_base_url)
+
+    def _handle_http_errors(
+        self, response: requests.Response, *args, **kwargs
+    ) -> requests.Response:
+        if response.ok:
+            return response
+
         request = response.request
         retries_count = getattr(request, "retries_count", 0)
 
-        if re.match(SEGMENT_URL_PATTERN, request.url):
-            if response.status_code == 403 and retries_count < self.max_retries:
-                logger.debug("Received 403 for segment url, refetch and then retry")
-
-                old_corresponding_stream = next(
-                    iter(
-                        self.playback.streams.filter(
-                            lambda x: request.url.startswith(x.base_url)
-                        )
-                    )
+        if retries_count < self.max_retries:
+            if re.match(SEGMENT_URL_PATTERN, request.url):
+                logger.debug("Received %s for %s", response.status_code, request.url)
+                logger.debug(
+                    "Handle error, and make another try (%s of %s)",
+                    retries_count + 1,
+                    self.max_retries,
                 )
-                old_base_url = old_corresponding_stream.base_url
-
-                self.playback.fetch_and_set_essential()
-                new_corresponding_stream = self.playback.streams.get_by_itag(
-                    old_corresponding_stream.itag
-                )
-                new_base_url = new_corresponding_stream.base_url
-
-                request.url = request.url.replace(old_base_url, new_base_url)
+                match response.status_code:
+                    case 403:
+                        self._handle_403_error(request)
+                    case 404:
+                        pass
+                    case _:
+                        logger.debug("Unhandleable error encountered, do nothing")
+                        return response
                 request.retries_count = retries_count + 1
-
                 return self.send(request, verify=False)
-
-        if retries_count == self.max_retries:
+        else:
             raise MaxRetryError(
                 f"Maximum number of retries exceeded with URL: {request.url}",
                 response,
