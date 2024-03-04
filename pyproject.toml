@@ -4,9 +4,9 @@ build-backend = "hatchling.build"
 
 [project]
 name = "ytpb"
-description = "Playback for YouTube live streams"
+description = "A playback for YouTube live streams"
 readme = "README.rst"
-version = "2024.3.3"
+version = "2024.3.4"
 authors = [ { name = "Maxim Stolyarchuk" } ]
 keywords = [ "youtube" ]
 license = { file = "LICENSE" }
