@@ -44,7 +44,7 @@ MPEG-DASH.
 
 .. raw:: html
 
-         <script async id="asciicast-645203" src="https://asciinema.org/a/645203.js"></script>
+         <a href="https://asciinema.org/a/645203" target="_blank"><img src="https://asciinema.org/a/645203.svg" /></a>
 
 *A demo of ytpb usage, showing downloading a live stream excerpt.*
 
