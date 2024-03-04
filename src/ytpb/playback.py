@@ -46,30 +46,6 @@ logger = structlog.get_logger(__name__)
 SEGMENT_URL_PATTERN = r"https://.+\.googlevideo\.com/videoplayback/.+"
 
 
-@dataclass
-class ExcerptBoundaryDates:
-    input_start_date: datetime
-    input_end_date: datetime
-    actual_start_date: datetime
-    actual_end_date: datetime
-
-
-@dataclass(frozen=True)
-class ExcerptFileMetadata:
-    video_url: str
-    actual_start_date: int
-    actual_end_date: int
-
-
-@dataclass(frozen=True)
-class ExcerptMetadata:
-    video_url: str
-    input_start_date: int
-    input_end_date: int
-    actual_start_date: int
-    actual_end_date: int
-
-
 @dataclass(frozen=True)
 class RewindMoment:
     date: datetime
