@@ -135,9 +135,9 @@ Compose and play
   Note: Requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
   <https://github.com/xymaxim/ytpb/issues/4>`__.
 
-This command takes a bit of the previous two commands. If you want to play the
-excerpt without downloading it, you can compose a static MPEG-DASH manifest
-(MPD) file and then play it in a player that supports DASH streams: ::
+If you want to play an excerpt without downloading it, you can compose a static
+MPEG-DASH manifest (MPD) file and then play it in a player that supports DASH
+streams: ::
 
   $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT30S <STREAM>
   $ mpv Stream-Title_20240102T102000+00.mpd
@@ -149,9 +149,9 @@ Fetch and demux
 ---------------
 
 Once you have a composed MPD, you can not only play it, but also convert
-selected streams to a video file (with stream copy to avoid transcoding actual
-audio and video). First, list all available streams and then select the desired
-streams with the ``-map`` option: ::
+selected streams to a video file. First, list all available streams and then
+select the desired streams to convert with the ``-map`` option (use ``-c copy``
+to avoid transcoding actual audio and video): ::
 
   $ ffprobe <MPD>
   $ ffmpeg -i <MPD> -map 0:0 -map 0:1 -c copy out.mp4
@@ -159,9 +159,9 @@ streams with the ``-map`` option: ::
 Play
 ====
 
-If you want to play and rewind live streams without downloading or composing,
-take a look at `mpv-ytpb <https://github.com/xymaxim/mpv-ytpb>`__. It provides
-interactive experience without leaving the mpv player.
+Playing and rewinding live streams are possible without downloading or
+composing. Take a look at `mpv-ytpb <https://github.com/xymaxim/mpv-ytpb>`__. It
+provides interactive experience with no need to leave the mpv player.
 
 Capture
 =======
