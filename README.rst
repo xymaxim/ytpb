@@ -777,18 +777,6 @@ behaviour. The cache expiration is defined by the base URLs expiration time. The
 writing. Another option, ``--force-update-cache``, exists to trigger cache
 update.
 
-..
-   Logging options
-   ---------------
-
-   TODO
-
-
-Python package
-**************
-
-Aside from the CLI, you can use *Ytpb* as a Python package. See `DEVELOPING.rst`_.
-
 Reference
 *********
 
