@@ -36,9 +36,7 @@ def test_download_excerpt_between_sequences_without_merging(
     )
 
     # When:
-    playback = Playback(
-        stream_url, temp_directory=run_temp_directory, fetcher=fake_info_fetcher
-    )
+    playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
     _, *output_paths = actions.download.download_excerpt(
         playback,
