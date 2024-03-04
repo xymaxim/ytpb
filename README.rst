@@ -40,6 +40,14 @@ MPEG-DASH.
 
 - Makes use of yt-dlp to reliably extract information about videos
 
+**Demo**
+
+.. raw:: html
+
+         <script async id="asciicast-645203" src="https://asciinema.org/a/645203.js"></script>
+
+*A demo of ytpb usage, showing downloading a live stream excerpt.*
+
 .. contents:: **Table of contents**
    :depth: 2
    :local:
