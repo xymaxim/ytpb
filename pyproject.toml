@@ -38,6 +38,10 @@ test = [
     "pytest-socket>=0.6.0",
     "responses>=0.24.1"
 ]
+dev = [
+    "ytpb[test]",
+    "pre-commit",
+]
 
 [project.urls]
 Source = "https://github.com/xymaxim/ytpb"
