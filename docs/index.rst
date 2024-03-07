@@ -10,4 +10,8 @@
    quick
    cli
    reference
+
+.. toctree::
+   :maxdepth: 1
+
    contributing
