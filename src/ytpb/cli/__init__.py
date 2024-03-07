@@ -119,6 +119,7 @@ def base_cli(
 
 cli = deepcopy(base_cli)
 
+cli.help = "A playback for YouTube live streams"
 cli.section(
     "Top-level commands",
     download_command,
