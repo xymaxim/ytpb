@@ -82,6 +82,10 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
 def base_cli(
     ctx: click.Context, config_path: Path, no_config: bool, debug: bool, report: bool
 ) -> None:
+    if ctx.invoked_subcommand is None:
+        click.echo(ctx.get_help())
+        ctx.exit()
+
     ctx.ensure_object(ContextObject)
     ctx.default_map = ctx.obj.config["options"]
 
