@@ -3,6 +3,15 @@ Ytpb
 
 A playback for YouTube live streams.
 
+.. |sep| unicode:: 0xA0 0xA0
+   :trim:
+
+`Project page`_ |sep| `Documentation`_ |sep| `Contributing`_
+
+.. _Project page: https://github.com/xymaxim/ytpb
+.. _Documentation: https://ytpb.readthedocs.io
+.. _Contributing: https://ytpb.readthedocs.io/en/latest/contributing.html
+
 .. image:: https://img.shields.io/pypi/v/ytpb
    :target: https://pypi.org/project/ytpb
    :alt: PyPI - Version
