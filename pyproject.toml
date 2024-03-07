@@ -49,6 +49,10 @@ dev = [
     "ytpb[test]",
     "pre-commit",
 ]
+docs = [
+    "sphinx==7.2.6",
+    "sphinx-toolbox==3.5.0",
+]
 
 [project.urls]
 Source = "https://github.com/xymaxim/ytpb"
