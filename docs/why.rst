@@ -25,10 +25,3 @@ the desired moment could be shifted to seconds, minutes, or even `hours
 Ytpb will help you to locate the rewind interval precisely and bring the
 desired excerpt back in two ways: by downloading or playing it instantly in a
 player (via MPEG-DASH).
-
-\*\*\*
-
-After installing, take a look at :doc:`quick` describing the first try. The
-:doc:`cli` section goes deeper into the usage. The :doc:`reference` provides
-some general aspects and terms. The :doc:`contributing` tells how to
-participate.

@@ -17,7 +17,7 @@ A playback for YouTube live streams.
 `Project page`_ |sep| `Documentation`_ |sep| `Contributing`_
 
 .. _Project page: https://github.com/xymaxim/ytpb
-.. _Documentation: https://ytpb.readthedocs.io
+.. _Documentation: https://ytpb.readthedocs.io/
 .. _Contributing: https://ytpb.readthedocs.io/en/latest/contributing.html
 
 *Rewind to past moments in live streams and download or play excerpts*
@@ -64,8 +64,23 @@ Ytpb requires Python 3.11 or higher. The recommended way is to use `pipx
 
   $ pipx install ytpb
 
+Further reading
+***************
+
+After installing, check out the `documentation`_. The `Why Ytpb?`_ section
+answers on why the project exists. The first try is described in `Quick
+start`_. The `Command line application`_ section goes deeper into the usage. The
+`Reference`_ provides some general aspects and terms. The `Contributing`_ tells
+how to participate.
+
+.. _Why Ytpb?: https://ytpb.readthedocs.io/en/latest/why.html
+.. _Quick start: https://ytpb.readthedocs.io/en/latest/quick.html
+.. _Command line application: https://ytpb.readthedocs.io/en/latest/cli.html
+.. _Reference: https://ytpb.readthedocs.io/en/latest/reference.html
+
 License
 *******
 
-Ytpb is licensed under the MIT license. See `LICENSE
-<https://github.com/xymaxim/ytpb/blob/main/LICENSE>`_ for details.
+Ytpb is licensed under the MIT license. See `LICENSE`_ for details.
+
+.. _LICENSE: https://github.com/xymaxim/ytpb/blob/main/LICENSE
