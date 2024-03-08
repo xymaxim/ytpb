@@ -70,7 +70,7 @@ Further reading
 After installing, check out the `documentation`_. The `Why Ytpb?`_ section
 explains why the project exists. For main usage scenarios, see `Quick
 start`_. The `Command line application`_ section goes deeper into the
-usage. `Reference`_ provides some general aspects and terms. Have issues,
+usage. `Reference`_ provides some general aspects and terms. Have any issues,
 suggestions, or want to contribute code?  `Contributing`_ tells how to
 participate in the project.
 
