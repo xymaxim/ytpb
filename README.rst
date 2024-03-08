@@ -14,7 +14,7 @@ A playback for YouTube live streams.
 .. |sep| unicode:: 0xA0 0xA0
    :trim:
 
-`Project page`_ |sep| `Documentation`_ |sep| `Contributing`_
+`Project page`_ |sep| `Documentation`_ |sep| `Contributing`_
 
 .. _Project page: https://github.com/xymaxim/ytpb
 .. _Documentation: https://ytpb.readthedocs.io/
@@ -68,10 +68,11 @@ Further reading
 ***************
 
 After installing, check out the `documentation`_. The `Why Ytpb?`_ section
-answers on why the project exists. The first try is described in `Quick
-start`_. The `Command line application`_ section goes deeper into the usage. The
-`Reference`_ provides some general aspects and terms. The `Contributing`_ tells
-how to participate.
+explains why the project exists. For main usage scenarios, see `Quick
+start`_. The `Command line application`_ section goes deeper into the
+usage. `Reference`_ provides some general aspects and terms. Have issues,
+suggestions, or want to contribute code?  `Contributing`_ tells how to
+participate in the project.
 
 .. _Why Ytpb?: https://ytpb.readthedocs.io/en/latest/why.html
 .. _Quick start: https://ytpb.readthedocs.io/en/latest/quick.html
