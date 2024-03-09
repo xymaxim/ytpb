@@ -1,4 +1,4 @@
-"""Provides locating a segment with the desired time."""
+"""Provides locating a segment with a desired time."""
 
 import math
 import tempfile
@@ -68,13 +68,16 @@ class SequenceMetadataPair:
 
 
 class SegmentLocator:
-    """A locator which finds a segment with the desired time.
+    """A locator which finds a segment with a desired time.
 
-    The locating consists of three steps: (1) make one or two trial jumps based
-    on the constant duration of segments (timeline may contain gaps, which leads
-    to overestimation); (2) refine an estimated sequence number using a binary
-    search if a candidate is not found (search domain is determined by two
-    previous jumps); (3) check whether a target time falls into gap or not.
+    A timeline may contain numerous gaps, which leads to under- or
+    overestimation, and it needs to be taken into account.
+
+    The locating consists of three steps: (1) a "look around", jump-based search
+    to find a segment directly or outline a search domain (the jump length is
+    based on the time difference and constant duration of segments); (2) refine
+    an estimated sequence number using a binary search if a segment is not
+    found; (3) check whether a target time falls into gap or not.
     """
 
     def __init__(
@@ -91,6 +94,7 @@ class SegmentLocator:
         if reference_sequence is None:
             reference_sequence = request_reference_sequence(base_url)
         self.reference = SequenceMetadataPair(reference_sequence, self)
+        self.candidate: SequenceMetadataPair | None = None
 
         self.segment_duration = float(extract_parameter_from_url("dur", base_url))
         self.track: list[tuple[SegmentSequence, float]] = []
@@ -128,30 +132,17 @@ class SegmentLocator:
         )
         return self.candidate.metadata.ingestion_walltime
 
-    def _refine_candidate_sequence(
-        self, desired_time: Timestamp, end: bool
+    def _search_sequence(
+        self,
+        desired_time: Timestamp,
+        start: SegmentSequence,
+        end: SegmentSequence,
+        is_end: bool,
     ) -> tuple[SegmentSequence, bool]:
-        """Refine an estimated sequence number and perform gap check."""
-        first_jump_sequence, first_jump_diff = self.track[0]
-        second_jump_sequence, second_jump_diff = self.track[1]
-
-        # The direction of iteration: to the right (+1) or left (-1).
-        direction = int(math.copysign(1, second_jump_diff))
-
-        # Expand a search domain if it doesn't include a target. This can be
-        # observed when the duration of segments just after a gap is
-        # unexpectedly small, which brings underestimation.
-        candidate_sequence = second_jump_sequence
-        if first_jump_diff * second_jump_diff > 0:
-            last_hope_jump = 4
-            candidate_sequence += direction * last_hope_jump
-            logger.debug("Search domain expanded to segment %d", candidate_sequence)
-
-        domain_sequences = (first_jump_sequence, candidate_sequence)
-        left, right = min(domain_sequences), max(domain_sequences)
-        search_domain = range(left, right + 1)
-        logger.debug("Start a binary search", left=left, right=right)
-
+        """Search for a segment with a desired time inside a search domain with
+        the given start and end sequence numbers and perform a gap check."""
+        search_domain = range(min((start, end)), max((start, end)) + 1)
+        logger.debug("Start a binary search", domain=search_domain)
         bisect_key = partial(self._get_bisected_segment_timestamp, target=desired_time)
         found_index = bisect_left(search_domain, desired_time, key=bisect_key)
         self.candidate.sequence = search_domain[found_index - 1]
@@ -175,7 +166,7 @@ class SegmentLocator:
         if candidate_duration < candidate_diff_in_s - TIME_DIFF_TOLERANCE:
             falls_into_gap = True
             logger.debug("Input target time falls into a gap")
-            if not end:
+            if not is_end:
                 self.candidate.sequence += 1
                 current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
                 self.track.append((self.candidate.sequence, current_diff_in_s))
@@ -190,52 +181,57 @@ class SegmentLocator:
 
     def find_sequence_by_time(
         self, desired_time: Timestamp, end: bool = False
-    ) -> SegmentSequence:
+    ) -> tuple[SegmentSequence, bool]:
         """Find sequence number of a segment by the given timestamp."""
         logger.info(
-            "Locating segment with a timestamp",
+            "Locating segment",
+            end=end,
             target=desired_time,
             reference=self.reference.sequence,
         )
 
-        # Starting from the reference, make one or two trial jumps (based on the
-        # constant segment duration) to find a candidate or the desired segment.
-        current_sequence = self.reference.sequence
-        current_ingestion_time = self.reference.metadata.ingestion_walltime
+        current_diff_in_s = self._find_time_diff(self.reference, desired_time)
+        start_direction = int(math.copysign(1, current_diff_in_s))
+        self.candidate = self.reference
 
-        need_to_refine = False
-        for jump_number in [1, 2]:
-            estimated_diff_in_s = desired_time - current_ingestion_time
-            jump_length_in_seq = int(estimated_diff_in_s // self.segment_duration)
+        has_segment_found = False
 
-            self.candidate = SequenceMetadataPair(
-                current_sequence + jump_length_in_seq, self
-            )
-            current_sequence = self.candidate.sequence
-            current_ingestion_time = self.candidate.metadata.ingestion_walltime
-            current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
-            self.track.append((current_sequence, current_diff_in_s))
+        has_domain_discovered = False
+        has_sign_changed = False
 
+        while not has_domain_discovered:
+            self.track.append((self.candidate.sequence, current_diff_in_s))
             logger.debug(
-                "Jump %d, time difference: %+f s",
-                jump_number,
+                "Look around, time difference: %+f s",
                 current_diff_in_s,
-                seq=current_sequence,
-                time=current_ingestion_time,
+                seq=self.candidate.sequence,
+                time=self.candidate.metadata.ingestion_walltime,
             )
 
             if 0 <= current_diff_in_s <= self.segment_duration + TIME_DIFF_TOLERANCE:
+                has_segment_found = True
                 break
-        else:
-            need_to_refine = True
 
-        if need_to_refine:
+            direction = int(math.copysign(1, current_diff_in_s))
+            if not has_sign_changed:
+                has_sign_changed = direction * start_direction < 0
+            has_domain_discovered = has_sign_changed and direction == start_direction
+
+            jump_length_in_seq = int(current_diff_in_s // self.segment_duration)
+            self.candidate = SequenceMetadataPair(
+                self.candidate.sequence + jump_length_in_seq, self
+            )
+            current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
+
+        result: tuple[SegmentSequence, bool]
+        if has_segment_found:
+            result = (self.candidate.sequence, False)
+        else:
             try:
-                result = self._refine_candidate_sequence(desired_time, end)
+                search_between = (self.track[-2][0], self.track[-1][0])
+                result = self._search_sequence(desired_time, *search_between, end)
             except SegmentDownloadError as exc:
                 raise SequenceLocatingError(exc) from exc
-        else:
-            result = (self.candidate.sequence, False)
 
         logger.info("Segment has been located as %d", self.candidate.sequence)
 
