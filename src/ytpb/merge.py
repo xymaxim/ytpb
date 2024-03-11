@@ -1,3 +1,9 @@
+"""TODO: The current implementation of segment merging is not optimal in terms
+of disk space, as it requires triple the amount of the total size of
+segments. Should be changed to use different techniques, without the need for
+intermediate files.
+"""
+
 import os
 import shlex
 from pathlib import Path
