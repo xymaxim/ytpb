@@ -20,6 +20,7 @@ from ytpb.cli.commands.download import download_command
 from ytpb.cli.commands.mpd import mpd_group
 from ytpb.cli.options import config_options, logging_options
 from ytpb.config import (
+    ALL_ALIASES,
     DEFAULT_CONFIG,
     get_default_config_path,
     load_config_from_file,
@@ -66,10 +67,15 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
         )
 
     ctx.ensure_object(ContextObject)
-    ctx.obj.config.new_child(config_dict)
+    ctx.obj.config = ctx.obj.config.new_child(config_dict)
 
-    default_map_from_config = config_dict["options"]
+    default_map_from_config = ctx.obj.config["options"]
     ctx.default_map = update_nested_dict(ctx.default_map, default_map_from_config)
+
+    try:
+        ALL_ALIASES.update(ctx.obj.config["general"]["aliases"])
+    except KeyError:
+        pass
 
 
 @cloup.group(invoke_without_command=True)

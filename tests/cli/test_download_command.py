@@ -1092,3 +1092,53 @@ def test_download_via_invalid_stream_id(
             catch_exceptions=False,
             standalone_mode=False,
         )
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_custom_aliases(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    custom_config = {
+        "general": {
+            "aliases": {
+                "custom-alias": "itag eq 140",
+            }
+        }
+    }
+    config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb/config.toml"
+    config_path.parent.mkdir(parents=True)
+    with config_path.open("w") as f:
+        toml.dump(custom_config, f)
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        ytpb_cli_invoke(
+            [
+                "--config",
+                config_path,
+                "download",
+                "--dry-run",
+                "--no-cache",
+                "--interval",
+                "7959120/7959121",
+                "-vf",
+                "none",
+                "-af",
+                "@custom-alias",
+                stream_url,
+            ],
+            catch_exceptions=False,
+        )

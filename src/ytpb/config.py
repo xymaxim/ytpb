@@ -79,6 +79,8 @@ BUILT_IN_ALIASES = {
     **FRAME_PER_SECOND_ALIASES,
 }
 
+ALL_ALIASES = {**BUILT_IN_ALIASES}
+
 DEFAULT_OUTPUT_PATH = "<title>_<input_start_date>"
 
 DEFAULT_CONFIG = AddressableDict(

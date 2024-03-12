@@ -71,7 +71,9 @@ class Streams(MutableSet):
     def filter(self, predicate: Callable[[AudioOrVideoStream], bool]) -> SetOfStreams:
         return self.__class__(list(filter(predicate, self._elements)))
 
-    def query(self, format_spec: str) -> list[AudioOrVideoStream]:
+    def query(
+        self, format_spec: str, aliases: dict[str, str] | None = None
+    ) -> list[AudioOrVideoStream]:
         if not format_spec:
             return []
 
@@ -87,7 +89,7 @@ class Streams(MutableSet):
         else:
             raise QueryError(f"Format spec is invalid: {format_spec}")
 
-        expression_filter = make_filter_from_expression(expression)
+        expression_filter = make_filter_from_expression(expression, aliases)
         queried: list[AudioOrVideoStream] = list(
             filter(expression_filter, self._elements)
         )

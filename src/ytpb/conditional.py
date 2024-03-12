@@ -5,7 +5,7 @@ import pycond as pc
 
 import structlog
 
-from ytpb.config import BUILT_IN_ALIASES
+from ytpb.config import ALL_ALIASES
 from ytpb.exceptions import QueryError
 from ytpb.types import AudioOrVideoStream
 
@@ -18,7 +18,7 @@ FORMAT_SPEC_RE = re.compile(
 
 
 def _expand_aliases(expression: str, aliases: dict[str, str]) -> str:
-    all_aliases = BUILT_IN_ALIASES | aliases
+    all_aliases = ALL_ALIASES | aliases
     for matched in ALIAS_RE.finditer(expression):
         alias_with_symbol = matched.group()
         alias = matched.group(1)
