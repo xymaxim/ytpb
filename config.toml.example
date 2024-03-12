@@ -1,0 +1,75 @@
+# Example Ytpb configuration file.
+#
+# This is a sample file containing all known settings and its description. Some
+# values equal to the default configuration values (see config.py instead) and
+# some are not. To ovverride or extend the default values, copy and modify the
+# content (or part of the content) of this file to
+# $XDG_CONFIG_HOME/ytpb/config.toml.
+#
+# See https://ytpb.readthedocs.io/en/latest/cli.html#configuring for more
+# information on configuring.
+
+# Default values for the CLI options. Each section corresponds to its own
+# command or sub-command. See help of a command for all options. Note that
+# values provided here can be overriden by the corresponding CLI option.
+[options]
+
+[options.download]
+audio_format = "itag eq 140"
+video_format = "best(@mp4 and <=1080p and @30fps)"
+output_path = "<title>_<input_start_date>"
+
+[options.capture.frame]
+video_format = "best(@mp4 and @30fps)"
+output_path = "<title>_<moment_date>.jpg"
+
+[options.capture.timelapse]
+video_format = "best(@mp4 and @30fps)"
+output_path = "<title>/<input_start_date>/<every>/<title>_<input_start_date>_<every>_%04d.jpg"
+
+[options.mpd.compose]
+audio_formats = "itag eq 140"
+video_formats = "@webm and [@720p or @1080p] and @30fps"
+output_path = "<title>_<input_start_date>.mpd"
+
+# General settings.
+[general]
+
+# Preview duration for the --preview option (in seconds).
+preview_duration = 10
+# The User-Agent header.
+user_agent = "Mozilla/5.0 (Android 14; Mobile; rv:68.0) Gecko/68.0 Firefox/120.0"
+
+# Custom aliases used in format specs. See
+# https://ytpb.readthedocs.io/en/latest/reference.html#format-spec.
+[general.aliases]
+custom-alias = "[@720p or @1080p] and @webm"
+another-alias = "@custom-alias and @30fps"
+
+# Output settings.
+[output]
+
+# Output date formatting settings. See
+# https://ytpb.readthedocs.io/en/latest/cli.html#formatting-dates.
+[output.date]
+# Set of styles that refer to ISO 8601-related formatting. Available styles that
+# can be combined: 'basic' or 'extended', 'complete' or 'reduced', 'hh' or
+# 'hhmm', 'z'.
+styles = "basic,complete,hh"
+
+# Output title formatting settings. See
+# https://ytpb.readthedocs.io/en/latest/cli.html#formatting-titles.
+[output.title]
+# Output title style: 'original', 'custom'.
+style = "custom"
+
+# Output title formatting settings for the 'custom' style.
+[output.title.custom]
+# Allowed character set: 'unicode', 'ascii', 'posix'.
+characters = "posix"
+# Maximum length (note that title is truncated at word boundaries).
+max_length = 30
+# Use lowercase or not.
+lowercase = false
+# Separator between words.
+separator = "-"
