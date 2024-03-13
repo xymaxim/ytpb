@@ -207,7 +207,7 @@ def query_streams_or_exit(
     streams: SetOfStreams,
     format_spec: str,
     param: str | None = None,
-    allow_empty: bool = True,
+    allow_empty: bool = False,
     allow_many: bool = True,
 ) -> SetOfStreams:
     try:

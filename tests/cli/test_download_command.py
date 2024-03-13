@@ -1125,7 +1125,7 @@ def test_custom_aliases(
     # When:
     with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
-        ytpb_cli_invoke(
+        result = ytpb_cli_invoke(
             [
                 "--config",
                 config_path,
