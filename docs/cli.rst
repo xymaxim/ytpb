@@ -355,7 +355,7 @@ The default option values are as follows:
 .. code:: TOML
 
 	  [options.download]
-	  audio_format = "itag eq 140"
+	  audio_format = "@140"
 	  video_format = "best(@mp4 and <=1080p and @30fps)"
 
           [options.capture.frame]
@@ -365,7 +365,7 @@ The default option values are as follows:
 	  video_format = "best(@mp4 and @30fps)"
 
 	  [options.mpd.compose]
-	  audio_formats = "itag eq 140"
+	  audio_formats = "@140"
 	  video_formats = "@webm and [@720p or @1080p] and @30fps"
 
 See `Configuring`_ for more information on configuring.

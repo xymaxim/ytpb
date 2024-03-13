@@ -1140,5 +1140,86 @@ def test_custom_aliases(
                 "@custom-alias",
                 stream_url,
             ],
-            catch_exceptions=False,
         )
+
+    # Then:
+    assert result.exit_code == 0
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_dynamic_aliases(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--dry-run",
+                "--no-cache",
+                "--interval",
+                "7959120/7959121",
+                "-vf",
+                "none",
+                "-af",
+                "@140",
+                stream_url,
+            ],
+        )
+
+    # Then:
+    assert result.exit_code == 0
+
+
+@pytest.mark.parametrize(
+    "audio_format,video_format",
+    [
+        ("itag eq 140", "itag eq 0"),
+        ("itag eq 0", "itag eq 244"),
+    ],
+)
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_empty_representations(
+    audio_format: str,
+    video_format: str,
+    ytpb_cli_invoke: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--dry-run",
+                "--no-cut",
+                "--no-cache",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                audio_format,
+                "-vf",
+                video_format,
+                stream_url,
+            ],
+        )
+
+    assert result.exit_code == 1
+    assert "error: No streams found matching" in result.output

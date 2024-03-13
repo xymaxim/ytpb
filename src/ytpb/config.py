@@ -1,12 +1,13 @@
 import logging
 import operator
 import os
+import re
 import tomllib
 from collections import ChainMap
 from functools import reduce
 from itertools import product
 from pathlib import Path
-from typing import Any
+from typing import Any, Callable
 
 import structlog
 from platformdirs import user_config_path
@@ -32,6 +33,16 @@ class AddressableChainMap(ChainMap, AddressableMixin):
 
 USER_AGENT = "Mozilla/5.0 (Android 14; Mobile; rv:68.0) Gecko/68.0 Firefox/120.0"
 
+
+# Dynamic aliases (such aliases that are expanded by functions).
+def expand_itag_aliases(format_spec: str) -> str:
+    """@<itag> = itag eq <itag>"""
+    return re.sub(r"@(\d+)\b", r"itag eq \1", format_spec)
+
+
+ALIAS_EXPAND_FUNCTIONS: tuple[Callable[[str], str]] = (expand_itag_aliases,)
+
+# Static aliases (such aliases that are explicitly defined).
 FORMAT_ALIASES = {"mp4": "format eq mp4", "webm": "format eq webm"}
 
 VIDEO_QUALITY_HEIGHTS = (144, 240, 360, 480, 720, 1080, 1440, 2160)

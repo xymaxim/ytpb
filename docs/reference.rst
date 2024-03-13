@@ -106,10 +106,20 @@ Aliases
 =======
 
 The expressions can be simplified with aliases (``@alias``). There are built-in
-aliases as well as custom, user-defined ones.
+aliases as well as custom, user-defined ones. The built-in aliases, in turn, can
+be divided into static (explicitly defined) and dynamic (defined by a regex
+pattern) ones.
+
 
 Built-in aliases
 ----------------
+
+*itags*
+^^^^^^^
+
+- ``(\d+)`` — ``itag eq \1``
+
+For example, ``@140`` expands to ``itag eq 140``.
 
 *Formats*
 ^^^^^^^^^
@@ -155,15 +165,15 @@ Custom aliases
 --------------
 
 The custom aliases could extend and update the built-in ones. The corresponding
-field in ``config.toml`` is ``format_spec.aliases``.
+field in ``config.toml`` is ``general.aliases``.
 
 Here is an example of how to define (and reuse) aliases:
 
 .. code:: TOML
 
 	  [general.aliases]
-	  preferred-video = "best(@<=1080p and @30fps)"
-          video-for-mpd = "[@720p or @1080p] and @webm"
+	  preferred-videos = "@<=1080p and @30fps"
+          video-for-mpd = "best(@preferred-videos and @webm)"
 
 Locating moment in a stream
 ***************************
