@@ -15,7 +15,7 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 
 .. _custom aliases: https://ytpb.readthedocs.io/en/latest/reference.html#custom-aliases
 .. _aliases: https://ytpb.readthedocs.io/en/latest/reference.html#itags
-.. _dynamic aliases: https://ytpb.readthedocs.io/en/latest/reference.html#dynamic-aliases
+.. _dynamic aliases: https://ytpb.readthedocs.io/en/latest/reference.html#aliases
 
 `2024.3.9`_
 ***********
