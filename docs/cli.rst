@@ -356,11 +356,17 @@ The default option values are as follows:
 
 	  [options.download]
 	  audio_format = "itag eq 140"
-	  video_format = "best(@mp4 and @1080p30)"
+	  video_format = "best(@mp4 and <=1080p and @30fps)"
+
+          [options.capture.frame]
+	  video_format = "best(@mp4 and @30fps)"
+
+          [options.capture.timelapse]
+	  video_format = "best(@mp4 and @30fps)"
 
 	  [options.mpd.compose]
 	  audio_formats = "itag eq 140"
-	  video_formats = "best(@webm and @1080p)"
+	  video_formats = "@webm and [@720p or @1080p] and @30fps"
 
 See `Configuring`_ for more information on configuring.
 
@@ -494,13 +500,14 @@ the default, built-in settings are used.
 
 By default, the ``config.toml`` file is looked up under the ``~/.config/ytpb``
 directory (or in ``$XDG_CONFIG_HOME`` if set). Also, the ``--config`` option can
-be used to override the default file. The priority of applying the settings is
-following: default settings < the ``config.toml`` file under the default
-directory < a file provided via the ``--config`` option < commands options.
+be used to override the default file location. The priority of applying the
+settings is following: default settings < the ``config.toml`` file under the
+default directory < a file provided via the ``--config`` option < commands
+options.
 
-See the ``config.toml.example`` configuration file for the available fields and
-descriptions.
+See `config.toml.example`_ for the available fields and their descriptions.
 
+.. _config.toml.example: https://github.com/xymaxim/ytpb/blob/main/config.toml.example
 
 Advanced usage
 **************

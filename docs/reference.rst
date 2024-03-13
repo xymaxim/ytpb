@@ -161,7 +161,7 @@ Here is an example of how to define (and reuse) aliases:
 
 .. code:: TOML
 
-	  [format_spec.aliases]
+	  [general.aliases]
 	  preferred-video = "best(@<=1080p and @30fps)"
           video-for-mpd = "[@720p or @1080p] and @webm"
 
