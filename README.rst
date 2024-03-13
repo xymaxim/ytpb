@@ -45,7 +45,7 @@ Features
 - Play and rewind reactively and interactively (mpv + `mpv-ytpb
   <https://github.com/xymaxim/mpv-ytpb>`__)
 - Capture a single frame or create time-lapse images
-- Makes use of yt-dlp to reliably extract information about videos
+- Makes use of yt-dlp to reliably extract information about videos (optionally)
 
 Demo
 ****
