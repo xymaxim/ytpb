@@ -1264,3 +1264,44 @@ def test_quiet_option(
     # Then:
     assert result.exit_code == 0
     assert result.output == ""
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_report_option(
+    add_responses_callback_for_reference_base_url,
+    add_responses_callback_for_segment_urls,
+    ytpb_cli_invoke: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "--report",
+                "download",
+                "--dry-run",
+                "--no-cache",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                stream_url,
+            ],
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    assert os.path.exists(tmp_path / "ytpb-20230326-000000.log")
