@@ -4,7 +4,7 @@ import os
 import re
 import sys
 from copy import deepcopy
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from fileinput import FileInput
 from pathlib import Path
@@ -49,7 +49,8 @@ class ReportStreamWrapper:
 class ContextObject:
     """This object is referenced as `ctx.obj`."""
 
-    config = ConfigMap(DEFAULT_CONFIG)
+    config: ConfigMap = field(default_factory=lambda: ConfigMap(DEFAULT_CONFIG))
+    original_stdout: TextIO = sys.stdout
 
 
 def load_config_into_context(ctx: click.Context, path: Path) -> dict:
@@ -83,10 +84,23 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
     "Global options",
     config_options,
     logging_options,
+    click.option(
+        "-q",
+        "--quiet",
+        help="Supress all normal output.",
+        default=False,
+        is_flag=True,
+        is_eager=True,
+    ),
 )
 @click.pass_context
 def base_cli(
-    ctx: click.Context, config_path: Path, no_config: bool, debug: bool, report: bool
+    ctx: click.Context,
+    config_path: Path,
+    no_config: bool,
+    debug: bool,
+    report: bool,
+    quiet: bool,
 ) -> None:
     if ctx.invoked_subcommand is None:
         click.echo(ctx.get_help())
@@ -95,13 +109,18 @@ def base_cli(
     ctx.ensure_object(ContextObject)
     ctx.default_map = ctx.obj.config["options"]
 
+    if quiet:
+        sys.stdout = open(os.devnull, "w")
+
     if report:
         debug = True
         os.environ["NO_COLOR"] = "1"
 
         timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d-%H%M%S")
         report_handle = open(Path.cwd() / f"ytpb-{timestamp}.log", "a")
-        sys.stdout = cast(TextIO, ReportStreamWrapper(sys.stdout, report_handle))
+        sys.stdout = cast(
+            TextIO, ReportStreamWrapper(ctx.obj.original_stdout, report_handle)
+        )
         sys.stderr = cast(TextIO, ReportStreamWrapper(sys.stderr, report_handle))
 
         @atexit.register
