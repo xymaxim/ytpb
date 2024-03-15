@@ -18,6 +18,8 @@ import toml
 from ytpb.cli.commands.capture import capture_group
 from ytpb.cli.commands.download import download_command
 from ytpb.cli.commands.mpd import mpd_group
+
+from ytpb.cli.common import suppress_output
 from ytpb.cli.options import config_options, logging_options
 from ytpb.config import (
     ALL_ALIASES,
@@ -50,7 +52,7 @@ class ContextObject:
     """This object is referenced as `ctx.obj`."""
 
     config: ConfigMap = field(default_factory=lambda: ConfigMap(DEFAULT_CONFIG))
-    original_stdout: TextIO = sys.stdout
+    original_stdout: TextIO = field(default_factory=lambda: sys.stdout)
 
 
 def load_config_into_context(ctx: click.Context, path: Path) -> dict:
@@ -110,7 +112,7 @@ def base_cli(
     ctx.default_map = ctx.obj.config["options"]
 
     if quiet:
-        sys.stdout = open(os.devnull, "w")
+        suppress_output()
 
     if report:
         debug = True

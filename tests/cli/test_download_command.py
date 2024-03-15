@@ -1305,3 +1305,35 @@ def test_report_option(
     # Then:
     assert result.exit_code == 0
     assert os.path.exists(tmp_path / "ytpb-20230326-000000.log")
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_dump_base_urls_option(
+    add_responses_callback_for_segment_urls,
+    ytpb_cli_invoke: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    video_base_url: str,
+    tmp_path: Path,
+) -> None:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "itag eq 244",
+                "--dump-base-urls",
+                stream_url,
+            ],
+        )
+
+    assert result.exit_code == 0
+    assert result.output == f"{audio_base_url}\n{video_base_url}\n"

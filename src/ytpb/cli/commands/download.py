@@ -1,3 +1,4 @@
+import os
 import shutil
 import sys
 from datetime import datetime, timedelta
@@ -19,6 +20,7 @@ from ytpb.cli.common import (
     raise_for_too_far_sequence,
     resolve_output_path,
     stream_argument,
+    suppress_output,
 )
 from ytpb.cli.options import (
     cache_options,
@@ -87,6 +89,14 @@ def render_download_output_path_context(
     ),
     preview_option,
 )
+@cloup.option_group(
+    "Dump options",
+    cloup.option(
+        "--dump-base-urls",
+        is_flag=True,
+        help="Print base URLs and exit.",
+    ),
+)
 @click.option(
     "-o",
     "--output",
@@ -106,14 +116,14 @@ def render_download_output_path_context(
     "-X",
     "--dry-run",
     is_flag=True,
-    help=("Run without downloading."),
+    help="Run without downloading.",
 )
 @yt_dlp_option
 @click.option("--no-cut", is_flag=True, help="Do not perform excerpt cutting.")
 @click.option(
     "--no-merge",
     is_flag=True,
-    help=("Only download segments, without merging. This implies '--no-cleanup'."),
+    help="Only download segments, without merging. This implies '--no-cleanup'.",
 )
 @no_cleanup_option
 @cache_options
@@ -126,6 +136,7 @@ def download_command(
     audio_format: str,
     video_format: str,
     preview: bool,
+    dump_base_urls: bool,
     output_path: Path,
     from_manifest: Path,
     dry_run: bool,
@@ -137,6 +148,9 @@ def download_command(
     no_cache: bool,
     stream_url: str,
 ) -> int:
+    if dump_base_urls:
+        suppress_output()
+
     if no_merge:
         no_cleanup = True
 
@@ -180,6 +194,13 @@ def download_command(
             f"{video_stream.frame_rate} fps"
         )
         logger.info("Queried video stream", base_url=video_stream.base_url)
+
+    if dump_base_urls:
+        if audio_format:
+            click.echo(audio_stream.base_url, ctx.obj.original_stdout)
+        if video_format:
+            click.echo(video_stream.base_url, ctx.obj.original_stdout)
+        sys.exit()
 
     click.echo()
     click.echo("(<<) Locating start and end in the stream... ", nl=False)

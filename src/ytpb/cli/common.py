@@ -1,4 +1,5 @@
 import email
+import os
 import sys
 import textwrap
 from datetime import datetime, timedelta
@@ -276,3 +277,7 @@ def resolve_output_path(output_path: Path) -> Path:
     resolved_path = Path(output_path).expanduser().resolve()
     resolved_path.parent.mkdir(parents=True, exist_ok=True)
     return resolved_path
+
+
+def suppress_output() -> None:
+    sys.stdout = open(os.devnull, "w")
