@@ -3,6 +3,7 @@ import time
 from urllib.parse import parse_qs, urlparse
 
 from ytpb.exceptions import BadCommandArgument
+from ytpb.types import SegmentSequence
 
 
 def normalize_video_url(video_url_or_id: str) -> str:
@@ -61,6 +62,10 @@ def build_video_url_with_id(video_id: str) -> str:
 def build_video_url_from_base_url(base_url: str) -> str:
     video_id = extract_id_from_base_url(base_url)
     return build_video_url_with_id(video_id)
+
+
+def build_segment_url(base_url: str, sq: SegmentSequence | str) -> str:
+    return f"{base_url.rstrip('/')}/sq/{sq}"
 
 
 def check_base_url_is_expired(base_url: str) -> bool:

@@ -49,7 +49,7 @@ from ytpb.utils.path import (
     render_minimal_output_path_context,
 )
 from ytpb.utils.remote import request_reference_sequence
-from ytpb.utils.url import extract_parameter_from_url
+from ytpb.utils.url import build_segment_url, extract_parameter_from_url
 
 logger = structlog.get_logger(__name__)
 
@@ -96,6 +96,11 @@ def render_download_output_path_context(
         is_flag=True,
         help="Print base URLs and exit.",
     ),
+    cloup.option(
+        "--dump-segment-urls",
+        is_flag=True,
+        help="Print segment URLs and exit.",
+    ),
 )
 @click.option(
     "-o",
@@ -137,6 +142,7 @@ def download_command(
     video_format: str,
     preview: bool,
     dump_base_urls: bool,
+    dump_segment_urls: bool,
     output_path: Path,
     from_manifest: Path,
     dry_run: bool,
@@ -148,7 +154,7 @@ def download_command(
     no_cache: bool,
     stream_url: str,
 ) -> int:
-    if dump_base_urls:
+    if dump_base_urls or dump_segment_urls:
         suppress_output()
 
     if no_merge:
@@ -249,6 +255,17 @@ def download_command(
         sys.exit(1)
 
     click.echo("done.")
+
+    if dump_segment_urls:
+        range_part = "[{start}-{end}]".format(
+            start=rewind_interval.start.sequence, end=rewind_interval.end.sequence
+        )
+        build_dump_url = lambda base_url: build_segment_url(base_url, range_part)
+        if audio_format:
+            click.echo(build_dump_url(audio_stream.base_url), ctx.obj.original_stdout)
+        if video_format:
+            click.echo(build_dump_url(video_stream.base_url), ctx.obj.original_stdout)
+        sys.exit()
 
     if preview and interval[1] != "..":
         click.echo("info: The preview mode is enabled, interval end is ignored.")
