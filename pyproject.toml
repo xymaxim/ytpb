@@ -41,7 +41,7 @@ dependencies = [
 test = [
     "freezegun>=1.4.0",
     "pytest>=7.4.4",
-    "pytest-matcher==1.6.0",
+    "pytest-matcher==2.0.1",
     "pytest-socket>=0.6.0",
     "responses>=0.24.1"
 ]
@@ -75,3 +75,4 @@ line-length = 88
 
 [tool.pytest.ini_options]
 pm-patterns-base-dir = "tests/data/expected/"
+pm-pattern-file-fmt = "{fn}{callspec}"
