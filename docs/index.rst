@@ -14,5 +14,6 @@
 .. toctree::
    :maxdepth: 1
 
+   cookbook
    changelog
    contributing
