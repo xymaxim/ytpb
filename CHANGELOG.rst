@@ -5,6 +5,16 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 
 .. _Calendar Versioning: https://calver.org
 
+`2024.3.16`_
+************
+
+- Add options to dump base (``--dump-base-urls``) and segment
+  (``--dump-segment-urls``) URLs to the ``download`` command (`#10
+  <https://github.com/xymaxim/ytpb/pull/10>`__)
+- Add the `Cookbook`_ documentation page
+
+.. _Cookbook: https://ytpb.readthedocs.io/en/latest/cookbook.html
+
 `2024.3.13`_
 ************
 
@@ -24,5 +34,6 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 - Change the first segment locating step: don't limit it to two jumps (`#8
   <https://github.com/xymaxim/ytpb/pull/8>`__)
 
+.. _2024.3.16: https://github.com/xymaxim/ytpb/compare/v2024.3.13..v2024.3.16
 .. _2024.3.13: https://github.com/xymaxim/ytpb/compare/v2024.3.9..v2024.3.13
 .. _2024.3.9: https://github.com/xymaxim/ytpb/compare/v2024.3.7..v2024.3.9
