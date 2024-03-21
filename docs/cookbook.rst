@@ -1,11 +1,16 @@
 Cookbook
 ########
 
+.. contents:: Contents
+   :depth: 1
+   :backlinks: top
+   :local:
+
 Download segments with cURL
 ***************************
 
-Initially, and currently, Ytpb was not focused on stream archiving. While the
-basic retry mechanism exists for failed requests, there is no support for
+Initially, and currently, Ytpb was not focused on long stream archiving. While
+the basic retry mechanism exists for failed requests, there is no support for
 resumable downloading at this time. As an alternative, we can use the `cURL`_
 program to download segments.
 
@@ -72,3 +77,42 @@ Such file can be edited into a cURL `config file
 And be used to download segments with resume support (``-C -``): ::
 
   $ curl -L -C - -K segment-urls-config.txt
+
+Fetch and demux segments with FFmpeg
+************************************
+
+  *Note:* Requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
+  <https://github.com/xymaxim/ytpb/issues/4>`__ for details.
+
+After composing an MPEG-DASH MPD file with: ::
+
+  $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT30S STREAM
+  $ ls
+  Stream-Title_20240102T102000+00.mpd
+
+you can convert selected streams to an audio/video file.
+
+First, list all available streams: ::
+
+  $ ffprobe MPD
+  ...
+  Stream #0:0: Video: h264 (Main) (avc1 / 0x31637661), yuv420p(tv, bt709), 1280x720 [SAR 1:1 DAR 16:9], 30 fps, 30 tbr, 90k tbn (default)
+    Metadata:
+      id              : 136
+  Stream #0:1: Video: vp9 (Profile 0), yuv420p(tv, bt709), 1280x720, 30.30 fps, 30 tbr, 1k tbn (default)
+    Metadata:
+      id              : 247
+  Stream #0:2: Audio: aac (LC) (mp4a / 0x6134706D), 44100 Hz, stereo, fltp
+      (default)
+    Metadata:
+      id              : 140
+
+Then, select the desired ones to be converted with the ``-map`` `option
+<https://trac.ffmpeg.org/wiki/Map>`__: ::
+
+    $ ffmpeg -i MPD -map 0:1 -map 0:2 -c copy out.mp4
+
+The ``-map`` option can be omitted and the `default behavior
+<https://trac.ffmpeg.org/wiki/Map#Defaultbehavior>`__ will be applied. Use ``-c
+copy`` to `avoid <https://ffmpeg.org/ffmpeg.html#Stream-copy>`__ transcoding
+actual audio and video.
