@@ -9,18 +9,17 @@ FROM alpine:3.19 AS prepare
 ARG BUILDDIR
 
 RUN apk --no-cache add build-base git coreutils autoconf automake cmake \
-  nasm yasm meson ninja libtool ffmpeg-dev mpv-dev libxxhash libdovi \
+  nasm yasm meson ninja-build libtool ffmpeg-dev mpv-dev libxxhash libdovi \
   libunwind-dev libplacebo-dev glslang-dev elfutils-dev mesa-dev \
   freetype-dev fribidi harfbuzz-dev mujs lua5.2-dev luajit rubberband uchardet \
   alsa-lib jack libpulse libvpx-dev x264-dev gnutls-dev xrandr
+
+RUN ln -sf /usr/lib/ninja-build/bin/ninja /usr/bin/ninja
 
 WORKDIR ${BUILDDIR}
 RUN git clone https://github.com/mpv-player/mpv-build .
 
 RUN ./update
-
-COPY mpv-build-pr-203.patch ${BUILDDIR}
-RUN git apply mpv-build-pr-203.patch
 
 WORKDIR ${BUILDDIR}/ffmpeg
 RUN <<EOF
