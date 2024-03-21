@@ -83,6 +83,13 @@ participate in the project.
 .. _Cookbook: https://ytpb.readthedocs.io/en/latest/cookbook.html
 .. _Changelog: https://ytpb.readthedocs.io/en/latest/changelog.html
 
+Similar projects
+****************
+
+- `Kethsar/ytarchive <https://github.com/Kethsar/ytarchive>`__ — archive streams from the start
+- `rytsikau/ee.Yrewind <https://github.com/rytsikau/ee.Yrewind>`__ — rewind and save streams
+- `yt-dlp/yt-dlp#6498 <https://github.com/yt-dlp/yt-dlp/pull/6498>`__ — brings rewind range selection to yt-dlp
+
 License
 *******
 
