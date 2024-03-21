@@ -29,32 +29,35 @@ excerpt. To run downloading in the :ref:`preview mode <Preview mode>`, use the
 
   $ ytpb download -i 2024-01-02T10:20:00+00/.. -p <STREAM>
 
+Check also out how to `download
+<https://ytpb.readthedocs.io/en/latest/cookbook.html#download-segments-with-curl>`__
+media segments with an external downloader.
+
 Compose and play
 ****************
 
-  Note: Requires a custom FFmpeg build (or <= 5.1.4). See issue `#4
-  <https://github.com/xymaxim/ytpb/issues/4>`__.
-
 If you want to play an excerpt without downloading it, you can compose a static
-MPEG-DASH manifest (MPD) file and then play it in a player that supports DASH
-streams: ::
+MPEG-DASH manifest (MPD) file: ::
 
-  $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT30S <STREAM>
-  $ mpv Stream-Title_20240102T102000+00.mpd
+  $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT30S <STREAM> && ls
+  $ Stream-Title_20240102T102000+00.mpd
 
 By default, a manifest will contain a 128k AAC audio track and 720p (or better)
 30 fps VP9 video channels.
 
-Fetch and demux
-===============
+Next, you can play a composed manifest in a player that supports MPEG-DASH (for
+example, with `mpv <https://mpv.io/>`__):
 
-Once you have a composed MPD, you can not only play it, but also convert
-selected streams to a video file. First, list all available streams and then
-select the desired streams to convert with the ``-map`` option (use ``-c copy``
-to avoid transcoding actual audio and video): ::
+  *Note:* Requires a custom mpv build. See `#4
+  <https://github.com/xymaxim/ytpb/issues/4>`__ for details.
 
-  $ ffprobe <MPD>
-  $ ffmpeg -i <MPD> -map 0:0 -map 0:1 -c copy out.mp4
+::
+
+  $ mpv Stream-Title_20240102T102000+00.mpd
+
+Check also out how to `convert
+<https://ytpb.readthedocs.io/en/latest/cookbook.html#fetch-and-demux-segments-with-ffmpeg>`__
+a manifest to a media file with FFmpeg.
 
 Play
 ****
