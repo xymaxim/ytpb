@@ -27,6 +27,9 @@ back to past moments beyond the limits of the web player. You can keep selected
 moments by downloading excerpts or play them instantly in your video player via
 MPEG-DASH.
 
+Check out also `mpv-ytpb <https://github.com/xymaxim/mpv-ytpb>`__ to play and
+rewind live streams reactively and interactively without leaving a player.
+
 Features
 ********
 
@@ -42,8 +45,6 @@ Features
   - Compose DASH manifests to play it in your favorite player
   - Transcode/download excerpts into local files with FFmpeg
 
-- Play and rewind reactively and interactively (mpv + `mpv-ytpb
-  <https://github.com/xymaxim/mpv-ytpb>`__)
 - Capture a single frame or create time-lapse images
 - Makes use of yt-dlp to reliably extract information about videos (optionally)
 
