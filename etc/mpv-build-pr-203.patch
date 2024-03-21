@@ -1,0 +1,20 @@
+From 404eee11afba3f11b0e17fbd8a54f4dacaa1c49a Mon Sep 17 00:00:00 2001
+From: jackloomen <79494508+jackloomen@users.noreply.github.com>
+Date: Mon, 12 Dec 2022 23:24:17 +0000
+Subject: [PATCH] libplacebo-build script: fix meson command
+
+without this meson fails on alpine edge for whatever reason
+---
+ scripts/libplacebo-build | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/scripts/libplacebo-build b/scripts/libplacebo-build
+index 99056069..613f4e1a 100755
+--- a/scripts/libplacebo-build
++++ b/scripts/libplacebo-build
+@@ -1,4 +1,4 @@
+ #!/bin/sh
+ set -e
+
+-ninja install -C libplacebo/build "$@"
++ninja -C libplacebo/build "$@" install

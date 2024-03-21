@@ -1,0 +1,56 @@
+# An image that comes with patched FFmpeg and mpv installed.
+# See https://github.com/xymaxim/ytpb/issues/4 for details.
+
+ARG BUILDDIR=/root/mpv-build
+
+# Stage 1. Fetch all sources and apply patches.
+FROM alpine:3.19 AS prepare
+
+ARG BUILDDIR
+
+RUN apk --no-cache add build-base git coreutils autoconf automake cmake \
+  nasm yasm meson ninja libtool ffmpeg-dev mpv-dev libxxhash libdovi \
+  libunwind-dev libplacebo-dev glslang-dev elfutils-dev mesa-dev \
+  freetype-dev fribidi harfbuzz-dev mujs lua5.2-dev luajit rubberband uchardet \
+  alsa-lib jack libpulse libvpx-dev x264-dev gnutls-dev xrandr
+
+WORKDIR ${BUILDDIR}
+RUN git clone https://github.com/mpv-player/mpv-build .
+
+RUN ./update
+
+COPY mpv-build-pr-203.patch ${BUILDDIR}
+RUN git apply mpv-build-pr-203.patch
+
+WORKDIR ${BUILDDIR}/ffmpeg
+RUN <<EOF
+git revert --no-commit c122831
+git revert --no-commit 0dd1ff6
+EOF
+
+WORKDIR ${BUILDDIR}
+RUN printf "%s\n" --enable-gnutls --enable-libx264 --enable-libvpx \
+  --enable-libxml2 --enable-demuxer=dash > ffmpeg_options
+
+# Stage 2. Build FFmpeg and mpv.
+FROM prepare AS build
+
+RUN ./build -j$(nproc)
+
+RUN <<EOF
+mkdir /tmp/shared
+cp $(ldd ffmpeg_build/ffmpeg | awk '/=>/{print $3}') /tmp/shared/
+cp $(ldd mpv/build/mpv | awk '/=>/{print $3}') /tmp/shared/
+EOF
+
+# Stage 3. Copy binaries and shared libraries to a bare image.
+FROM alpine:3.19 AS final
+
+ARG BUILDDIR
+
+COPY --from=build ${BUILDDIR}/build_libs/bin/ff* /usr/local/bin/
+COPY --from=build ${BUILDDIR}/mpv/build/mpv /usr/local/bin/
+
+COPY --from=build /tmp/shared/* /usr/local/lib
+
+RUN ldconfig /usr/local/lib

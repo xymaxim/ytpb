@@ -5,6 +5,11 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 
 .. _Calendar Versioning: https://calver.org
 
+Unreleased
+**********
+
+- Add Containerfile with an image of patched FFmpeg and MPV builds
+
 `2024.3.16`_
 ************
 
