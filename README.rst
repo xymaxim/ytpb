@@ -28,19 +28,19 @@ moments by downloading excerpts or play them instantly in your video player via
 MPEG-DASH.
 
 Check out also `mpv-ytpb <https://github.com/xymaxim/mpv-ytpb>`__ to play and
-rewind live streams reactively and interactively without leaving a player.
+rewind live streams interactively without leaving a player.
 
 Features
 ********
 
 - Command line interface (CLI) and Python library
 - Rewind live streams far beyond the limits of the web player
-- *Download audio and/or video excerpts*
+- Download audio and/or video excerpts
 
   - Save excerpts in different available audio and video formats
   - Precisely cut to exact moments without slow re-encoding
 
-- *Play and rewind instantly via MPEG-DASH*
+- Play and rewind instantly via MPEG-DASH
 
   - Compose DASH manifests to play it in your favorite player
   - Transcode/download excerpts into local files with FFmpeg
