@@ -3,18 +3,20 @@ Ytpb
 
 A playback for YouTube live streams.
 
-.. image:: https://img.shields.io/pypi/v/ytpb
+|PyPI| |Tests|
+
+.. |PyPI| image:: https://img.shields.io/pypi/v/ytpb
    :target: https://pypi.org/project/ytpb
    :alt: PyPI - Version
 
-.. image:: https://github.com/xymaxim/ytpb/actions/workflows/ci.yml/badge.svg
+.. |Tests| image:: https://github.com/xymaxim/ytpb/actions/workflows/ci.yml/badge.svg
    :target: https://github.com/xymaxim/ytpb/actions/workflows/ci.yml
    :alt: Tests
 
-.. |sep| unicode:: 0xA0 0xA0
-   :trim:
-
 `Project page`_ |sep| `Documentation`_ |sep| `Contributing`_
+
+.. |sep| unicode:: 0xA0
+   :trim:
 
 .. _Project page: https://github.com/xymaxim/ytpb
 .. _Documentation: https://ytpb.readthedocs.io/
