@@ -5,10 +5,16 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 
 .. _Calendar Versioning: https://calver.org
 
-Unreleased
-**********
+`2024.3.27`_
+************
 
-- Add Containerfile with an image of patched FFmpeg and MPV builds
+- Add Containerfile with instructions to build patched FFmpeg and MPV
+
+Breaking changes
+================
+
+- Change return value of ``SegmentLocator.find_sequence_by_time()`` to
+  ``LocateResult``
 
 `2024.3.16`_
 ************
@@ -39,6 +45,7 @@ Unreleased
 - Change the first segment locating step: don't limit it to two jumps (`#8
   <https://github.com/xymaxim/ytpb/pull/8>`__)
 
+.. _2024.3.27: https://github.com/xymaxim/ytpb/compare/v2024.3.16..v2024.3.27
 .. _2024.3.16: https://github.com/xymaxim/ytpb/compare/v2024.3.13..v2024.3.16
 .. _2024.3.13: https://github.com/xymaxim/ytpb/compare/v2024.3.9..v2024.3.13
 .. _2024.3.9: https://github.com/xymaxim/ytpb/compare/v2024.3.7..v2024.3.9
