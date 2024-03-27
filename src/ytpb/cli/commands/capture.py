@@ -229,7 +229,7 @@ def frame_command(
                     temp_directory=playback.get_temp_directory(),
                     session=playback.session,
                 )
-                moment_sequence, _ = sl.find_sequence_by_time(date.timestamp())
+                moment_sequence, *_ = sl.find_sequence_by_time(date.timestamp())
             except SequenceLocatingError:
                 message = "\nerror: An error occured during segment locating, exit."
                 click.echo(message, err=True)

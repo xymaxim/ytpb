@@ -66,14 +66,28 @@ class TestLocateMoment:
     def test_start_date(self, add_responses_callback_for_reference_base_url: Callable):
         add_responses_callback_for_reference_base_url()
         date = datetime.fromisoformat("2023-03-25T23:33:55Z")
-        expected = RewindMoment(date, 7959120, 0.508824, False)
-        assert expected == self.playback.locate_moment(date, "140")
+        expected = RewindMoment(date, 7959120, 0.508824, False, False)
+        actual = self.playback.locate_moment(date, "140")
+        assert expected == RewindMoment(
+            actual.date,
+            actual.sequence,
+            pytest.approx(actual.cut_at, 1e-6),
+            actual.is_end,
+            actual.falls_into_gap,
+        )
 
     def test_end_date(self, add_responses_callback_for_reference_base_url: Callable):
         add_responses_callback_for_reference_base_url()
         date = datetime.fromisoformat("2023-03-25T23:33:55Z")
-        expected = RewindMoment(date, 7959120, 0.508824, True)
-        assert expected == self.playback.locate_moment(date, "140", True)
+        expected = RewindMoment(date, 7959120, 0.508824, True, False)
+        actual = self.playback.locate_moment(date, "140", True)
+        assert expected == RewindMoment(
+            actual.date,
+            actual.sequence,
+            pytest.approx(actual.cut_at, 1e-6),
+            actual.is_end,
+            actual.falls_into_gap,
+        )
 
 
 @pytest.mark.parametrize(

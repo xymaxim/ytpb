@@ -5,6 +5,7 @@ import tempfile
 from bisect import bisect_left
 from functools import partial
 from pathlib import Path
+from typing import NamedTuple
 
 import requests
 import structlog
@@ -65,6 +66,13 @@ class SequenceMetadataPair:
         with open(downloaded_path, "rb") as f:
             metadata = Segment.parse_youtube_metadata(f.read())
         return metadata
+
+
+class LocateResult(NamedTuple):
+    sequence: SegmentSequence
+    time_difference: float
+    falls_in_gap: bool
+    track: list[tuple[SegmentSequence, float]]
 
 
 class SegmentLocator:
@@ -138,7 +146,7 @@ class SegmentLocator:
         start: SegmentSequence,
         end: SegmentSequence,
         is_end: bool,
-    ) -> tuple[SegmentSequence, bool]:
+    ) -> LocateResult:
         """Search for a segment with a desired time inside a search domain with
         the given start and end sequence numbers and perform a gap check."""
         search_domain = range(min((start, end)), max((start, end)) + 1)
@@ -148,9 +156,9 @@ class SegmentLocator:
         self.candidate.sequence = search_domain[found_index - 1]
 
         # After the previous step the time difference is always positive.
-        candidate_diff_in_s = self._find_time_diff(self.candidate, desired_time)
-        if candidate_diff_in_s == 0:
-            return self.candidate.sequence, False
+        current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
+        if current_diff_in_s == 0:
+            return LocateResult(self.candidate.sequence, 0, False, self.track)
 
         downloaded_path = self._download_full_segment(self.candidate.sequence)
         candidate_segment = Segment.from_file(downloaded_path)
@@ -158,12 +166,12 @@ class SegmentLocator:
 
         logger.debug(
             "Candidate time difference: %+f s, actual duration: %f s",
-            candidate_diff_in_s,
+            current_diff_in_s,
             candidate_duration,
         )
 
         falls_into_gap = False
-        if candidate_duration < candidate_diff_in_s - TIME_DIFF_TOLERANCE:
+        if candidate_duration < current_diff_in_s - TIME_DIFF_TOLERANCE:
             falls_into_gap = True
             logger.debug("Input target time falls into a gap")
             if not is_end:
@@ -177,11 +185,13 @@ class SegmentLocator:
                     time=self.candidate.metadata.ingestion_walltime,
                 )
 
-        return self.candidate.sequence, falls_into_gap
+        return LocateResult(
+            self.candidate.sequence, current_diff_in_s, falls_into_gap, self.track
+        )
 
     def find_sequence_by_time(
         self, desired_time: Timestamp, end: bool = False
-    ) -> tuple[SegmentSequence, bool]:
+    ) -> LocateResult:
         """Find sequence number of a segment by the given timestamp."""
         logger.info(
             "Locating segment",
@@ -223,9 +233,10 @@ class SegmentLocator:
             )
             current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
 
-        result: tuple[SegmentSequence, bool]
         if has_segment_found:
-            result = (self.candidate.sequence, False)
+            result = LocateResult(
+                self.candidate.sequence, current_diff_in_s, False, self.track
+            )
         else:
             try:
                 search_between = (self.track[-2][0], self.track[-1][0])

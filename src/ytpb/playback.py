@@ -331,19 +331,23 @@ class Playback:
                     temp_directory=self.get_temp_directory(),
                     session=self.session,
                 )
-                sequence, falls_into_gap = sl.find_sequence_by_time(
-                    point.timestamp(), end=is_end
-                )
-                segment = self.get_downloaded_segment(sequence, base_url)
-                if falls_into_gap:
+                locate_result = sl.find_sequence_by_time(point.timestamp(), end=is_end)
+                segment = self.get_downloaded_segment(locate_result.sequence, base_url)
+                if locate_result.falls_in_gap:
                     if is_end:
                         date = segment.ingestion_end_date
                     else:
                         date = segment.ingestion_start_date
                     cut_at = 0
                 else:
-                    cut_at = (date - segment.ingestion_start_date).total_seconds()
-                moment = RewindMoment(date, sequence, cut_at, is_end, falls_into_gap)
+                    cut_at = locate_result.time_difference
+                moment = RewindMoment(
+                    date,
+                    locate_result.sequence,
+                    cut_at,
+                    is_end,
+                    locate_result.falls_in_gap,
+                )
 
         return moment
 

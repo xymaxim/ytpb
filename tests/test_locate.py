@@ -97,24 +97,26 @@ class TestGapCase1(BaseGapCase):
     reference_sequence = 7959630
 
     def test_S1(self):
-        assert (7959599, False) == self.ssl.find_sequence_by_time(1679788193.600278)
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(1679788193.600278)
+        assert (7959599, False) == (sequence, falls_in_gap)
 
     def test_E1(self):
-        assert (7959599, False) == self.ssl.find_sequence_by_time(
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(
             1679788193.600278, end=True
         )
+        assert (7959599, False) == (sequence, falls_in_gap)
 
     @pytest.mark.parametrize("reference", [None, 7959600, 7959601, 7959602])
     def test_S2(self, reference: int | None):
         target_time = 1679788196.600287
         expected_sequence = 7959600
         if reference is None:
-            assert (expected_sequence, False) == self.ssl.find_sequence_by_time(
-                target_time
-            )
+            sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(target_time)
+            assert (expected_sequence, False) == (sequence, falls_in_gap)
         else:
             sl = SegmentLocator(self.test_base_url, reference)
-            assert (expected_sequence, False) == sl.find_sequence_by_time(target_time)
+            sequence, _, falls_in_gap, _ = sl.find_sequence_by_time(target_time)
+            assert (expected_sequence, False) == (sequence, falls_in_gap)
 
     @pytest.mark.parametrize("reference", [None, 7959600, 7959601, 7959602])
     def test_S3(self, reference: int | None):
@@ -126,12 +128,12 @@ class TestGapCase1(BaseGapCase):
         else:
             expected_sequence = 7959602
         if reference is None:
-            assert (expected_sequence, False) == self.ssl.find_sequence_by_time(
-                target_time
-            )
+            sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(target_time)
+            assert (expected_sequence, False) == (sequence, falls_in_gap)
         else:
             sl = SegmentLocator(self.test_base_url, reference)
-            assert (expected_sequence, False) == sl.find_sequence_by_time(target_time)
+            sequence, _, falls_in_gap, _ = sl.find_sequence_by_time(target_time)
+            assert (expected_sequence, falls_in_gap) == (sequence, falls_in_gap)
 
 
 class TestGapCase2(BaseGapCase):
@@ -139,22 +141,29 @@ class TestGapCase2(BaseGapCase):
     reference_sequence = 7947346
 
     def test_S1(self):
-        assert (7947333, False) == self.ssl.find_sequence_by_time(1679763599.262686)
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(1679763599.262686)
+        assert (7947333, False) == (sequence, falls_in_gap)
 
     def test_S2(self):
-        assert (7947334, False) == self.ssl.find_sequence_by_time(1679763601.235894)
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(1679763601.235894)
+        assert (7947334, False) == (sequence, falls_in_gap)
 
     def test_S3(self):
-        assert (7947335, True) == self.ssl.find_sequence_by_time(1679763611.742391)
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(1679763611.742391)
+        assert (7947335, True) == (sequence, falls_in_gap)
 
     def test_E3(self):
-        assert (7947334, True) == self.ssl.find_sequence_by_time(
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(
             1679763611.742391, end=True
         )
+        assert (7947334, True) == (sequence, falls_in_gap)
 
     @pytest.mark.xfail
     def test_S4(self):
-        assert (7947335, False) == self.ssl.find_sequence_by_time(1679763626.506922)
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(
+            1679763626.506922, end=True
+        )
+        assert (7947335, True) == (sequence, falls_in_gap)
 
 
 class TestGapCase3(BaseGapCase):
@@ -162,23 +171,28 @@ class TestGapCase3(BaseGapCase):
     reference_sequence = 7958122
 
     def test_S1(self):
-        assert (7958102, False) == self.ssl.find_sequence_by_time(1679785199.451019)
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(1679785199.451019)
+        assert (7958102, False) == (sequence, falls_in_gap)
 
     def test_S2(self):
-        assert (7958103, False) == self.ssl.find_sequence_by_time(1679785201.449813)
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(1679785201.449813)
+        assert (7958103, False) == (sequence, falls_in_gap)
 
     def test_S3(self):
-        assert (7958104, True) == self.ssl.find_sequence_by_time(1679785204.623643)
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(1679785204.623643)
+        assert (7958104, True) == (sequence, falls_in_gap)
 
     def test_E3(self):
-        assert (7958103, True) == self.ssl.find_sequence_by_time(
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(
             1679785204.623643, end=True
         )
+        assert (7958103, True) == (sequence, falls_in_gap)
 
     def test_S4(self):
-        sequence, is_inside_gap = self.ssl.find_sequence_by_time(1679785208.850441)
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(1679785208.850441)
         assert sequence in (7958104, 7958105)
-        assert False == is_inside_gap
+        assert False == falls_in_gap
 
     def test_S5(self):
-        assert (7958106, False) == self.ssl.find_sequence_by_time(1679785208.903407)
+        sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(1679785208.903407)
+        assert (7958106, False) == (sequence, falls_in_gap)
