@@ -2,9 +2,18 @@ name: Documentation
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "README.rst"
+      - "CHANGELOG.rst"
+
   pull_request:
-    branches: [ "main" ]
+    branches: [main]
+    paths:
+      - "docs/**"
+      - "README.rst"
+      - "CHANGELOG.rst"
 
 permissions:
   contents: read
