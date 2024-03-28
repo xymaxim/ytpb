@@ -8,6 +8,8 @@ This section explains some general aspects and terms.
    :backlinks: top
    :local:
 
+.. _format-spec:
+
 Format spec
 ***********
 

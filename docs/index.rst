@@ -9,6 +9,7 @@
    why
    quick
    cli
+   package
    reference
 
 .. toctree::
