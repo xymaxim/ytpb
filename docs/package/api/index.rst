@@ -1,9 +1,11 @@
 API reference
 #############
 
+*DISCLAIMER: The API is not stable yet and subject to change.*
+
 This document is the API reference for Ytpb.
 
-*DISCLAIMER: The API is not stable yet and subject to change.*
+**Module-level APIs**
 
 .. toctree::
     :maxdepth: 1
