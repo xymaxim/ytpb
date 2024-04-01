@@ -8,6 +8,11 @@ This document is the API reference for Ytpb.
 **Module-level APIs**
 
 .. toctree::
+    :maxdepth: 2
+
+    ytpb.actions
+
+.. toctree::
     :maxdepth: 1
 
     ytpb.cache

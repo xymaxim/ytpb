@@ -1,3 +1,5 @@
+"""Actions to compose and refresh MPEG-DASH MPDs."""
+
 import copy
 from datetime import datetime, timezone
 
