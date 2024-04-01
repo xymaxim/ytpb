@@ -1,5 +1,7 @@
+"""Actions to download excerpts."""
+
 from pathlib import Path
-from typing import NamedTuple
+from typing import Any, NamedTuple
 
 import structlog
 from rich.console import Console
@@ -19,10 +21,16 @@ from ytpb.playback import Playback, RewindInterval
 logger = structlog.get_logger(__name__)
 
 
-class _ExcerptDownloadResult(NamedTuple):
+class ExcerptDownloadResult(NamedTuple):
+    """Represents an excerpt download result."""
+
+    #: An exception raised during downloading.
     exception: Exception | None
+    #: A path of the merged excerpt file.
     merged_path: Path | None
+    #: Paths of downloaded audio segments.
     audio_segment_paths: list[Path]
+    #: Paths of downloaded video segments.
     video_segment_paths: list[Path]
 
 
@@ -34,8 +42,9 @@ def download_excerpt(
     output_directory: str | Path | None = None,
     output_stem: str | Path | None = None,
     no_merge: bool = False,
-    **merge_kwargs,
-) -> _ExcerptDownloadResult:
+    merge_kwargs: dict[str, Any] | None = None,
+) -> ExcerptDownloadResult:
+    """Downloads an excerpt."""
     sequences_to_download = range(
         rewind_interval.start.sequence, rewind_interval.end.sequence + 1
     )
@@ -94,7 +103,7 @@ def download_excerpt(
                 download_progress.advance(video_download_task)
 
     if no_merge:
-        result = _ExcerptDownloadResult(
+        result = ExcerptDownloadResult(
             None,
             None,
             downloaded_audio_paths,
@@ -108,14 +117,14 @@ def download_excerpt(
                 output_directory=output_directory,
                 output_stem=output_stem,
                 temp_directory=playback.get_temp_directory(),
-                **merge_kwargs,
+                **(merge_kwargs or {}),
             )
-            result = _ExcerptDownloadResult(
+            result = ExcerptDownloadResult(
                 None, merged_path, downloaded_audio_paths, downloaded_video_paths
             )
-        except Exception as e:
-            result = _ExcerptDownloadResult(
-                e, None, downloaded_audio_paths, downloaded_video_paths
+        except Exception as exc:
+            result = ExcerptDownloadResult(
+                exc, None, downloaded_audio_paths, downloaded_video_paths
             )
 
     return result
