@@ -1,4 +1,4 @@
-"""Fetchers are used to gather an essential information.
+"""Fetchers are used to gather essential information about videos.
 
 Such information includes the basic video information and streams.
 """
@@ -20,7 +20,16 @@ logger = structlog.get_logger(__name__)
 
 
 class InfoFetcher(ABC):
-    """A base abstract class for fetchers."""
+    """A base abstract class for fetchers.
+
+    Notes:
+        Keep in mind that fetchers serve to fetch information, not to
+        store.
+
+        A good practice would be to treat each fetch operation as atomic and
+        invoke it sequentially. This provides flexibility and will avoid
+        repeated calls triggered from outside.
+    """
 
     def __init__(self, video_url: str, session: requests.Session | None = None) -> None:
         """Constructs an object of this class.
@@ -45,8 +54,10 @@ class InfoFetcher(ABC):
 
 
 class YtpbInfoFetcher(InfoFetcher):
+    """A native fetcher."""
+
     def fetch_video_info(self) -> YouTubeVideoInfo:
-        logger.debug("Fetching index webpage and extracting video info")
+        logger.debug("Fetching index webpage and extracting info")
 
         response = self.session.get(self.video_url)
         response.raise_for_status()
@@ -54,14 +65,16 @@ class YtpbInfoFetcher(InfoFetcher):
         info = extract_video_info(self.video_url, response.text)
         if info.status != BroadcastStatus.ACTIVE:
             raise BroadcastStatusError("Stream is not live", info.status)
-        self.info = info
+        self._info = info
 
-        return self.info
+        return info
 
     def fetch_streams(self) -> SetOfStreams:
-        logger.debug("Fetching manifest file and extracting streams info")
+        assert self._info, "Video info is not set"
 
-        dash_manifest_url = self.info.dash_manifest_url
+        logger.debug("Fetching manifest file and extracting streams")
+
+        dash_manifest_url = self._info.dash_manifest_url
         response = self.session.get(dash_manifest_url)
         response.raise_for_status()
 
@@ -72,6 +85,13 @@ class YtpbInfoFetcher(InfoFetcher):
 
 
 class YoutubeDLInfoFetcher(InfoFetcher):
+    """A fetcher that uses :mod:`yt_dlp` to gather information.
+
+    All information is extracted from the :class:`~yt_dlp.YoutubeDL`'s
+    information dictionary.
+    """
+
+    #: The default options passed to :class:`yt_dlp.YoutubeDL`.
     default_options = {
         "live_from_start": True,
         "quiet": True,
