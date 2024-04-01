@@ -15,7 +15,7 @@ logger = structlog.get_logger(__name__)
 
 def extract_frame_as_image(
     segment: Segment, target_date: datetime, last_as_fallback: bool = True
-) -> Image:
+) -> Image.Image:
     target_offset = (target_date - segment.ingestion_start_date).total_seconds()
     with av.open(str(segment.local_path)) as container:
         stream = container.streams.video[0]
@@ -39,7 +39,7 @@ def capture_frames(
     target_dates: list[datetime],
     base_url: str,
     reference_sequence: SegmentSequence,
-) -> Iterator[Image, Segment]:
+) -> Iterator[Image.Image, Segment]:
     number_of_targets = len(target_dates)
     previous_sequence = reference_sequence
     for i, target_date in enumerate(target_dates):
