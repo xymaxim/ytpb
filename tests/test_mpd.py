@@ -6,6 +6,18 @@ from lxml import etree
 from ytpb import mpd
 
 
+def test_representation_properties(audio_base_url):
+    representation = mpd.AudioRepresentationInfo(
+        itag="140",
+        codecs="mp4a.40.2",
+        mime_type="audio/mp4",
+        base_url=audio_base_url,
+        audio_sampling_rate=44100,
+    )
+    assert representation.type == "audio"
+    assert representation.format == "mp4"
+
+
 def test_extract_representations_info(audio_base_url: str, video_base_url: str):
     with open(TEST_DATA_PATH / "manifest-1695928670.mpd") as f:
         results = mpd.extract_representations(f.read())

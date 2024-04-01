@@ -85,7 +85,7 @@ class Streams(MutableSet):
             Get only video streams::
 
               from ytpb.types import VideoStream
-              playback.streams.filter(lambda x: isinstance(x, VideoStream))
+              playback.streams.filter(lambda x: x.type == "video")
 
         Returns:
             A new instance of this class with filtered streams.

@@ -73,6 +73,11 @@ class RepresentationInfo:
     base_url: str
 
     @property
+    def type(self) -> str:
+        """An alias for a MIME type."""
+        return self.mime_type.split("/")[0]
+
+    @property
     def format(self) -> str:
         """An alias for a MIME subtype."""
         return self.mime_type.split("/")[1]
