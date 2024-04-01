@@ -1,7 +1,9 @@
 Reference
 #########
 
-This section explains some general aspects and terms.
+This document explains some general aspects and terms.
+
+*For the API reference, see* :doc:`this <package/api/index>` *document.*
 
 .. contents:: Contents
    :depth: 2
