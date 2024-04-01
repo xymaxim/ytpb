@@ -1,3 +1,5 @@
+"""Basic information about videos."""
+
 import re
 from dataclasses import dataclass
 from enum import auto, StrEnum
@@ -9,15 +11,21 @@ from ytpb.exceptions import InfoExtractError
 
 
 class BroadcastStatus(StrEnum):
+    """Represents a live broadcast status."""
+
+    #: A broadcast is live.
     ACTIVE = auto()
+    #: A broadcast has been scheduled but started.
     UPCOMING = auto()
+    #: A broadcast has been completed.
     COMPLETED = auto()
+    #: A video is not a live broadcast.
     NONE = auto()
 
 
 @dataclass
 class YouTubeVideoInfo:
-    """Information about YouTube video."""
+    """Represents information about a video."""
 
     url: str
     title: str
@@ -27,9 +35,10 @@ class YouTubeVideoInfo:
 
 
 class LeftNotFetched:
-    """Represents a value that is intentionally not fetched."""
+    pass
 
 
+#: A sentinel object for a value that is intentionally not fetched.
 LEFT_NOT_FETCHED = LeftNotFetched()
 
 
@@ -51,6 +60,18 @@ def _extract_dash_manifest_url(index_page: str) -> str:
 
 
 def extract_video_info(url: str, index_page_text: str) -> YouTubeVideoInfo:
+    """Extracts an information about a video from an index page.
+
+    Args:
+        url: A video URL.
+        index_page_text: An index page string content.
+
+    Returns:
+        A :class:`YouTubeVideoInfo` filled with extracted attributes.
+
+    Raises:
+        InfoExtractError: If failed to extract an attribute.
+    """
     index_page_element = etree.HTML(index_page_text)
 
     # Extracting title and author:

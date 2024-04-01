@@ -9,7 +9,7 @@
    why
    quick
    cli
-   package
+   package/index
    reference
 
 .. toctree::

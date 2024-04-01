@@ -1,30 +1,21 @@
-Python package
-##############
-
-Aside from the CLI, you can use ``ytpb`` as a Python package. The main class is
-:class:`ytpb.playback.Playback`. It works with
-:class:`ytpb.playback.PlaybackSession`, fetchers, audio and video streams,
-etc. Behind the scene, the lower level functions from the verb-named modules are
-utilized, such as :mod:`ytpb.locate`, :mod:`ytpb.download`, :mod:`ytpb.merge`,
-etc.
-
-*DISCLAIMER: The API is not stable yet and subject to change.*
+Basic usage
+###########
 
 .. contents:: Contents
    :depth: 1
    :backlinks: top
    :local:
 
-.. currentmodule:: ytpb.playback
-
 Creating playback
 *****************
+
+.. currentmodule:: ytpb.playback
 
 Default usage
 =============
 
-First, let's create a playback for a YouTube video and fetch some essential
-information:
+First, let's create a :class:`Playback` for a YouTube video and fetch some
+essential information:
 
 .. code-block:: python
 
@@ -36,9 +27,9 @@ Such information includes basic video details,
 :class:`ytpb.info.YouTubeVideoInfo`, and a set of streams (MPEG-DASH
 representations), :class:`ytpb.types.SetOfStreams`.
 
-By default, :class:`ytpb.fetchers.YtpbInfoFetcher` is used to download and parse
+By default, :class:`~ytpb.fetchers.YtpbInfoFetcher` is used to download and parse
 all of the information needed to further work. Another available fetcher is
-:class:`YoutubeDLInfoFetcher`, which calls `yt-dlp
+:class:`~ytpb.fetchers.YoutubeDLInfoFetcher`, which calls `yt-dlp
 <https://github.com/yt-dlp/yt-dlp>`__ under the hood:
 
 .. code-block:: python
@@ -49,7 +40,7 @@ all of the information needed to further work. Another available fetcher is
    playback.fetch_and_set_essential()
 
 *Note:* The default fetcher will be *perhaps* changed later to
-:class:`YoutubeDLInfoFetcher` as supposed to be more reliable.
+:class:`~ytpb.fetchers.YoutubeDLInfoFetcher` as supposed to be more reliable.
 
 :meth:`.Playback.from_url` can be used to create a playback in one step:
 
@@ -57,8 +48,7 @@ all of the information needed to further work. Another available fetcher is
 
    playback = Playback.from_url(video_url, fetcher=fetcher)
 
-After, basic info (:class:`ytpb.info.YouTubeVideoInfo`) and streams
-(:class:`ytpb.streams.Streams`) are available.
+After, the basic information and streams are available.
 
 Reading and writing to cache
 ============================
@@ -138,7 +128,7 @@ spec<format-spec>`.
 
 .. code-block:: python
 
-   >>> from ytpb.types import SetOfStreams, VideoStream
+   >>> from ytpb.types import AudioOrVideoStream, VideoStream
 
    >>> # Get the audio stream by its itag:
    >>> playback.streams.get_by_itag("247")
@@ -150,7 +140,7 @@ spec<format-spec>`.
    ... )
 
    >>> # Querying streams by a format spec:
-   >>> queried: list[VideoStream] = video_streams.query(
+   >>> queried: list[AudioOrVideoStream] = video_streams.query(
    ...     "format eq webm and quality ge 720p"
    ... )
    [

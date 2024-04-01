@@ -1,3 +1,5 @@
+"""Mutable set of streams."""
+
 from collections.abc import MutableSet
 from operator import attrgetter
 from typing import Any, Callable, Iterator, Self
@@ -5,6 +7,8 @@ from typing import Any, Callable, Iterator, Self
 from ytpb.conditional import FORMAT_SPEC_RE, make_filter_from_expression
 from ytpb.exceptions import QueryError
 from ytpb.types import AudioOrVideoStream, AudioStream, SetOfStreams, VideoStream
+
+__all__ = ("Streams",)
 
 
 def stream_comparison_function(stream: AudioOrVideoStream):
@@ -16,7 +20,7 @@ def stream_comparison_function(stream: AudioOrVideoStream):
 
 
 class Streams(MutableSet):
-    """Represents a set of `ytpb.info.RepresentationInfo` objects."""
+    """Represents a mutable set of :class:`ytpb.mpd.RepresentationInfo` objects."""
 
     def __init__(self, iterable: list[AudioOrVideoStream] | None = None) -> None:
         self._elements = set()
@@ -54,26 +58,62 @@ class Streams(MutableSet):
         return False
 
     def add(self, value: AudioOrVideoStream):
+        """Adds a stream."""
         self._elements.add(value)
 
     def discard(self, value: AudioOrVideoStream):
+        """Removes a stream."""
         try:
             self._elements.remove(value)
         except KeyError:
             pass
 
     def get_by_itag(self, itag: str) -> AudioOrVideoStream | None:
+        """Gets a stream by an itag value."""
         for stream in self:
             if stream.itag == itag:
                 return stream
         return None
 
     def filter(self, predicate: Callable[[AudioOrVideoStream], bool]) -> SetOfStreams:
+        """Filters streams by a predicate function.
+
+        Args:
+            predicate: A predicate function.
+
+        Examples:
+            Get only video streams::
+
+              from ytpb.types import VideoStream
+              playback.streams.filter(lambda x: isinstance(x, VideoStream))
+
+        Returns:
+            A new instance of this class with filtered streams.
+        """
         return self.__class__(list(filter(predicate, self._elements)))
 
     def query(
         self, format_spec: str, aliases: dict[str, str] | None = None
     ) -> list[AudioOrVideoStream]:
+        """Queries streams by a format spec.
+
+        Examples:
+            Query streams of a specific format using aliases::
+
+              playback.streams.query(
+                  "@webm", aliases={"webm": "format eq webm"}
+              )
+
+        References:
+            https://ytpb.readthedocs.io/en/latest/reference.html#format-spec
+
+        Args:
+            format_spec: A format spec. May contains aliases.
+            aliases: A dictionary of aliases.
+
+        Returns:
+            A list of queried streams.
+        """
         if not format_spec:
             return []
 

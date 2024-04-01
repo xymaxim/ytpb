@@ -1,9 +1,13 @@
-"""TODO: The current implementation of segment merging is not optimal in terms
-of disk space, as it requires triple the amount of the total size of
-segments. Should be changed to use different techniques, without the need for
-intermediate files.
+"""Merge and cut media segments.
+
+Note:
+    The current implementation of segment merging is not optimal in terms of
+    disk space, as it requires triple the amount of the total size of
+    segments. Should be changed to use different techniques, without the need
+    for intermediate files.
 """
 
+import functools
 import os
 import shlex
 from pathlib import Path
@@ -12,6 +16,9 @@ from typing import Any
 
 from ytpb import ffmpeg
 from ytpb.utils.other import S_TO_MS
+
+__all__ = ("merge_segments", "mux_and_cut_boundary_segment")
+
 
 DEFAULT_VIDEO_ENCODING_SETTINGS = {
     "h264": "libx264 -crf 18",
@@ -28,7 +35,16 @@ def get_nth_or_none(iterable, n: int) -> Any | None:
 
 def mux_and_cut_boundary_segment(
     audio_segment_path: Path, video_segment_path: Path, output_path: Path, **cut_kwargs
-):
+) -> None:
+    """Muxes and cuts a boundary segment.
+
+    Args:
+        audio_segment_path: A path to an audio segment.
+        video_segment_path: A path to a video segment.
+        output_path: An output path of the muxed segment.
+        cut_kwargs: Cut keyword arguments: ``cut_at_start`` and ``cut_at_end``.
+    """
+
     def prepare_ffmpeg_input_options(
         segment_path: Path, cut_at_start: int = 0, cut_at_end: int = 0
     ):
@@ -116,6 +132,7 @@ def _compose_concat_file(segment_paths, temp_directory, suffix: str = ""):
 
 
 def ensure_cleanup_if_needed(f):
+    @functools.wraps(f)
     def g(*args, **kwargs):
         try:
             return f(*args, **kwargs)
@@ -139,6 +156,21 @@ def merge_segments(
     cut_at_end: int = 0,
     cleanup: bool = True,
 ) -> Path:
+    """Merges and cuts media segments.
+
+    Args:
+        audio_segment_paths: Paths to audio segments.
+        video_segment_paths: Paths to video segments.
+        output_directory: Where to output the merged file.
+        output_stem: An output stem of the merged file.
+        temp_directory: Where to store intermediate files.
+        cut_at_start: An offset (in seconds) to cut at start.
+        cut_at_end: An offset (in seconds) to cut at end.
+        cleanup: Wether to cleanup intermediate files.
+
+    Returns:
+        A path of the merged file.
+    """
     merge_segments.paths_to_cleanup = []
 
     if audio_segment_paths is None and video_segment_paths is None:

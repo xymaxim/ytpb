@@ -13,13 +13,15 @@ class YtpbError(Exception):
 
 
 class BroadcastStatusError(YtpbError):
+    """Raised because of :class:`ytpb.info.BroadcastStatus`."""
+
     def __init__(self, message: str, status: BroadcastStatus):
         self.status = status
         super().__init__(message)
 
 
 class InfoExtractError(YtpbError):
-    pass
+    """Failed to extract a YouTube video information."""
 
 
 class BaseUrlExpiredError(YtpbError):
@@ -27,6 +29,8 @@ class BaseUrlExpiredError(YtpbError):
 
 
 class CachedItemNotFoundError(YtpbError):
+    """Failed to find an unexpired cached item."""
+
     def __str__(self) -> str:
         return "Unexpired cached item doesn't exist for the video"
 
@@ -40,11 +44,11 @@ class MaxRetryError(YtpbError):
 
 
 class FFmpegRunError(YtpbError):
-    pass
+    """Raised during FFmpeg subprocess call."""
 
 
 class QueryError(YtpbError):
-    pass
+    """Failed to query streams with format spec."""
 
 
 class BadCommandArgument(YtpbError):
@@ -52,10 +56,12 @@ class BadCommandArgument(YtpbError):
 
 
 class SequenceLocatingError(YtpbError):
-    pass
+    """Failed to locate a segment."""
 
 
 class SegmentDownloadError(YtpbError, requests.exceptions.HTTPError):
+    """Failed to download a segment."""
+
     def __init__(self, message: str, sequence: int):
         self.sequence = sequence
         super().__init__(message)

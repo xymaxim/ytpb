@@ -1,3 +1,5 @@
+"""Download media segments."""
+
 import io
 import os
 from pathlib import Path
@@ -60,6 +62,23 @@ def download_segment(
     session: requests.Session | None = None,
     force_download: bool = True,
 ) -> Path:
+    """Downloads a segment to file.
+
+    Args:
+        sequence: A segment sequence number.
+        base_url: A segment base URL.
+        output_directory: Where to download a segment.
+        output_filename: A segment output filename.
+        size: An amount of bytes to download.
+        session: A :class:`requests.Session` object.
+        force_download: Wether to download a segment if it already exists.
+
+    Returns:
+        A path where a segment was downloaded.
+
+    Raises:
+        SegmentDownloadError: If failed to download a segment.
+    """
     if callable(output_filename):
         output_filename_value = output_filename(sequence, base_url)
         path_to_download_to = Path(output_directory) / output_filename_value
@@ -80,5 +99,19 @@ def download_segment_to_buffer(
     size: int | None = None,
     session: requests.Session | None = None,
 ) -> io.BytesIO:
+    """Downloads a segment to buffer.
+
+    Args:
+        sequence: A segment sequence number.
+        base_url: A segment base URL.
+        size: An amount of bytes to download.
+        session: A :class:`requests.Session` object.
+
+    Returns:
+        An :class:`io.BytesIO` object.
+
+    Raises:
+        SegmentDownloadError: If failed to download a segment.
+    """
     response = _make_request_for_segment(sequence, base_url, size, session)
     return io.BytesIO(response.content)

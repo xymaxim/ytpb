@@ -1,5 +1,10 @@
-"""A naive disk-based caching solution via JSON. Invalidation is based on the
-filenaming."""
+"""Naive disk-based caching via JSON files.
+
+The cache invalidation is based on the filenaming: ``<expires-at>~<key>``.
+
+In the playback context, ``key`` is a video ID and ``expires-at`` is a
+timestamp referred to the expiration time of segment base URL.
+"""
 
 import json
 import time
@@ -16,12 +21,21 @@ def _find_cached_item_paths(key: str, cache_directory: Path) -> Iterable[Path]:
 
 
 def _check_item_is_expired(item_name: str) -> bool:
-    """Check if an item has expired or not based on the item filename."""
+    """Checks if an item has expired based on the item filename."""
     expires_at = int(item_name.split("~")[0])
     return time.time() >= expires_at
 
 
 def read_from_cache(key: str, cache_directory: Path) -> dict | None:
+    """Reads a cached item.
+
+    Args:
+        key: A cached item key.
+        cache_directory: A cached items location.
+
+    Returns:
+        A dictionary of a cached item.
+    """
     try:
         found_item_paths = _find_cached_item_paths(key, cache_directory)
         *earlier_item_paths, latest_item_path = sorted(found_item_paths)
@@ -46,8 +60,16 @@ def read_from_cache(key: str, cache_directory: Path) -> dict | None:
 def write_to_cache(
     key: str, expires_at: str, item: dict, cache_directory: Path
 ) -> None:
-    """Write an item to the cache file. The previous cached items with the key
-    will be removed before."""
+    """Writes a cache item to a file.
+
+    The existing cached items with ``key`` (both expired and unexpired) will be
+    removed before writing.
+
+    Args:
+        key: A cache item key.
+        expires_at: When a cache item will be expired.
+        cache_directory: A cached items location.
+    """
     cache_directory.mkdir(parents=True, exist_ok=True)
     if old_item_paths := _find_cached_item_paths(key, cache_directory):
         for path in old_item_paths:
@@ -59,6 +81,7 @@ def write_to_cache(
 
 
 def remove_expired_cache_items(cache_directory: Path) -> None:
+    """Removes expired cache items."""
     for path in sorted(cache_directory.glob("*~*")):
         if _check_item_is_expired(path.name):
             path.unlink()

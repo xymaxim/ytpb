@@ -1,3 +1,8 @@
+"""Fetchers are used to gather an essential information.
+
+Such information includes the basic video information and streams.
+"""
+
 from abc import ABC, abstractmethod
 
 import requests
@@ -8,28 +13,32 @@ from ytpb.exceptions import BroadcastStatusError
 from ytpb.info import BroadcastStatus, extract_video_info, YouTubeVideoInfo
 from ytpb.mpd import extract_representations_info
 from ytpb.streams import Streams
-from ytpb.types import AudioOrVideoStream, AudioStream, VideoStream
+from ytpb.types import AudioOrVideoStream, AudioStream, SetOfStreams, VideoStream
 from ytpb.utils.url import extract_parameter_from_url
 
 logger = structlog.get_logger(__name__)
 
 
 class InfoFetcher(ABC):
+    """A base abstract class for fetchers."""
+
     def __init__(self, video_url: str, session: requests.Session | None = None):
         self.video_url = video_url
         self.session = session or requests.Session()
 
     @abstractmethod
     def fetch_video_info(self):
+        """Fetches basic information about a video."""
         raise NotImplementedError
 
     @abstractmethod
     def fetch_streams(self, force_fetch: bool = True):
+        """Fetches streams available for a video."""
         raise NotImplementedError
 
 
 class YtpbInfoFetcher(InfoFetcher):
-    def fetch_video_info(self):
+    def fetch_video_info(self) -> YouTubeVideoInfo:
         logger.debug("Fetching index webpage and extracting video info")
 
         response = self.session.get(self.video_url)
@@ -42,7 +51,7 @@ class YtpbInfoFetcher(InfoFetcher):
 
         return self.info
 
-    def fetch_streams(self, force_fetch: bool = True):
+    def fetch_streams(self, force_fetch: bool = True) -> SetOfStreams:
         logger.debug("Fetching manifest file and extracting streams info")
 
         dash_manifest_url = self.info.dash_manifest_url
@@ -66,7 +75,7 @@ class YoutubeDLInfoFetcher(InfoFetcher):
         self._ydl = YoutubeDL(self.options)
         self._formats: list[dict] = []
 
-    def fetch_video_info(self):
+    def fetch_video_info(self) -> YouTubeVideoInfo:
         try:
             extracted = self._ydl.extract_info(self.video_url, download=False)
         except DownloadError as exc:
@@ -129,7 +138,7 @@ class YoutubeDLInfoFetcher(InfoFetcher):
             stream = VideoStream(**attributes)
         return stream
 
-    def fetch_streams(self, force_fetch: bool = True):
+    def fetch_streams(self, force_fetch: bool = True) -> SetOfStreams:
         streams = Streams()
 
         if not self._formats or force_fetch:

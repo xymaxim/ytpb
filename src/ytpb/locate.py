@@ -1,11 +1,11 @@
-"""Provides locating a segment with a desired time."""
+"""Locate segments by given times."""
 
 import math
 import tempfile
 from bisect import bisect_left
 from functools import partial
 from pathlib import Path
-from typing import NamedTuple
+from typing import NamedTuple, Self
 
 import requests
 import structlog
@@ -19,9 +19,9 @@ from ytpb.utils.url import extract_parameter_from_url
 
 logger = structlog.get_logger(__name__)
 
-# Number of bytes sufficient to cover the YouTube metadata in segment
-# files. Note that the minimum value varies for different media formats, so the
-# value was determined empirically for all available formats.
+#: Number of bytes sufficient to cover the YouTube metadata in segment
+#: files. Note that the minimum value varies for different media formats, so the
+#: value was determined empirically for all available MPEG-DASH formats.
 PARTIAL_SEGMENT_SIZE_BYTES = 2000
 
 # Absolute time difference tolerance (in seconds). See issue #5.
@@ -29,6 +29,8 @@ TIME_DIFF_TOLERANCE = 3e-2
 
 
 class SequenceMetadataPair:
+    """Represents a pair of segment sequence number and :class:`SegmentMetadata`."""
+
     def __init__(self, sequence: SegmentSequence, locator: "SegmentLocator"):
         self.locator = locator
         self.sequence = sequence
@@ -69,23 +71,32 @@ class SequenceMetadataPair:
 
 
 class LocateResult(NamedTuple):
+    """Represents a locate result."""
+
+    #: A segment sequence number.
     sequence: SegmentSequence
+    #: A time difference between a target time and
+    #: :attr:`ytpb.segment.Segment.ingestion_start_date`.
     time_difference: float
+    #: Wheter a target time falls in gap.
     falls_in_gap: bool
+    #: Stores all locate steps as pairs of segment sequence nubmer and time
+    #: difference.
     track: list[tuple[SegmentSequence, float]]
 
 
 class SegmentLocator:
-    """A locator which finds a segment with a desired time.
+    """A class that locates a segment with a desired time.
 
     A timeline may contain numerous gaps, which leads to under- or
     overestimation, and it needs to be taken into account.
 
     The locating consists of three steps: (1) a "look around", jump-based search
     to find a segment directly or outline a search domain (the jump length is
-    based on the time difference and constant duration of segments); (2) refine
-    an estimated sequence number using a binary search if a segment is not
-    found; (3) check whether a target time falls into gap or not.
+    based on the time difference and constant duration of segments); (2) search
+    for a segment in the outlined domain using a binary search if a segment is
+    not found in the previous step; (3) check whether a target time falls in gap
+    or not.
     """
 
     def __init__(
@@ -94,7 +105,16 @@ class SegmentLocator:
         reference_sequence: SegmentSequence | None = None,
         temp_directory: Path | None = None,
         session: requests.Session | None = None,
-    ) -> None:
+    ) -> Self:
+        """Constructs a segment locator.
+
+        Args:
+            base_url: A segment base URL.
+            reference_sequence: A segment sequence number used as a reference.
+            temp_directory: A temporary directory used to store downloaded
+              segments during locating.
+            session: A :class:`request.Session` object.
+        """
         self._temp_directory = temp_directory
         self.base_url = base_url
         self.session = session or requests.Session()
@@ -108,6 +128,7 @@ class SegmentLocator:
         self.track: list[tuple[SegmentSequence, float]] = []
 
     def get_temp_directory(self):
+        """Gets (and creates if needed) a temporary directory."""
         if self._temp_directory is None:
             self._temp_directory = tempfile.mkdtemp()
         return self._temp_directory
@@ -192,7 +213,15 @@ class SegmentLocator:
     def find_sequence_by_time(
         self, desired_time: Timestamp, end: bool = False
     ) -> LocateResult:
-        """Find sequence number of a segment by the given timestamp."""
+        """Finds sequence number of a segment by the given timestamp.
+
+        Args:
+            desired_time: A target Unix timestamp.
+            end: Wether a segment belongs to the end of an interval.
+
+        Returns:
+            A :class:`LocateResult` object.
+        """
         logger.info(
             "Locating segment",
             end=end,

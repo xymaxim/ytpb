@@ -1,3 +1,5 @@
+"""Media segments and their metadata."""
+
 import re
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
@@ -15,6 +17,11 @@ logger = structlog.get_logger(__name__)
 
 @dataclass
 class SegmentMetadata:
+    """Represents the YouTube segment metadata.
+
+    All timestamp and time-related values are in seconds.
+    """
+
     sequence_number: SegmentSequence
     ingestion_walltime: Timestamp
     ingestion_uncertainty: float
@@ -29,6 +36,8 @@ class SegmentMetadata:
 
 @dataclass
 class Segment:
+    """A media segment."""
+
     def __init__(self) -> None:
         self.local_path: Path | None = None
         self.metadata: SegmentMetadata | None = None
@@ -37,6 +46,7 @@ class Segment:
 
     @classmethod
     def from_file(cls, path: Path) -> "Segment":
+        """Creates a :class:`Segment` object by reading file from path."""
         segment = cls()
 
         with open(path, "rb") as f:
@@ -50,6 +60,7 @@ class Segment:
 
     @classmethod
     def from_bytes(cls, content: bytes) -> "Segment":
+        """Creates a :class:`Segment` object from bytes."""
         segment = cls()
         segment.metadata = Segment.parse_youtube_metadata(content)
         segment.sequence = segment.metadata.sequence_number
@@ -58,16 +69,40 @@ class Segment:
         return segment
 
     @property
-    def ingestion_start_date(self):
+    def ingestion_start_date(self) -> datetime:
+        """A segment ingestion start date.
+
+        Corresponds to the Ingestion-Walltime-Us value.
+        """
         timestamp = self.metadata.ingestion_walltime
         return datetime.fromtimestamp(timestamp, timezone.utc)
 
     @property
-    def ingestion_end_date(self):
+    def ingestion_end_date(self) -> datetime:
+        """A segment ingestion end date.
+
+        Corresponds to the actual segment duration started from the
+        Ingestion-Walltime-Us value.
+        """
         return self.ingestion_start_date + timedelta(seconds=self.get_actual_duration())
 
     @staticmethod
     def parse_youtube_metadata(content: bytes) -> SegmentMetadata:
+        """Parses the metadata from the full or partial content of a segment.
+
+        All timestamp and time-related values are converted to units of seconds.
+
+        Notes:
+            If partial content is provided, the amount of bytes should be enough
+            to cover the metadata header (see
+            :attr:`~ytpb.locate.PARTIAL_SEGMENT_SIZE_BYTES`).
+
+        Args:
+            content: Full or partial segment byte content.
+
+        Returns:
+            A parsed segment metadata.
+        """
         optional_fields = ("Streamable", "Encoding-Alias")
 
         def _search_for_metadata_field(
@@ -113,6 +148,7 @@ class Segment:
         return SegmentMetadata(**parsed_metadata_fields)
 
     def get_actual_duration(self) -> float:
+        """Gets the actual segment duration in seconds."""
         with av.open(str(self.local_path)) as container:
             first_packet, *_, last_packet = list(container.demux())[:-1]
             end_timestamp = last_packet.pts + last_packet.duration

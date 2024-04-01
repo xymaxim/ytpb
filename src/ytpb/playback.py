@@ -1,10 +1,12 @@
+"""Playback for live streams."""
+
 import operator
 import re
 import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal
+from typing import Literal, Self
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -48,15 +50,25 @@ SEGMENT_URL_PATTERN = r"https://.+\.googlevideo\.com/videoplayback/.+"
 
 @dataclass(frozen=True)
 class RewindMoment:
+    """Represents a moment that has been rewound."""
+
+    #: A target rewind date.
     date: datetime
+    #: A sequence number of a segment with a target date.
     sequence: SegmentSequence
+    #: A difference (in seconds) between segment start ingestion date and target
+    #: date.
     cut_at: float
+    #: Wether a moment represents the end of an interval.
     is_end: bool = False
+    #: Wether a moment falls in gap.
     falls_into_gap: bool = False
 
 
 @dataclass(frozen=True)
 class RewindInterval:
+    """Represents an interval that has been rewound."""
+
     start: RewindMoment
     end: RewindMoment
 
@@ -69,6 +81,15 @@ class RewindInterval:
 
 
 class PlaybackSession(requests.Session):
+    """A session to use with :class:`Playback`.
+
+    This session can be used to provide a retry mechanism for failed
+    requests. Here is a list of handled HTTP status codes for segment URLs:
+
+    - 403: Refresh segment base URL, and repeat a request
+    - 404: Retry a request with no change
+    """
+
     max_retries: int = 3
 
     def __init__(self, playback: "Playback" = None, **kwargs):
@@ -134,6 +155,8 @@ class PlaybackSession(requests.Session):
 
 
 class Playback:
+    """The playback for live streams."""
+
     def __init__(
         self,
         video_url: str,
@@ -141,6 +164,19 @@ class Playback:
         fetcher: InfoFetcher | None = None,
         write_to_cache: bool = False,
     ):
+        """Constructs a playback.
+
+        To work with a playback, fetch the essential information afterwards::
+
+            playback = Playback(video_url)
+            playback.fetch_and_set_essential()
+
+        Args:
+            video_url: A video URL.
+            session: An instance of :class:`requests.Session`.
+            fetcher: A fetcher used to gather the video information and streams.
+            write_to_cache: Wether to write to cache.
+        """
         self.video_url = video_url
         self.session = session or PlaybackSession(self)
         self.fetcher = fetcher or YtpbInfoFetcher(video_url)
@@ -153,6 +189,17 @@ class Playback:
 
     @classmethod
     def from_url(cls, video_url: str, **kwargs) -> "Playback":
+        """Creates a playback for the given video URL.
+
+        This also fetches the video information and streams.
+
+        Args:
+            video_url: A video URL.
+            **kwargs: Optional arguments that :class:`Playback` takes.
+
+        Returns:
+            An instance of :class:`Playback`.
+        """
         playback = cls(video_url, **kwargs)
         playback.fetch_and_set_essential()
         return playback
@@ -182,6 +229,27 @@ class Playback:
 
     @classmethod
     def from_cache(cls, video_url: str, **kwargs) -> "Playback":
+        """Creates a playback for the given URL from cache.
+
+        This also implies writing to cache. Note that an unexpired cache item
+        for a stream should exist.
+
+        Example:
+            To write a new cache item, create a playback with
+            ``write_to_cache=True``::
+
+                from ytpb.exceptions import CachedItemNotFoundError
+                try:
+                    playback = Playback.from_cache(video_url)
+                except CachedItemNotFoundError:
+                    playback = Playback.from_url(video_url, write_to_cache=True)
+
+        Args:
+            video_url: A video URL.
+
+        Raises:
+            CachedItemNotFoundError: If a cache item is not found or expired.
+        """
         video_id = extract_id_from_video_url(video_url)
         cached_item = read_from_cache(video_id, Playback.get_cache_directory())
         if cached_item is None:
@@ -195,20 +263,22 @@ class Playback:
 
     @staticmethod
     def get_cache_directory():
+        """Gets the cache directory."""
         return user_cache_path("ytpb")
 
     def get_temp_directory(self) -> Path:
+        """Gets the run temporary directory."""
         if self._temp_directory is None:
             self._temp_directory = Path(tempfile.mkdtemp(prefix="ytpb-"))
             logger.debug("Run temp directory set to %s", self._temp_directory)
         return self._temp_directory
 
     @property
-    def video_url(self):
+    def video_url(self) -> str:
         return self._video_url
 
     @video_url.setter
-    def video_url(self, value: str):
+    def video_url(self, value: str) -> None:
         self._video_url = value
         try:
             self._video_id = parse_qs(urlparse(value).query)["v"][0]
@@ -216,7 +286,7 @@ class Playback:
             print("Could not extract video ID from URL")
 
     @property
-    def video_id(self):
+    def video_id(self) -> str:
         return self._video_id
 
     @property
@@ -252,15 +322,32 @@ class Playback:
     def _fetch_and_set_streams(self) -> None:
         self._streams = self.fetcher.fetch_streams()
 
-    def fetch_and_set_essential(
-        self, force_fetch=False, fetch_streams: bool = True
-    ) -> None:
+    def fetch_and_set_essential(self) -> None:
+        """Fetches and sets essential information.
+
+        Such information includes information about a video and streams.
+        """
+
         self._fetch_and_set_video_info()
-        if fetch_streams:
-            self._fetch_and_set_streams()
+        self._fetch_and_set_streams()
         self._write_to_cache_if_needed()
 
     def set_streams(self, value: SetOfStreams, fetch_video_info: bool = True) -> None:
+        """Sets streams manually.
+
+        By default, it also fetches information about a video.
+
+        Args:
+            value: Streams to set.
+            fetch_video_info: Wether fetch information about a video or not. If
+              not, the :attr:`.info` attribute will be set to
+              :attr:`ytpb.info.LEFT_NOT_FETCHED`.
+
+        Notes:
+            In most cases, you don't need this. It could be only useful, when
+            you can't fetch streams the usual way, with
+            :meth:`fetch_and_set_essential`.
+        """
         self._streams = value
         if not self._info or fetch_video_info:
             self._fetch_and_set_video_info()
@@ -273,11 +360,21 @@ class Playback:
 
     def download_segment(
         self,
-        sequence,
-        base_url,
+        sequence: SegmentSequence,
+        base_url: str,
         location: Literal[".", "segments"] = ".",
         force_download: bool = False,
     ) -> Path:
+        """Downloads a segment.
+
+        Args:
+            sequence: A segment sequence number.
+            base_url: A segment base URL.
+            force_download: Wether to force download a segment even if it exists.
+
+        Returns:
+            A path to the downloaded segment.
+        """
         path = download_segment(
             sequence,
             base_url,
@@ -294,7 +391,21 @@ class Playback:
         location: Literal[".", "segments"] = ".",
         download: bool = True,
     ) -> Segment:
-        """Get a downloaded segment, or download it if it doesn't exist."""
+        """Gets a :class:`Segment` representing a downloaded segment.
+
+        If a segment doesn't exist, it can be downloaded with ``download=True``.
+
+        Args:
+            sequence: A segment sequence number.
+            base_url: A segment base URL.
+            location: Where a segment is located relative to
+                :meth:`get_temp_directory`. The single dot ('.') represents the run
+                temporary directory itself.
+            download: Wether to download a segment if it doesn't exist.
+
+        Returns:
+            A :class:`Segment` object.
+        """
         segment_filename = compose_default_segment_filename(sequence, base_url)
         segment_directory = self.get_temp_directory() / location
         try:
@@ -312,7 +423,20 @@ class Playback:
         point: AbsolutePointInStream,
         itag: str | None = None,
         is_end: bool = False,
-    ) -> SegmentSequence:
+    ) -> RewindMoment:
+        """Locates a moment by a point in stream.
+
+        Args:
+            point: An absolute point.
+            itag: An itag value.
+            is_end: Wether a moment represents the end of an interval.
+
+        Notes:
+            See also :class:`ytpb.locate.SegmentLocator`.
+
+        Returns:
+            A located moment of :class:`RewindMoment`.
+        """
         itag = itag or next(iter(self.streams)).itag
         base_url = self._get_reference_base_url(itag)
 
@@ -357,6 +481,19 @@ class Playback:
         end_point: PointInStream,
         itag: str | None = None,
     ) -> RewindInterval:
+        """Locates an interval by start and end points in stream.
+
+        Args:
+            start_point: A start absolute or relative point.
+            end_point: An end absolute or relative point.
+            itag: An itag value.
+
+        Notes:
+            See also :class:`ytpb.locate.SegmentLocator`.
+
+        Returns:
+           A located interval of :class:`RewindInterval`.
+        """
         # First, resolve relativity where it's possible, without locating:
         start_point, end_point = resolve_relativity_in_interval(start_point, end_point)
 

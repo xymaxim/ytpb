@@ -1,3 +1,5 @@
+"""Representations from MPEG-DASH MPD."""
+
 import io
 from dataclasses import dataclass
 from functools import total_ordering
@@ -14,11 +16,27 @@ NAMESPACES = {
 @total_ordering
 @dataclass(frozen=True)
 class VideoQuality:
+    """Represents a video quality (height and frame rate).
+
+    Examples:
+        The class supports comparison operations. For example: ::
+
+          >>> VideoQuality("720p") == VideoQuality("720p30")
+          True
+          >>> VideoQuality("720p") > VideoQuality("720p60")
+          True
+    """
+
     height: int
     frame_rate: float
 
     @classmethod
     def from_string(cls, value: str) -> "VideoQuality":
+        """Creates a :class:`VideoQuality` object from string.
+
+        Args:
+            value: A video quality string. For example: "720p", "1080p60".
+        """
         try:
             height, frame_rate = value.split("p")
             return cls(int(height), float(frame_rate or 30))
@@ -47,14 +65,16 @@ class VideoQuality:
 
 @dataclass(frozen=True, slots=True)
 class RepresentationInfo:
+    """Represents common attributes of audio and video representations."""
+
     itag: str
     mime_type: str
     codecs: str
     base_url: str
 
     @property
-    def format(self):
-        "An alias for a MIME subtype."
+    def format(self) -> str:
+        """An alias for a MIME subtype."""
         return self.mime_type.split("/")[1]
 
     def __repr__(self):
@@ -63,11 +83,15 @@ class RepresentationInfo:
 
 @dataclass(frozen=True, repr=False)
 class AudioRepresentationInfo(RepresentationInfo):
+    """Represents attributes of audio representations."""
+
     audio_sampling_rate: int
 
 
 @dataclass(frozen=True, repr=False)
 class VideoRepresentationInfo(RepresentationInfo):
+    """Represents attributes of video representations."""
+
     width: int
     height: int
     frame_rate: int
@@ -89,6 +113,14 @@ def strip_manifest(manifest: etree.Element) -> bytes:
 
 
 def extract_representations_info(manifest_content: str) -> list[RepresentationInfo]:
+    """Extracts representations from a manifest.
+
+    Args:
+        manifest_content: An MPEG-DASH MPD string content.
+
+    Returns:
+        A list of :class:`RepresentationInfo` objects.
+    """
     representations_info: list[RepresentationInfo] = []
 
     manifest = etree.fromstring(manifest_content.encode())
