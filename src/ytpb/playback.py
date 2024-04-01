@@ -384,7 +384,7 @@ class Playback:
         )
         return path
 
-    def get_downloaded_segment(
+    def get_segment(
         self,
         sequence: SegmentSequence,
         base_url: str,
@@ -443,7 +443,7 @@ class Playback:
         match point:
             case SegmentSequence() as sequence:
                 self.download_segment(sequence, base_url)
-                segment = self.get_downloaded_segment(sequence, base_url)
+                segment = self.get_segment(sequence, base_url)
                 if not is_end:
                     date = segment.ingestion_start_date
                 else:
@@ -456,7 +456,7 @@ class Playback:
                     session=self.session,
                 )
                 locate_result = sl.find_sequence_by_time(point.timestamp(), end=is_end)
-                segment = self.get_downloaded_segment(locate_result.sequence, base_url)
+                segment = self.get_segment(locate_result.sequence, base_url)
                 if locate_result.falls_in_gap:
                     if is_end:
                         date = segment.ingestion_end_date

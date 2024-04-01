@@ -53,7 +53,7 @@ def capture_frames(
         found_sequence, _ = sl.find_sequence_by_time(target_date.timestamp(), is_end)
         previous_sequence = found_sequence
 
-        segment = playback.get_downloaded_segment(found_sequence, base_url)
+        segment = playback.get_segment(found_sequence, base_url)
         image = extract_frame_as_image(segment, target_date)
 
         yield image, segment

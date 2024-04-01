@@ -408,12 +408,10 @@ def timelapse_command(
 
     click.echo("done.")
 
-    start_segment = playback.get_downloaded_segment(
+    start_segment = playback.get_segment(
         rewind_interval.start.sequence, reference_base_url
     )
-    end_segment = playback.get_downloaded_segment(
-        rewind_interval.end.sequence, reference_base_url
-    )
+    end_segment = playback.get_segment(rewind_interval.end.sequence, reference_base_url)
 
     requested_start_date: datetime
     match requested_start:
