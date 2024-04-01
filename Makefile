@@ -1,6 +1,6 @@
 .PHONY: docs
 docs:
-	sphinx-build -ab html docs docs/_build
+	sphinx-build docs docs/_build
 
 .PHONY: clean
 clean:
