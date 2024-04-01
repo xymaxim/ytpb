@@ -393,7 +393,7 @@ class Playback:
     ) -> Segment:
         """Gets a :class:`Segment` representing a downloaded segment.
 
-        If a segment doesn't exist, it can be downloaded with ``download=True``.
+        By default, if a segment file cannot be found, it will be downloaded.
 
         Args:
             sequence: A segment sequence number.
@@ -405,16 +405,23 @@ class Playback:
 
         Returns:
             A :class:`Segment` object.
+
+        Raises:
+            FileNotFoundError: If couldn't find a downloaded segment.
         """
         segment_filename = compose_default_segment_filename(sequence, base_url)
         segment_directory = self.get_temp_directory() / location
         try:
             segment = Segment.from_file(segment_directory / segment_filename)
-        except FileNotFoundError:
+        except FileNotFoundError as exc:
             if download:
                 downloaded_path = self.download_segment(sequence, base_url)
                 segment = Segment.from_file(downloaded_path)
             else:
+                exc.add_note(
+                    "Couldn't find a segment. Make sure to download it before "
+                    "and the same segment filename compose function is used"
+                )
                 raise
         return segment
 
