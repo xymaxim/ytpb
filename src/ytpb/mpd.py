@@ -105,13 +105,6 @@ def _eval_local_xpath(element: etree.Element, node: str) -> list[etree.Element]:
     return element.xpath(".//*[local-name() = $node]", node=node)
 
 
-def strip_manifest(manifest: etree.Element) -> bytes:
-    with io.BytesIO() as output_stream:
-        etree.strip_elements(manifest, f"{{{NAMESPACES['mpd']}}}SegmentList")
-        manifest.write(output_stream, pretty_print=True)
-        return output_stream.getvalue()
-
-
 def extract_representations_info(manifest_content: str) -> list[RepresentationInfo]:
     """Extracts representations from a manifest.
 
