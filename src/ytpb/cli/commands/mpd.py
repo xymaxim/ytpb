@@ -36,7 +36,7 @@ from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
 from ytpb.exceptions import BroadcastStatusError
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
-from ytpb.mpd import extract_representations_info
+from ytpb.mpd import extract_representations
 from ytpb.playback import Playback
 from ytpb.streams import Streams
 from ytpb.types import DateInterval, SegmentSequence
@@ -279,7 +279,7 @@ def refresh_command(
     with open(manifest, "r", encoding="utf-8") as f:
         manifest_content = f.read()
 
-    list_of_streams = extract_representations_info(manifest_content)
+    list_of_streams = extract_representations(manifest_content)
     stream_url = build_video_url_from_base_url(list_of_streams[0].base_url)
 
     if yt_dlp:

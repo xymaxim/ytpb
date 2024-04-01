@@ -8,7 +8,7 @@ from ytpb import mpd
 
 def test_extract_representations_info(audio_base_url: str, video_base_url: str):
     with open(TEST_DATA_PATH / "manifest-1695928670.mpd") as f:
-        results = mpd.extract_representations_info(f.read())
+        results = mpd.extract_representations(f.read())
 
     assert (
         mpd.AudioRepresentationInfo(

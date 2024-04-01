@@ -25,7 +25,7 @@ from ytpb.exceptions import (
 from ytpb.fetchers import InfoFetcher, YtpbInfoFetcher
 from ytpb.info import LEFT_NOT_FETCHED, LeftNotFetched, YouTubeVideoInfo
 from ytpb.locate import SegmentLocator
-from ytpb.mpd import extract_representations_info
+from ytpb.mpd import extract_representations
 from ytpb.segment import Segment
 from ytpb.streams import SetOfStreams, Streams
 from ytpb.types import (
@@ -212,7 +212,7 @@ class Playback:
         **kwargs,
     ) -> "Playback":
         with open(manifest_path, "r") as f:
-            list_of_streams = extract_representations_info(f.read())
+            list_of_streams = extract_representations(f.read())
             streams = Streams(list_of_streams)
 
         some_base_url = next(iter(streams)).base_url

@@ -11,7 +11,7 @@ from yt_dlp import DownloadError, YoutubeDL
 
 from ytpb.exceptions import BroadcastStatusError
 from ytpb.info import BroadcastStatus, extract_video_info, YouTubeVideoInfo
-from ytpb.mpd import extract_representations_info
+from ytpb.mpd import extract_representations
 from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, AudioStream, SetOfStreams, VideoStream
 from ytpb.utils.url import extract_parameter_from_url
@@ -58,7 +58,7 @@ class YtpbInfoFetcher(InfoFetcher):
         response = self.session.get(dash_manifest_url)
         response.raise_for_status()
 
-        streams_list = extract_representations_info(response.text)
+        streams_list = extract_representations(response.text)
         streams = Streams(streams_list)
 
         return streams

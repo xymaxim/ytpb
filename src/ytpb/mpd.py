@@ -105,7 +105,7 @@ def _eval_local_xpath(element: etree.Element, node: str) -> list[etree.Element]:
     return element.xpath(".//*[local-name() = $node]", node=node)
 
 
-def extract_representations_info(manifest_content: str) -> list[RepresentationInfo]:
+def extract_representations(manifest_content: str) -> list[RepresentationInfo]:
     """Extracts representations from a manifest.
 
     Args:

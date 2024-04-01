@@ -11,9 +11,9 @@ from ytpb.streams import AudioOrVideoStream
 
 
 @patch("ytpb.fetchers.extract_video_info")
-@patch("ytpb.fetchers.extract_representations_info")
+@patch("ytpb.fetchers.extract_representations")
 def test_ytpb_info_fetcher(
-    mock_extract_representations_info: MagicMock,
+    mock_extract_representations: MagicMock,
     mock_extract_video_info: MagicMock,
     mocked_responses: responses.RequestsMock,
     stream_url: str,
@@ -25,7 +25,7 @@ def test_ytpb_info_fetcher(
     mocked_responses.get(active_live_video_info.dash_manifest_url, status=200)
 
     mock_extract_video_info.return_value = active_live_video_info
-    mock_extract_representations_info.return_value = streams_in_list
+    mock_extract_representations.return_value = streams_in_list
 
     fetcher = YtpbInfoFetcher(stream_url)
     assert fetcher.fetch_video_info() == active_live_video_info
