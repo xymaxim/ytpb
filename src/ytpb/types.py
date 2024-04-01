@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 from typing import Any, Protocol, TypeAlias
 
 from ytpb.config import AddressableChainMap
-from ytpb.mpd import AudioRepresentationInfo, VideoRepresentationInfo
+from ytpb.representations import AudioRepresentationInfo, VideoRepresentationInfo
 
 
 Timestamp: TypeAlias = float

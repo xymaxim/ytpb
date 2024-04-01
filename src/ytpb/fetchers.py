@@ -11,7 +11,7 @@ from yt_dlp import DownloadError, YoutubeDL
 
 from ytpb.exceptions import BroadcastStatusError
 from ytpb.info import BroadcastStatus, extract_video_info, YouTubeVideoInfo
-from ytpb.mpd import extract_representations
+from ytpb.representations import extract_representations
 from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, AudioStream, SetOfStreams, VideoStream
 from ytpb.utils.url import extract_parameter_from_url

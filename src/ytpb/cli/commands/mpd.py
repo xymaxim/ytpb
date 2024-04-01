@@ -36,8 +36,8 @@ from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
 from ytpb.exceptions import BroadcastStatusError
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
-from ytpb.mpd import extract_representations
 from ytpb.playback import Playback
+from ytpb.representations import extract_representations
 from ytpb.streams import Streams
 from ytpb.types import DateInterval, SegmentSequence
 from ytpb.utils.date import express_timedelta_in_words

@@ -21,8 +21,8 @@ This document is the API reference for Ytpb.
     ytpb.fetchers
     ytpb.info
     ytpb.locate
-    ytpb.mpd
     ytpb.merge
     ytpb.playback
+    ytpb.representations
     ytpb.segment
     ytpb.streams

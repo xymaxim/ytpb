@@ -20,7 +20,8 @@ def stream_comparison_function(stream: AudioOrVideoStream):
 
 
 class Streams(MutableSet):
-    """Represents a mutable set of :class:`ytpb.mpd.RepresentationInfo` objects."""
+    """Represents a mutable set of
+    :class:`ytpb.representations.RepresentationInfo` objects."""
 
     def __init__(self, iterable: list[AudioOrVideoStream] | None = None) -> None:
         self._elements = set()

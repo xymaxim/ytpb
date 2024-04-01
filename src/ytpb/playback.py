@@ -25,7 +25,7 @@ from ytpb.exceptions import (
 from ytpb.fetchers import InfoFetcher, YtpbInfoFetcher
 from ytpb.info import LEFT_NOT_FETCHED, LeftNotFetched, YouTubeVideoInfo
 from ytpb.locate import SegmentLocator
-from ytpb.mpd import extract_representations
+from ytpb.representations import extract_representations
 from ytpb.segment import Segment
 from ytpb.streams import SetOfStreams, Streams
 from ytpb.types import (

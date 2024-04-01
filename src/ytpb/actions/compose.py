@@ -7,8 +7,8 @@ from lxml import etree
 from lxml.builder import E
 
 from ytpb.exceptions import YtpbError
-from ytpb.mpd import NAMESPACES as NS
 from ytpb.playback import Playback, RewindInterval
+from ytpb.representations import NAMESPACES as NS
 from ytpb.segment import SegmentMetadata
 from ytpb.streams import SetOfStreams
 from ytpb.utils.other import S_TO_MS
@@ -100,6 +100,7 @@ def _compose_mpd_skeleton(playback, streams):
 def compose_static_mpd(
     playback: Playback, rewind_interval: RewindInterval, streams: SetOfStreams
 ) -> str:
+    """Composes a static MPEG-DASH MPD."""
     mpd_element = _compose_mpd_skeleton(playback, streams)
 
     some_base_url = next(iter(streams)).base_url
@@ -141,6 +142,7 @@ def compose_static_mpd(
 def compose_dynamic_mpd(
     playback: Playback, rewind_metadata: SegmentMetadata, streams: SetOfStreams
 ) -> str:
+    """Composes a dynamic MPEG-DASH MPD."""
     mpd_element = _compose_mpd_skeleton(playback, streams)
     mpd_element.attrib["profiles"] = "urn:mpeg:dash:profile:isoff-live:2011"
 
@@ -184,6 +186,7 @@ def compose_dynamic_mpd(
 
 
 def refresh_mpd(manifest_content: str, streams: SetOfStreams) -> str:
+    """Refreshes segment base URLs in a composed MPEG-DASH MPD."""
     manifest = etree.fromstring(manifest_content.encode())
 
     representation_elements = manifest.xpath("//mpd:Representation", namespaces=NS)

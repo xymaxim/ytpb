@@ -3,11 +3,11 @@ import re
 from conftest import TEST_DATA_PATH
 from lxml import etree
 
-from ytpb import mpd
+from ytpb import representations
 
 
 def test_representation_properties(audio_base_url):
-    representation = mpd.AudioRepresentationInfo(
+    representation = representations.AudioRepresentationInfo(
         itag="140",
         codecs="mp4a.40.2",
         mime_type="audio/mp4",
@@ -20,10 +20,10 @@ def test_representation_properties(audio_base_url):
 
 def test_extract_representations_info(audio_base_url: str, video_base_url: str):
     with open(TEST_DATA_PATH / "manifest-1695928670.mpd") as f:
-        results = mpd.extract_representations(f.read())
+        results = representations.extract_representations(f.read())
 
     assert (
-        mpd.AudioRepresentationInfo(
+        representations.AudioRepresentationInfo(
             itag="140",
             codecs="mp4a.40.2",
             mime_type="audio/mp4",
@@ -33,7 +33,7 @@ def test_extract_representations_info(audio_base_url: str, video_base_url: str):
         in results
     )
     assert (
-        mpd.VideoRepresentationInfo(
+        representations.VideoRepresentationInfo(
             itag="244",
             codecs="vp9",
             mime_type="video/webm",

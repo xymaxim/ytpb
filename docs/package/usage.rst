@@ -117,8 +117,8 @@ Selecting streams
 The information about audio and video streams are described by
 :class:`ytpb.types.AudioStream` and :class:`ytpb.types.VideoStream` types,
 respectively. These types are basically aliases to
-:class:`ytpb.mpd.AudioRepresentationInfo` and
-:class:`ytpb.mpd.VideoRepresentationInfo`, which in turn are referenced to
+:class:`ytpb.representations.AudioRepresentationInfo` and
+:class:`ytpb.representations.VideoRepresentationInfo`, which in turn are referenced to
 MPEG-DASH `representations
 <https://dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#representation-timing>`__.
 
