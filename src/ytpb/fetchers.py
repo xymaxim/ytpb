@@ -39,7 +39,7 @@ class InfoFetcher(ABC):
         raise NotImplementedError
 
     @abstractmethod
-    def fetch_streams(self, force_fetch: bool = True):
+    def fetch_streams(self):
         """Fetches streams available for a video."""
         raise NotImplementedError
 
@@ -58,7 +58,7 @@ class YtpbInfoFetcher(InfoFetcher):
 
         return self.info
 
-    def fetch_streams(self, force_fetch: bool = True) -> SetOfStreams:
+    def fetch_streams(self) -> SetOfStreams:
         logger.debug("Fetching manifest file and extracting streams info")
 
         dash_manifest_url = self.info.dash_manifest_url
@@ -160,12 +160,10 @@ class YoutubeDLInfoFetcher(InfoFetcher):
             stream = VideoStream(**attributes)
         return stream
 
-    def fetch_streams(self, force_fetch: bool = True) -> SetOfStreams:
+    def fetch_streams(self) -> SetOfStreams:
+        assert self._formats, "Formats are not set"
+
         streams = Streams()
-
-        if not self._formats or force_fetch:
-            self.fetch_video_info()
-
         for format_item in self._formats:
             try:
                 stream = self._parse_format_item(format_item)
