@@ -2,7 +2,8 @@
 ###############
 
 .. contents::
-    :local:
+   :local:
 .. currentmodule:: ytpb.locate
 
 .. automodule:: ytpb.locate
+   :ignore-module-all:

@@ -17,6 +17,9 @@ from ytpb.types import SegmentSequence, Timestamp
 from ytpb.utils.remote import request_reference_sequence
 from ytpb.utils.url import extract_parameter_from_url
 
+__all__ = ("SegmentLocator", "LocateResult")
+
+
 logger = structlog.get_logger(__name__)
 
 #: Number of bytes sufficient to cover the YouTube metadata in segment
