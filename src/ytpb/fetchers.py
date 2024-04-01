@@ -22,7 +22,14 @@ logger = structlog.get_logger(__name__)
 class InfoFetcher(ABC):
     """A base abstract class for fetchers."""
 
-    def __init__(self, video_url: str, session: requests.Session | None = None):
+    def __init__(self, video_url: str, session: requests.Session | None = None) -> None:
+        """Constructs an object of this class.
+
+        Args:
+            video_url: A video URL.
+            base_url: A segment base URL.
+            session: A :class:`requests.Session` object.
+        """
         self.video_url = video_url
         self.session = session or requests.Session()
 
@@ -65,14 +72,29 @@ class YtpbInfoFetcher(InfoFetcher):
 
 
 class YoutubeDLInfoFetcher(InfoFetcher):
-    options = {
+    default_options = {
         "live_from_start": True,
         "quiet": True,
     }
 
-    def __init__(self, video_url: str, session: requests.Session | None = None):
+    def __init__(
+        self,
+        video_url: str,
+        session: requests.Session | None = None,
+        options: dict | None = None,
+    ) -> None:
+        """Constructs an object of this class.
+
+        Args:
+            video_url: A video URL.
+            base_url: A segment base URL.
+            session: A :class:`requests.Session` object.
+            options: Options passed to :class:`yt_dlp.YoutubeDL`.
+        """
         super().__init__(video_url, session)
-        self._ydl = YoutubeDL(self.options)
+        if options is not None:
+            options = default_options.update(options)
+        self._ydl = YoutubeDL(options)
         self._formats: list[dict] = []
 
     def fetch_video_info(self) -> YouTubeVideoInfo:
