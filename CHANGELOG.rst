@@ -5,6 +5,24 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 
 .. _Calendar Versioning: https://calver.org
 
+Unreleased
+**********
+
+- Add the `Python package
+  <https://ytpb.readthedocs.io/en/latest/package/index.html>`__ page with the
+  basic usage and API reference.
+- Add :attr:`ytpb.mpd.RepresentationInfo.type` property
+- Add ``options`` to :meth:`ytpb.fetchers.YoutubeDLInfoFetcher.__init__`
+
+Breaking changes
+================
+
+- Rename :meth:`ytpb.playback.Playback.get_downloaded_segment` to
+  :meth:`~ytpb.playback.Playback.get_segment`
+- Rename :meth:`ytpb.mpd.extract_representations_info` to
+  :meth:`~ytpb.mpd.extract_representations`
+- Remove unused :meth:`ytpb.mpd.strip_manifest`
+
 `2024.3.27`_
 ************
 
@@ -13,8 +31,9 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 Breaking changes
 ================
 
-- Change return value of ``SegmentLocator.find_sequence_by_time()`` to
-  ``LocateResult``
+- Change return value of
+  :meth:`ytpb.locate.SegmentLocator.find_sequence_by_time` to
+  :class:`~ytpb.locate.LocateResult`
 
 `2024.3.16`_
 ************
