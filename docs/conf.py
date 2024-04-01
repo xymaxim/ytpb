@@ -12,6 +12,7 @@ extensions = [
 ]
 
 autosectionlabel_prefix_document = True
+suppress_warnings = ["autosectionlabel.*"]
 
 autodoc_default_options = {
     "members": True,
