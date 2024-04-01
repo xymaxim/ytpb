@@ -1,5 +1,5 @@
 ``ytpb.download``
-###############
+#################
 
 .. contents::
     :local:
