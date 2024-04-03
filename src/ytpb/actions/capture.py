@@ -51,9 +51,24 @@ def capture_frames(
     playback: Playback,
     target_dates: list[datetime],
     base_url: str,
-    reference_sequence: SegmentSequence,
+    reference_sequence: SegmentSequence | None = None,
 ) -> Iterator[Image.Image, Segment]:
     """Captures frames as images.
+
+    Example:
+        Here's an example of capturing frames from one day every hour::
+
+          from datetime import datetime, timedelta, timezone
+
+          best_stream = playback.streams.query("best(format eq mp4 and fps eq 30)")[0]
+          start_date = datetime(2024, 1, 2, tzinfo=timezone.utc)
+          dates_to_capture = [start_date + timedelta(hours=h) for h in range(25)]
+
+          captured = capture_frames(
+              playback, dates_to_capture, best_stream.base_url
+          )
+          for i, (image, _) in enumerate(captured):
+              image.save(f"output-{i:02d}.jpg", quality=80)
 
     Args:
         playback: A :class:`~ytpb.playback.Playback` object.
@@ -74,7 +89,7 @@ def capture_frames(
             session=playback.session,
         )
         is_end = i == number_of_targets - 1
-        found_sequence, _ = sl.find_sequence_by_time(target_date.timestamp(), is_end)
+        found_sequence, *_ = sl.find_sequence_by_time(target_date.timestamp(), is_end)
         previous_sequence = found_sequence
 
         segment = playback.get_segment(found_sequence, base_url)
