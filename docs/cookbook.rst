@@ -113,6 +113,12 @@ Then, select the desired ones to be converted with the ``-map`` `option
 
     $ ffmpeg -i MPD -map 0:1 -map 0:2 -c copy out.mp4
 
+Here's an equivalent for ``ffmpeg`` running in a `container
+<https://github.com/xymaxim/ytpb/issues/4#issuecomment-2012443084>`__: ::
+
+    $ podman run --rm -it -v $PWD:/root:Z ytpb \
+        ffmpeg -i MPD -c copy /root/out.mp4
+
 The ``-map`` option can be omitted and the `default behavior
 <https://trac.ffmpeg.org/wiki/Map#Defaultbehavior>`__ will be applied. Use ``-c
 copy`` to `avoid <https://ffmpeg.org/ffmpeg.html#Stream-copy>`__ transcoding
