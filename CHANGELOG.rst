@@ -10,18 +10,23 @@ Unreleased
 
 - Add the `Python package
   <https://ytpb.readthedocs.io/en/latest/package/index.html>`__ page with the
-  basic usage and API reference.
-- Add :attr:`ytpb.mpd.RepresentationInfo.type` property
+  basic usage and API reference
+- Add :attr:`ytpb.representations.RepresentationInfo.type` property
 - Add ``options`` to :meth:`ytpb.fetchers.YoutubeDLInfoFetcher.__init__`
+- Accept Unix timestamps for moments and intervals (`b7dcbaf
+  <https://github.com/xymaxim/ytpb/commit/b7dcbaf6eebe3f6022b7fa8eefe98f4b8af7c4cb>`__)
 
 Breaking changes
 ================
 
 - Rename :meth:`ytpb.playback.Playback.get_downloaded_segment` to
   :meth:`~ytpb.playback.Playback.get_segment`
-- Rename :meth:`ytpb.mpd.extract_representations_info` to
-  :meth:`~ytpb.mpd.extract_representations`
-- Remove unused :meth:`ytpb.mpd.strip_manifest`
+- Rename :mod:`ytpb.mpd` to :mod:`ytpb.representations`
+- Rename :meth:`ytpb.representations.extract_representations_info` to
+  :meth:`~ytpb.representations.extract_representations`
+- Remove unused :meth:`ytpb.representations.strip_manifest`
+- Change ``merge_kwargs`` of :meth:`ytpb.actions.download.download_excerpt` from
+  keyword to positional argument
 
 `2024.3.27`_
 ************
