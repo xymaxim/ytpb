@@ -5,6 +5,13 @@ API reference
 
 This document is the API reference for Ytpb.
 
+**Top-level API**
+
+.. toctree::
+    :maxdepth: 2
+
+    ytpb
+
 **Module-level APIs**
 
 .. toctree::
