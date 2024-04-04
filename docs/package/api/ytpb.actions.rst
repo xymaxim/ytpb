@@ -1,10 +1,12 @@
 Actions
 #######
 
-.. currentmodule:: ytpb.actions
+Actions are high-level functions that work with a playback.
 
 .. contents::
     :local:
+
+.. currentmodule:: ytpb.actions
 
 ``ytpb.actions.capture``
 ************************
