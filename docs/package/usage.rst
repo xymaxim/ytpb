@@ -1,6 +1,8 @@
 Basic usage
 ###########
 
+This document shows the basic usage examples.
+
 .. contents:: Contents
    :depth: 1
    :backlinks: top
@@ -20,12 +22,12 @@ essential information:
 .. code-block:: python
 
           from ytpb.playback import Playback
-	  playback = Playback(video_url := "https://www.youtube.com/watch?v=...")
+	  playback = Playback(stream_url := "https://www.youtube.com/watch?v=...")
 	  playback.fetch_and_set_essential()
 
 Such information includes basic video details,
-:class:`ytpb.info.YouTubeVideoInfo`, and a set of streams (MPEG-DASH
-representations), :class:`ytpb.types.SetOfStreams`.
+:class:`~ytpb.info.YouTubeVideoInfo`, and a set of streams (MPEG-DASH
+representations), :class:`~ytpb.types.SetOfStreams`.
 
 By default, :class:`~ytpb.fetchers.YtpbInfoFetcher` is used to download and parse
 all of the information needed to further work. Another available fetcher is
@@ -35,8 +37,8 @@ all of the information needed to further work. Another available fetcher is
 .. code-block:: python
 
    from ytpb.fetchers import YoutubeDLInfoFetcher
-   fetcher = YoutubeDLInfoFetcher(video_url)
-   playback = Playback(video_url, fetcher=fetcher)
+   fetcher = YoutubeDLInfoFetcher(stream_url)
+   playback = Playback(stream_url, fetcher=fetcher)
    playback.fetch_and_set_essential()
 
 *Note:* The default fetcher will be *perhaps* changed later to
@@ -46,7 +48,7 @@ all of the information needed to further work. Another available fetcher is
 
 .. code-block:: python
 
-   playback = Playback.from_url(video_url, fetcher=fetcher)
+   playback = Playback.from_url(stream_url, fetcher=fetcher)
 
 After, the basic information and streams are available.
 
@@ -57,21 +59,32 @@ By default, cache is not touched during playback creation. With this, each
 execution downloads and parses a main HTML page and MPEG-DASH MPD file, which is
 not optimal. The :meth:`Playback.from_cache` can be used to create a playback
 from an existing cache item (it also involves writing to cache). If an item is
-not found or expired, :class:`CachedItemNotFoundError` will be raised.
+not found or expired, :class:`~ytpb.exceptions.CachedItemNotFoundError` will be
+raised.
 
 .. code-block:: python
 
    from ytpb.exceptions import CachedItemNotFoundError
    try:
-       playback = Playback.from_cache(video_url)
+       playback = Playback.from_cache(stream_url)
    except CachedItemNotFoundError:
-       playback = Playback.from_url(video_url, write_to_cache=True)
+       playback = Playback.from_url(stream_url, write_to_cache=True)
+
+Another, more convenient way is to use :meth:`ytpb.get_playback`, which uses
+cache by default:
+
+.. code-block:: python
+
+   from ytpb import get_playback
+   playback = get_playback(stream_url_or_id)
+
 
 Locating moments and intervals
 ******************************
 
-Next, let's locate a rewind moment of :class:`.RewindMoment` by mapping a point
-of :class:`ytpb.types.AbsolutePointInStream` (a date or a sequence number) to a
+Once we have a playback ready to use, let's locate a rewind moment of
+:class:`.RewindMoment` by mapping a point of
+:class:`ytpb.types.AbsolutePointInStream` (a date or a sequence number) to a
 segment sequence number:
 
 .. code-block:: python
@@ -88,7 +101,7 @@ segment sequence number:
 
 While locating a moment requires an absolute point in stream, locating an
 interval accepts both absolute and relative
-(:class:`ytpb.types.RelativePointInStream`) points. For example, we can locate a
+(:class:`~ytpb.types.RelativePointInStream`) points. For example, we can locate a
 30-second interval starting on a specific date:
 
    >>> playback.locate_interval(datetime(2024, 3, 28, 8), timedelta(seconds=30))
@@ -98,8 +111,8 @@ interval accepts both absolute and relative
    8, 0, 30), sequence=93610, cut_at=4.387692928314209, is_end=True,
    falls_into_gap=False))
 
-Behind the scenes, the instance of :class:`ytpb.locate.SegmentLocator` is used
-to locate moments at lower level:
+The instance of :class:`~ytpb.locate.SegmentLocator` is used to locate moments
+at lower level:
 
 .. code-block:: python
 
@@ -117,14 +130,13 @@ Selecting streams
 The information about audio and video streams are described by
 :class:`ytpb.types.AudioStream` and :class:`ytpb.types.VideoStream` types,
 respectively. These types are basically aliases to
-:class:`ytpb.representations.AudioRepresentationInfo` and
-:class:`ytpb.representations.VideoRepresentationInfo`, which in turn are referenced to
+:class:`~ytpb.representations.AudioRepresentationInfo` and
+:class:`~ytpb.representations.VideoRepresentationInfo`, which in turn are referenced to
 MPEG-DASH `representations
 <https://dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#representation-timing>`__.
 
-The streams can be selected in different ways: unambiguously by the ``itag``
-value or ambiguously by using a predicate function or :ref:`format
-spec<format-spec>`.
+The streams can be selected in different ways: unambiguously by the itag value
+or ambiguously by using a predicate function or :ref:`format spec<format-spec>`.
 
 .. code-block:: python
 
