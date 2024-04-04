@@ -1,4 +1,4 @@
-from datetime import datetime, time, timedelta
+from datetime import datetime, time, timedelta, timezone
 from enum import auto, StrEnum
 from typing import Literal, NamedTuple
 
@@ -47,6 +47,12 @@ class PointInStreamParamType(click.ParamType):
                 except ValueError:
                     message = f"'{value}' does not match ISO 8601 date format."
                     self.fail(message, param, ctx)
+            # Unix timestamp
+            case value if value.startswith("@"):
+                timestamp = float(value.lstrip("@"))
+                output = ensure_date_aware(
+                    datetime.fromtimestamp(timestamp, timezone.utc)
+                )
             case _:
                 self.fail("Option doesn't allow '{}' value", param, ctx)
         return output
@@ -106,6 +112,10 @@ class RewindIntervalParamType(click.ParamType):
             # Date and time
             case x if "T" in x:
                 output = datetime.fromisoformat(x)
+            # Unix timestamp
+            case x if x.startswith("@"):
+                timestamp = float(x.lstrip("@"))
+                output = datetime.fromtimestamp(timestamp, timezone.utc)
             case "now" | ".." as x:
                 output = x
             case _:

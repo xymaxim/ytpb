@@ -86,6 +86,13 @@ def test_format_spec_with_function():
             "20240102T102000+00/..",
             (datetime(2024, 1, 2, 10, 20, tzinfo=timezone.utc), ".."),
         ),
+        (
+            "@1704190800/@1704190830.123",
+            (
+                datetime(2024, 1, 2, 10, 20, 0, tzinfo=timezone.utc),
+                datetime(2024, 1, 2, 10, 20, 30, 123000, tzinfo=timezone.utc),
+            ),
+        ),
     ],
 )
 def test_rewind_interval(value: str, expected):
