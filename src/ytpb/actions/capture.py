@@ -55,7 +55,7 @@ def capture_frames(
 ) -> Iterator[Image.Image, Segment]:
     """Captures frames as images.
 
-    Example:
+    Examples:
         Here's an example of capturing frames from one day every hour::
 
           from datetime import datetime, timedelta, timezone

@@ -98,8 +98,14 @@ class Streams(MutableSet):
     ) -> list[AudioOrVideoStream]:
         """Queries streams by a format spec.
 
+        Notes:
+            Check for attributes is strict. This means that the following code
+            will fail with :class:`.QueryError` because audio streams don't have
+            the ``height`` attribute::
+              audio_streams.query("height eq 1080")
+
         Examples:
-            Query streams of a specific format using aliases::
+            Query streams of a specific media format using aliases::
 
               playback.streams.query(
                   "@webm", aliases={"webm": "format eq webm"}
@@ -114,6 +120,9 @@ class Streams(MutableSet):
 
         Returns:
             A list of queried streams.
+
+        Raises:
+            QueryError: If failed to query streams with the given format spec.
         """
         if not format_spec:
             return []
