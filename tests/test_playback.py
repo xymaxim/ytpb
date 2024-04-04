@@ -23,7 +23,7 @@ import responses
 from conftest import TEST_DATA_PATH
 from freezegun import freeze_time
 
-from ytpb.exceptions import (
+from ytpb.errors import (
     BaseUrlExpiredError,
     CachedItemNotFoundError,
     SequenceLocatingError,

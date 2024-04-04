@@ -1,6 +1,6 @@
 import pytest
 
-from ytpb.exceptions import BadCommandArgument
+from ytpb.errors import BadCommandArgument
 from ytpb.utils.url import (
     extract_media_type_from_url,
     extract_parameter_from_url,

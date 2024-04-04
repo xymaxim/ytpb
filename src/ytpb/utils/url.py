@@ -2,7 +2,7 @@ import re
 import time
 from urllib.parse import parse_qs, urlparse
 
-from ytpb.exceptions import BadCommandArgument
+from ytpb.errors import BadCommandArgument
 from ytpb.types import SegmentSequence
 
 

@@ -5,7 +5,7 @@ from operator import attrgetter
 from typing import Any, Callable, Iterator, Self
 
 from ytpb.conditional import FORMAT_SPEC_RE, make_filter_from_expression
-from ytpb.exceptions import QueryError
+from ytpb.errors import QueryError
 from ytpb.types import AudioOrVideoStream, AudioStream, SetOfStreams, VideoStream
 
 __all__ = ("Streams",)

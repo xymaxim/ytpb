@@ -10,7 +10,7 @@ import cloup
 import structlog
 
 from ytpb.download import compose_default_segment_filename
-from ytpb.exceptions import (
+from ytpb.errors import (
     BadCommandArgument,
     BaseUrlExpiredError,
     BroadcastStatusError,

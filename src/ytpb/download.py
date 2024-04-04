@@ -9,7 +9,7 @@ from urllib.parse import urljoin
 import requests
 import structlog
 
-from ytpb.exceptions import SegmentDownloadError
+from ytpb.errors import SegmentDownloadError
 from ytpb.types import SegmentSequence
 from ytpb.utils.url import extract_media_type_from_url, extract_parameter_from_url
 

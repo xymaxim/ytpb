@@ -1,6 +1,6 @@
 import pytest
 
-from ytpb.exceptions import QueryError
+from ytpb.errors import QueryError
 from ytpb.streams import AudioOrVideoStream, AudioStream, Streams
 
 

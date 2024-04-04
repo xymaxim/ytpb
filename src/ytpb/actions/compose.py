@@ -6,7 +6,7 @@ from datetime import datetime, timezone
 from lxml import etree
 from lxml.builder import E
 
-from ytpb.exceptions import YtpbError
+from ytpb.errors import YtpbError
 from ytpb.playback import Playback, RewindInterval
 from ytpb.representations import NAMESPACES as NS
 from ytpb.segment import SegmentMetadata

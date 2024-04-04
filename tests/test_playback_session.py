@@ -5,7 +5,7 @@ from urllib.parse import urljoin
 
 import pytest
 import responses
-from ytpb.exceptions import MaxRetryError
+from ytpb.errors import MaxRetryError
 
 from ytpb.playback import Playback
 from ytpb.streams import AudioStream, Streams

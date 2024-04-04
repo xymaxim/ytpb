@@ -1,7 +1,7 @@
 import pytest
 import responses
 
-from ytpb.exceptions import YtpbError
+from ytpb.errors import YtpbError
 from ytpb.utils.remote import request_reference_sequence
 
 

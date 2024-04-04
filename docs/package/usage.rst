@@ -59,12 +59,12 @@ By default, cache is not touched during playback creation. With this, each
 execution downloads and parses a main HTML page and MPEG-DASH MPD file, which is
 not optimal. The :meth:`Playback.from_cache` can be used to create a playback
 from an existing cache item (it also involves writing to cache). If an item is
-not found or expired, :class:`~ytpb.exceptions.CachedItemNotFoundError` will be
+not found or expired, :class:`~ytpb.errors.CachedItemNotFoundError` will be
 raised.
 
 .. code-block:: python
 
-   from ytpb.exceptions import CachedItemNotFoundError
+   from ytpb.errors import CachedItemNotFoundError
    try:
        playback = Playback.from_cache(stream_url)
    except CachedItemNotFoundError:

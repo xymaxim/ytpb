@@ -33,7 +33,7 @@ from ytpb.cli.options import (
     yt_dlp_option,
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
-from ytpb.exceptions import BroadcastStatusError
+from ytpb.errors import BroadcastStatusError
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
 from ytpb.playback import Playback

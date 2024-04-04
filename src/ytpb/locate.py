@@ -11,7 +11,7 @@ import requests
 import structlog
 
 from ytpb.download import compose_default_segment_filename, download_segment
-from ytpb.exceptions import SegmentDownloadError, SequenceLocatingError
+from ytpb.errors import SegmentDownloadError, SequenceLocatingError
 from ytpb.segment import Segment, SegmentMetadata
 from ytpb.types import SegmentSequence, Timestamp
 from ytpb.utils.remote import request_reference_sequence

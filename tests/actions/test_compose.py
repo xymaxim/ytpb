@@ -8,7 +8,7 @@ from freezegun import freeze_time
 from helpers import patched_freezgun_astimezone
 
 from ytpb.actions.compose import compose_dynamic_mpd, compose_static_mpd, refresh_mpd
-from ytpb.exceptions import YtpbError
+from ytpb.errors import YtpbError
 from ytpb.playback import Playback
 from ytpb.segment import SegmentMetadata
 from ytpb.streams import Streams

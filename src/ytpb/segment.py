@@ -8,7 +8,7 @@ from pathlib import Path
 import av
 import structlog
 
-from ytpb.exceptions import YtpbError
+from ytpb.errors import YtpbError
 from ytpb.types import SegmentSequence, Timestamp
 from ytpb.utils.other import US_TO_S
 

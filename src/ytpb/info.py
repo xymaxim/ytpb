@@ -7,7 +7,7 @@ from typing import Any
 
 from lxml import etree
 
-from ytpb.exceptions import InfoExtractError
+from ytpb.errors import InfoExtractError
 
 
 class BroadcastStatus(StrEnum):

@@ -31,7 +31,7 @@ from ytpb.cli.options import (
     yt_dlp_option,
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewindInterval
-from ytpb.exceptions import SequenceLocatingError
+from ytpb.errors import SequenceLocatingError
 from ytpb.merge import merge_segments
 from ytpb.types import (
     AddressableMappingProtocol,

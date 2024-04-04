@@ -24,7 +24,7 @@ This document is the API reference for Ytpb.
 
     ytpb.cache
     ytpb.download
-    ytpb.exceptions
+    ytpb.errors
     ytpb.fetchers
     ytpb.info
     ytpb.locate

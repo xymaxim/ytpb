@@ -6,7 +6,7 @@ import pycond as pc
 import structlog
 
 from ytpb.config import ALIAS_EXPAND_FUNCTIONS, ALL_ALIASES
-from ytpb.exceptions import QueryError
+from ytpb.errors import QueryError
 from ytpb.types import AudioOrVideoStream
 
 logger = structlog.get_logger(__name__)

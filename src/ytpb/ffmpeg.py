@@ -5,7 +5,7 @@ from typing import Any
 
 import structlog
 
-from ytpb.exceptions import FFmpegRunError
+from ytpb.errors import FFmpegRunError
 
 logger = structlog.get_logger(__name__)
 

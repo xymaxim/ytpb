@@ -1,6 +1,6 @@
 import requests
 
-from ytpb.exceptions import YtpbError
+from ytpb.errors import YtpbError
 from ytpb.types import AudioOrVideoStream, SegmentSequence, VideoStream
 
 

@@ -1,4 +1,4 @@
-from ytpb.exceptions import CachedItemNotFoundError
+from ytpb.errors import CachedItemNotFoundError
 from ytpb.fetchers import InfoFetcher, YtpbInfoFetcher
 from ytpb.playback import Playback
 from ytpb.utils.url import normalize_video_url
