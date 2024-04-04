@@ -44,7 +44,23 @@ def download_excerpt(
     no_merge: bool = False,
     merge_kwargs: dict[str, Any] | None = None,
 ) -> ExcerptDownloadResult:
-    """Downloads an excerpt."""
+    """Downloads and merges audio and/or video segments.
+
+    Notes:
+        Downloaded segments are not cleaned up after merging.
+
+    Args:
+        playback: A playback.
+        rewind_interval: A rewound interval to download.
+        audio_format_spec: An audio format spec.
+        video_format_spec: A video format spec.
+        output_stem: A path stem of the merged excerpt file.
+        no_merge: Do not merge downloaded segments.
+        merge_kwargs: Arguments that :meth:`ytpb.merge.merge_segments` takes.
+
+    Returns:
+        An :class:`ExcerptDownloadResult` object.
+    """
     sequences_to_download = range(
         rewind_interval.start.sequence, rewind_interval.end.sequence + 1
     )
