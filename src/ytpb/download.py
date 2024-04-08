@@ -3,7 +3,7 @@
 import io
 import os
 from pathlib import Path
-from typing import Callable
+from typing import Any, Callable, Generator
 from urllib.parse import urljoin
 
 import requests
@@ -18,13 +18,7 @@ logger = structlog.get_logger(__name__)
 _SegmentOutputFilename = str | Callable[[SegmentSequence, str], str]
 
 
-def compose_default_segment_filename(sequence: SegmentSequence, base_url: str) -> str:
-    itag = extract_parameter_from_url("itag", base_url)
-    extension = extract_media_type_from_url(base_url)[1]
-    return f"{sequence}.i{itag}.{extension}"
-
-
-def _make_request_for_segment(
+def _request_segment(
     sequence: SegmentSequence,
     base_url: str,
     size: int | None = None,
@@ -51,6 +45,31 @@ def _make_request_for_segment(
         logger.debug("Header 'Range' is ignored, downloaded all content")
 
     return response
+
+
+def compose_default_segment_filename(sequence: SegmentSequence, base_url: str) -> str:
+    itag = extract_parameter_from_url("itag", base_url)
+    extension = extract_media_type_from_url(base_url)[1]
+    return f"{sequence}.i{itag}.{extension}"
+
+
+def save_segment_to_file(
+    content: bytes,
+    sequence: SegmentSequence,
+    base_url: str,
+    output_directory: Path,
+    output_filename,
+) -> Path:
+    if callable(output_filename):
+        output_filename_value = output_filename(sequence, base_url)
+        output_path = Path(output_directory) / output_filename_value
+    else:
+        output_path = Path(output_directory) / output_filename
+
+    with open(output_path, "wb") as f:
+        f.write(content)
+
+    return output_path
 
 
 def download_segment(
@@ -87,7 +106,7 @@ def download_segment(
 
     if force_download or not os.path.isfile(path_to_download_to):
         with open(path_to_download_to, "wb") as f:
-            response = _make_request_for_segment(sequence, base_url, size, session)
+            response = _request_segment(sequence, base_url, size, session)
             f.write(response.content)
 
     return path_to_download_to
@@ -113,5 +132,28 @@ def download_segment_to_buffer(
     Raises:
         SegmentDownloadError: If failed to download a segment.
     """
-    response = _make_request_for_segment(sequence, base_url, size, session)
+    response = _request_segment(sequence, base_url, size, session)
     return io.BytesIO(response.content)
+
+
+def iter_segments(
+    sequences: list[SegmentSequence],
+    base_url: str,
+    size: int | None = None,
+    session: requests.Session | None = None,
+) -> Generator[tuple[requests.Response, SegmentSequence, str], None, None]:
+    """Iterates over segment sequence numbers and requests segments.
+
+    Args:
+        sequences: Segment sequence numbers.
+        base_url: A segment base URL.
+        size: An amount of bytes to download.
+        session: A :class:`requests.Session` object.
+
+    Yields:
+        Tuples of a :class:`requests.Response` object, segment sequence number,
+        and base URL.
+    """
+    for sequence in sequences:
+        with _request_segment(sequence, base_url, size, session) as response:
+            yield response, sequence, base_url
