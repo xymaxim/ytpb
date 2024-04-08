@@ -350,15 +350,20 @@ def download_command(
             final_output_path = output_path
         final_output_path = resolve_output_path(final_output_path)
 
-        do_download_excerpt_segments = partial(
-            actions.download.download_excerpt,
+        total_segments = (
+            rewind_interval.end.sequence - rewind_interval.start.sequence + 1
+        )
+        progress_reporter = actions.download.RichProgressReporter()
+        if audio_stream:
+            progress_reporter.progress.add_task("   - Audio", total=total_segments)
+        if video_stream:
+            progress_reporter.progress.add_task("   - Video", total=total_segments)
+        do_download_segments = partial(
+            actions.download.download_segments,
             playback,
             rewind_interval,
-            audio_format,
-            video_format,
-            output_directory=final_output_path.parent,
-            output_stem=final_output_path.name,
-            no_merge=True,
+            [x for x in [audio_stream, video_stream] if x is not None],
+            progress_reporter=progress_reporter,
         )
 
         if no_merge:
@@ -367,15 +372,10 @@ def download_command(
                     rewind_interval.start.sequence, rewind_interval.end.sequence
                 )
             )
-            download_result = do_download_excerpt_segments()
-            some_downloaded_paths = (
-                download_result.audio_segment_paths
-                or download_result.video_segment_paths
-            )
+            downloaded_segment_paths = do_download_segments()
+            some_downloaded_path = downloaded_segment_paths[0][0]
             click.echo(
-                "\nSuccess! Segments saved to {}/.".format(
-                    some_downloaded_paths[0].parent
-                )
+                "\nSuccess! Segments saved to {}/.".format(some_downloaded_path.parent)
             )
         else:
             click.echo("(<<) Preparing and saving the excerpt...")
@@ -385,7 +385,15 @@ def download_command(
                 )
             )
 
-            download_result = do_download_excerpt_segments()
+            downloaded_segment_paths = do_download_segments()
+            audio_and_video_segment_paths: list[list[Path]] = [[], []]
+            match audio_stream, video_stream:
+                case _, None:
+                    audio_and_video_segment_paths[0] = downloaded_segment_paths[0]
+                case None, _:
+                    audio_and_video_segment_paths[1] = downloaded_segment_paths[0]
+                case _:
+                    audio_and_video_segment_paths = downloaded_segment_paths
 
             if no_cut:
                 click.echo("2. Merging segments (no cut requested)... ", nl=False)
@@ -393,8 +401,8 @@ def download_command(
                 click.echo("2. Merging segments (may take a while)... ", nl=False)
 
             merged_path = merge_segments(
-                download_result.audio_segment_paths,
-                download_result.video_segment_paths,
+                audio_and_video_segment_paths[0],
+                audio_and_video_segment_paths[1],
                 output_directory=final_output_path.parent,
                 output_stem=final_output_path.name,
                 temp_directory=playback.get_temp_directory(),
