@@ -6,7 +6,7 @@ import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Literal, Self
+from typing import Iterable, Literal, Self
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -78,6 +78,16 @@ class RewindInterval:
                 "Start moment is ahead of the end one: "
                 f"{self.start.sequence} > {self.end.sequence}"
             )
+
+    @property
+    def duration(self) -> timedelta:
+        """An interval duration."""
+        return self.end.date - self.start.date
+
+    @property
+    def sequences(self) -> Iterable[SegmentSequence]:
+        """Segment sequence numbers that represent the interval."""
+        return range(self.start.sequence, self.end.sequence + 1)
 
 
 class PlaybackSession(requests.Session):

@@ -30,7 +30,7 @@ from ytpb.errors import (
 )
 from ytpb.fetchers import YtpbInfoFetcher
 from ytpb.info import YouTubeVideoInfo
-from ytpb.playback import Playback, RewindMoment
+from ytpb.playback import Playback, RewindInterval, RewindMoment
 from ytpb.streams import AudioOrVideoStream
 from ytpb.types import RelativeSegmentSequence
 
@@ -279,3 +279,12 @@ def test_create_playback_from_not_found_cache(stream_url: str, tmp_path: Path):
 def test_type_of_playback_default_fetcher(stream_url: str):
     playback = Playback(stream_url)
     assert isinstance(playback.fetcher, YtpbInfoFetcher)
+
+
+def test_rewind_interval_properties():
+    interval = RewindInterval(
+        RewindMoment(datetime(2024, 1, 2, 10, 20, 0), 0, 0),
+        RewindMoment(datetime(2024, 1, 2, 10, 20, 30), 1000, 0),
+    )
+    assert timedelta(seconds=30) == interval.duration
+    assert 1001 == len(interval.sequences)
