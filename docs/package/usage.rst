@@ -92,12 +92,12 @@ segment sequence number:
    >>> from datetime import datetime
    >>> playback.locate_moment(datetime(2024, 3, 28, 8))
    RewindMoment(date=datetime.datetime(2024, 3, 28, 8, 0), sequence=93604,
-   cut_at=4.660386085510254, is_end=False, falls_into_gap=False)
+   cut_at=4.660386085510254, is_end=False, falls_in_gap=False)
 
    >>> playback.locate_moment(93604)
    RewindMoment(date=datetime.datetime(2024, 3, 28, 4, 59, 55, 339614,
    tzinfo=datetime.timezone.utc), sequence=93604, cut_at=0, is_end=False,
-   falls_into_gap=False)
+   falls_in_gap=False)
 
 While locating a moment requires an absolute point in stream, locating an
 interval accepts both absolute and relative
@@ -107,9 +107,9 @@ interval accepts both absolute and relative
    >>> playback.locate_interval(datetime(2024, 3, 28, 8), timedelta(seconds=30))
    RewindInterval(start=RewindMoment(date=datetime.datetime(2024, 3, 28, 8, 0),
    sequence=93604, cut_at=4.660386085510254, is_end=False,
-   falls_into_gap=False), end=RewindMoment(date=datetime.datetime(2024, 3, 28,
+   falls_in_gap=False), end=RewindMoment(date=datetime.datetime(2024, 3, 28,
    8, 0, 30), sequence=93610, cut_at=4.387692928314209, is_end=True,
-   falls_into_gap=False))
+   falls_in_gap=False))
 
 The instance of :class:`~ytpb.locate.SegmentLocator` is used to locate moments
 at lower level:

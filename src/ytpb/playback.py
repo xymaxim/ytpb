@@ -52,7 +52,7 @@ SEGMENT_URL_PATTERN = r"https://.+\.googlevideo\.com/videoplayback/.+"
 class RewindMoment:
     """Represents a moment that has been rewound."""
 
-    #: A target rewind date.
+    #: An actual rewound date.
     date: datetime
     #: A sequence number of a segment with a target date.
     sequence: SegmentSequence
@@ -62,7 +62,7 @@ class RewindMoment:
     #: Wether a moment represents the end of an interval.
     is_end: bool = False
     #: Wether a moment falls in gap.
-    falls_into_gap: bool = False
+    falls_in_gap: bool = False
 
 
 @dataclass(frozen=True)
@@ -451,10 +451,10 @@ class Playback:
             case SegmentSequence() as sequence:
                 self.download_segment(sequence, base_url)
                 segment = self.get_segment(sequence, base_url)
-                if not is_end:
-                    date = segment.ingestion_start_date
-                else:
+                if is_end:
                     date = segment.ingestion_end_date
+                else:
+                    date = segment.ingestion_start_date
                 moment = RewindMoment(date, sequence, 0, is_end)
             case datetime() as date:
                 sl = SegmentLocator(
@@ -473,11 +473,11 @@ class Playback:
                 else:
                     cut_at = locate_result.time_difference
                 moment = RewindMoment(
-                    date,
-                    locate_result.sequence,
-                    cut_at,
-                    is_end,
-                    locate_result.falls_in_gap,
+                    date=date,
+                    sequence=locate_result.sequence,
+                    cut_at=cut_at,
+                    is_end=is_end,
+                    falls_in_gap=locate_result.falls_in_gap,
                 )
 
         return moment

@@ -73,7 +73,7 @@ class TestLocateMoment:
             actual.sequence,
             pytest.approx(actual.cut_at, 1e-6),
             actual.is_end,
-            actual.falls_into_gap,
+            actual.falls_in_gap,
         )
 
     def test_end_date(self, add_responses_callback_for_reference_base_url: Callable):
@@ -86,7 +86,7 @@ class TestLocateMoment:
             actual.sequence,
             pytest.approx(actual.cut_at, 1e-6),
             actual.is_end,
-            actual.falls_into_gap,
+            actual.falls_in_gap,
         )
 
 

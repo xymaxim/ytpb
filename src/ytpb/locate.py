@@ -194,10 +194,10 @@ class SegmentLocator:
             candidate_duration,
         )
 
-        falls_into_gap = False
+        falls_in_gap = False
         if candidate_duration < current_diff_in_s - TIME_DIFF_TOLERANCE:
-            falls_into_gap = True
-            logger.debug("Input target time falls into a gap")
+            falls_in_gap = True
+            logger.debug("Input target time falls in a gap")
             if not is_end:
                 self.candidate.sequence += 1
                 current_diff_in_s = self._find_time_diff(self.candidate, desired_time)
@@ -210,7 +210,7 @@ class SegmentLocator:
                 )
 
         return LocateResult(
-            self.candidate.sequence, current_diff_in_s, falls_into_gap, self.track
+            self.candidate.sequence, current_diff_in_s, falls_in_gap, self.track
         )
 
     def find_sequence_by_time(
