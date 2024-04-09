@@ -11,7 +11,6 @@ import functools
 import os
 import shlex
 from pathlib import Path
-from tempfile import NamedTemporaryFile
 from typing import Any
 
 from ytpb import ffmpeg

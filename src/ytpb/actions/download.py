@@ -18,7 +18,6 @@ from rich.progress import (
 
 from ytpb.download import (
     compose_default_segment_filename,
-    download_segment,
     iter_segments,
     save_segment_to_file,
 )
@@ -140,7 +139,7 @@ def download_segments(
         output_directory = playback.get_temp_directory() / "segments"
         output_directory.mkdir(parents=True, exist_ok=True)
 
-    base_urls: List[str] = [s.base_url for s in streams]
+    base_urls: list[str] = [s.base_url for s in streams]
     download_generator = chained_zip(
         *[
             product(

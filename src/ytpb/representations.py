@@ -1,6 +1,5 @@
 """Representations from MPEG-DASH MPD."""
 
-import io
 from dataclasses import dataclass
 from functools import total_ordering
 

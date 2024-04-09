@@ -6,7 +6,7 @@ import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable, Literal, Self
+from typing import Iterable, Literal
 from urllib.parse import parse_qs, urlparse
 
 import requests

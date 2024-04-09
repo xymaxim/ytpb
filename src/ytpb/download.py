@@ -3,7 +3,7 @@
 import io
 import os
 from pathlib import Path
-from typing import Any, Callable, Generator
+from typing import Callable, Generator
 from urllib.parse import urljoin
 
 import requests
