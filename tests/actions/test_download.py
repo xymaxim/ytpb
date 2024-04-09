@@ -10,7 +10,7 @@ import responses
 from helpers import assert_approx_duration
 
 from ytpb import actions
-from ytpb.playback import Playback
+from ytpb.playback import Playback, RewindInterval
 
 
 @dataclass
@@ -23,6 +23,7 @@ class FakeRewindMoment:
 class FakeRewindInterval:
     start: FakeRewindMoment
     end: FakeRewindMoment
+    sequences = RewindInterval.sequences
 
 
 @dataclass

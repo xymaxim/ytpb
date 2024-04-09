@@ -136,10 +136,6 @@ def download_segments(
     Returns:
         A list of downloaded segment paths.
     """
-    sequences_to_download = range(
-        rewind_interval.start.sequence, rewind_interval.end.sequence + 1
-    )
-
     if output_directory is None:
         output_directory = playback.get_temp_directory() / "segments"
         output_directory.mkdir(parents=True, exist_ok=True)
@@ -149,7 +145,7 @@ def download_segments(
         *[
             product(
                 iter_segments(
-                    sequences_to_download, base_url, session=playback.session
+                    rewind_interval.sequences, base_url, session=playback.session
                 ),
                 [task],
             )
@@ -200,10 +196,6 @@ def download_excerpt(
     """
     if not (audio_stream or video_stream):
         raise AssertionError("At least audio or video stream should be provided")
-
-    sequences_to_download = range(
-        rewind_interval.start.sequence, rewind_interval.end.sequence + 1
-    )
 
     all_streams = [x for x in [audio_stream, video_stream] if x is not None]
 
