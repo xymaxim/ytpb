@@ -113,7 +113,7 @@ class YoutubeDLInfoFetcher(InfoFetcher):
         """
         super().__init__(video_url, session)
         if options is not None:
-            options = default_options.update(options)
+            options = self.default_options.update(options)
         self._ydl = YoutubeDL(options)
         self._formats: list[dict] = []
 
