@@ -159,3 +159,37 @@ or ambiguously by using a predicate function or :ref:`format spec<format-spec>`.
        VideoRepresentationInfo(itag=248),
        VideoRepresentationInfo(itag=247),
    ]
+
+Making actions
+**************
+
+Actions can be viewed as top-level functions. They come into play when a
+playback is ready to use and moments or intervals are located. There are
+built-in download, compose, and capture actions.
+
+Let's, for example, download a 30-seconds audio and video excerpt with showing
+download progress:
+
+.. code-block:: python
+
+   from ytpb.actions.download import download_excerpt, RichProgressReporter
+
+   rewind_interval = playback.locate_interval(
+       datetime(2024, 1, 2, 12, tzinfo=datetime.timezone.utc),
+       timedelta(minutes=30),
+   )
+
+   progress_reporter = RichProgressReporter()
+   total_sequences = len(rewind_interval.sequences)
+   progress_reporter.add_task("Audio", total=total_sequences)
+   progress_reporter.add_task("Video", total=total_sequences)
+
+   download_excerpt(
+       rewind_interval,
+       audio_stream=playback.streams.get_by_itag("140"),
+       video_stream=playback.streams.query(
+           "best(format eq webm and quality eq 720p)"
+       ),
+       output_stem="path/to/output",
+       progress_reporter=progress_reporter,
+   )
