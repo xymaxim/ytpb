@@ -39,7 +39,7 @@ from ytpb.types import (
     RelativeSegmentSequence,
     SegmentSequence,
 )
-from ytpb.utils.other import resolve_relativity_in_interval, S_TO_MS
+from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.path import (
     expand_template_output_path,
     IntervalOutputPathContext,
@@ -309,8 +309,8 @@ def download_command(
         else:
             cut_at_end_s = abs(end_diff) if end_diff < 0 else 0
         cut_kwargs = {
-            "cut_at_start": round(cut_at_start_s * int(S_TO_MS)),
-            "cut_at_end": round(cut_at_end_s * int(S_TO_MS)),
+            "cut_at_start": cut_at_start_s,
+            "cut_at_end": cut_at_end_s,
         }
         if not no_merge:
             actual_date_interval = DateInterval(

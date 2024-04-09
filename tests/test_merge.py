@@ -28,7 +28,7 @@ def test_merge_with_default_encoding_settings(run_temp_directory: Path, tmp_path
         video_segment_paths=[SEGMENT_BASE_PATH / "7959120.i244.webm"],
         output_stem=output_stem,
         temp_directory=run_temp_directory,
-        cut_at_start=500,
+        cut_at_start=0.5,
     )
 
     expected_output_path = output_stem.with_suffix(".mkv")
@@ -91,8 +91,8 @@ def test_merge_one_audio_and_video_segments_with_cutting(
         video_segment_paths=[SEGMENT_BASE_PATH / "7959120.i244.webm"],
         output_stem=output_stem,
         temp_directory=run_temp_directory,
-        cut_at_start=500,
-        cut_at_end=500,
+        cut_at_start=0.5,
+        cut_at_end=0.5,
     )
 
     expected_output_path = output_stem.with_suffix(".mkv")
@@ -147,8 +147,8 @@ def test_merge_two_audio_and_video_segments_with_cutting(
         ],
         output_stem=output_stem,
         temp_directory=run_temp_directory,
-        cut_at_start=500,
-        cut_at_end=500,
+        cut_at_start=0.5,
+        cut_at_end=0.5,
     )
 
     expected_output_path = output_stem.with_suffix(".mkv")
@@ -205,8 +205,8 @@ def test_merge_three_audio_and_video_segments_with_cutting(
         ],
         output_stem=output_stem,
         temp_directory=run_temp_directory,
-        cut_at_start=500,
-        cut_at_end=500,
+        cut_at_start=0.5,
+        cut_at_end=0.5,
     )
 
     expected_output_path = output_stem.with_suffix(".mkv")
@@ -251,8 +251,8 @@ def test_merge_two_audio_segments_with_cutting(
         ],
         output_stem=output_stem,
         temp_directory=run_temp_directory,
-        cut_at_start=500,
-        cut_at_end=500,
+        cut_at_start=0.5,
+        cut_at_end=0.5,
     )
 
     expected_output_path = output_stem.with_suffix(".mp4")
@@ -297,8 +297,8 @@ def test_merge_two_video_segments_with_cutting(
         ],
         output_stem=output_stem,
         temp_directory=run_temp_directory,
-        cut_at_start=500,
-        cut_at_end=500,
+        cut_at_start=0.5,
+        cut_at_end=0.5,
     )
 
     expected_output_path = output_stem.with_suffix(".webm")

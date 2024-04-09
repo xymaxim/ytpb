@@ -15,7 +15,6 @@ from tempfile import NamedTemporaryFile
 from typing import Any
 
 from ytpb import ffmpeg
-from ytpb.utils.other import S_TO_MS
 
 __all__ = ("merge_segments", "mux_and_cut_boundary_segment")
 
@@ -46,11 +45,11 @@ def mux_and_cut_boundary_segment(
     """
 
     def prepare_ffmpeg_input_options(
-        segment_path: Path, cut_at_start: int = 0, cut_at_end: int = 0
+        segment_path: Path, cut_at_start: float = 0, cut_at_end: float = 0
     ):
         assert cut_at_start or cut_at_end
         if cut_at_start > 0:
-            return ["-ss", f"{cut_at_start}ms", "-i", segment_path]
+            return ["-ss", f"{cut_at_start}s", "-i", segment_path]
         elif cut_at_end > 0:
             with NamedTemporaryFile(suffix=segment_path.suffix) as f:
                 temp_path = Path(f.name)
@@ -58,8 +57,8 @@ def mux_and_cut_boundary_segment(
                 segment_duration_s = float(
                     ffmpeg.ffprobe_show_entries(temp_path, "format=duration")
                 )
-            end_seek_pos: int = round(segment_duration_s * S_TO_MS) - cut_at_end
-            return ["-i", segment_path, "-to", f"{end_seek_pos}ms"]
+            end_seek_pos: float = segment_duration_s - cut_at_end
+            return ["-i", segment_path, "-to", f"{end_seek_pos}s"]
         else:
             return ["-i", segment_path]
 
@@ -152,8 +151,8 @@ def merge_segments(
     output_directory: str | Path | None = None,
     output_stem: str | Path | None = None,
     temp_directory: str | Path | None = None,
-    cut_at_start: int = 0,
-    cut_at_end: int = 0,
+    cut_at_start: float = 0,
+    cut_at_end: float = 0,
     cleanup: bool = True,
 ) -> Path:
     """Merges and cuts media segments.

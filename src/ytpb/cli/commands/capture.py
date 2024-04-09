@@ -55,7 +55,7 @@ from ytpb.types import (
     SegmentSequence,
 )
 from ytpb.utils.date import DurationFormatPattern, format_duration, ISO8601DateFormatter
-from ytpb.utils.other import resolve_relativity_in_interval, S_TO_MS
+from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.path import (
     expand_template_output_path,
     IntervalOutputPathContext,
@@ -442,8 +442,8 @@ def timelapse_command(
     cut_at_start_s = start_diff if start_diff > 0 else 0
     cut_at_end_s = abs(end_diff) if end_diff < 0 else 0
     {
-        "cut_at_start": round(cut_at_start_s * int(S_TO_MS)),
-        "cut_at_end": round(cut_at_end_s * int(S_TO_MS)),
+        "cut_at_start": cut_at_start_s,
+        "cut_at_end": cut_at_end_s,
     }
     actual_date_interval = DateInterval(
         start=actual_date_interval.start + timedelta(seconds=cut_at_start_s),

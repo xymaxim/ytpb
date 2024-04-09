@@ -31,7 +31,6 @@ from ytpb.types import (
     SetOfStreams,
     VideoStream,
 )
-from ytpb.utils.other import S_TO_MS
 
 logger = structlog.get_logger(__name__)
 
@@ -228,11 +227,10 @@ def download_excerpt(
         end_segment = playback.get_segment(
             rewind_interval.end.sequence, base_url, "segments"
         )
-        cut_at_kwargs = {"cut_at_start": rewind_interval.start.cut_at * S_TO_MS}
+        cut_at_kwargs = {"cut_at_start": rewind_interval.start.cut_at}
         if rewind_interval.end.cut_at != 0:
             cut_at_kwargs["cut_at_end"] = (
-                end_segment.get_actual_duration() * S_TO_MS
-                - rewind_interval.end.cut_at * S_TO_MS
+                end_segment.get_actual_duration() - rewind_interval.end.cut_at
             )
     else:
         cut_at_kwargs = {}
