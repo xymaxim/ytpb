@@ -219,21 +219,12 @@ def download_excerpt(
     if video_stream:
         downloaded_paths[1] = _downloaded_paths[1]
 
+    cut_at_kwargs: dict[str, float] = {}
     if need_cut:
-        if video_stream:
-            base_url = video_stream.base_url
-        else:
-            base_url = audio_stream.base_url
-        end_segment = playback.get_segment(
-            rewind_interval.end.sequence, base_url, "segments"
-        )
-        cut_at_kwargs = {"cut_at_start": rewind_interval.start.cut_at}
-        if rewind_interval.end.cut_at != 0:
-            cut_at_kwargs["cut_at_end"] = (
-                end_segment.get_actual_duration() - rewind_interval.end.cut_at
-            )
-    else:
-        cut_at_kwargs = {}
+        cut_at_kwargs = {
+            "cut_at_start": rewind_interval.start.cut_at,
+            "cut_at_end": rewind_interval.end.cut_at,
+        }
 
     merge_kwargs = {**cut_at_kwargs, **(merge_kwargs or {})}
 

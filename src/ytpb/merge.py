@@ -51,14 +51,7 @@ def mux_and_cut_boundary_segment(
         if cut_at_start > 0:
             return ["-ss", f"{cut_at_start}s", "-i", segment_path]
         elif cut_at_end > 0:
-            with NamedTemporaryFile(suffix=segment_path.suffix) as f:
-                temp_path = Path(f.name)
-                ffmpeg.ffmpeg_stream_copy(segment_path, temp_path)
-                segment_duration_s = float(
-                    ffmpeg.ffprobe_show_entries(temp_path, "format=duration")
-                )
-            end_seek_pos: float = segment_duration_s - cut_at_end
-            return ["-i", segment_path, "-to", f"{end_seek_pos}s"]
+            return ["-i", segment_path, "-to", f"{cut_at_end}s"]
         else:
             return ["-i", segment_path]
 

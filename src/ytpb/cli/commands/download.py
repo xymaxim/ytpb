@@ -299,24 +299,26 @@ def download_command(
         end_segment.ingestion_end_date,
     )
 
-    if no_cut:
-        cut_kwargs = {}
-    else:
-        start_diff, end_diff = requested_date_interval - actual_date_interval
-        cut_at_start_s = start_diff if start_diff > 0 else 0
+    cut_kwargs: dict[str, float] = {}
+    if not no_cut:
+        cut_at_start = rewind_interval.start.cut_at
         if preview:
-            cut_at_end_s = 0
+            cut_at_end = 0
         else:
-            cut_at_end_s = abs(end_diff) if end_diff < 0 else 0
+            cut_at_end = rewind_interval.end.cut_at
         cut_kwargs = {
-            "cut_at_start": cut_at_start_s,
-            "cut_at_end": cut_at_end_s,
+            "cut_at_start": cut_at_start,
+            "cut_at_end": cut_at_end,
         }
-        if not no_merge:
-            actual_date_interval = DateInterval(
-                actual_date_interval.start + timedelta(seconds=cut_at_start_s),
-                actual_date_interval.end - timedelta(seconds=cut_at_end_s),
-            )
+
+        if cut_at_end == 0:
+            end_point = end_segment.ingestion_end_date
+        else:
+            end_point = end_segment.ingestion_start_date + timedelta(seconds=cut_at_end)
+        actual_date_interval = DateInterval(
+            start_segment.ingestion_start_date + timedelta(seconds=cut_at_start),
+            end_point,
+        )
 
     print_summary_info(requested_date_interval, actual_date_interval, rewind_interval)
     click.echo()

@@ -437,21 +437,7 @@ def timelapse_command(
         end_segment.ingestion_end_date,
     )
 
-    start_diff, end_diff = requested_date_interval - actual_date_interval
-
-    cut_at_start_s = start_diff if start_diff > 0 else 0
-    cut_at_end_s = abs(end_diff) if end_diff < 0 else 0
-    {
-        "cut_at_start": cut_at_start_s,
-        "cut_at_end": cut_at_end_s,
-    }
-    actual_date_interval = DateInterval(
-        start=actual_date_interval.start + timedelta(seconds=cut_at_start_s),
-        end=actual_date_interval.end - timedelta(seconds=cut_at_end_s),
-    )
-
-    s = requested_date_interval.start
-    e = requested_date_interval.end
+    s, e = requested_date_interval.start, requested_date_interval.end
     dates_to_capture = [s + every * i for i in range((e - s) // every + 1)]
 
     print_timelapse_summary_info(dates_to_capture, requested_date_interval.end, every)
