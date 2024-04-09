@@ -306,18 +306,14 @@ def download_command(
             cut_at_end = 0
         else:
             cut_at_end = rewind_interval.end.cut_at
-        cut_kwargs = {
-            "cut_at_start": cut_at_start,
-            "cut_at_end": cut_at_end,
-        }
-
-        if cut_at_end == 0:
-            end_point = end_segment.ingestion_end_date
-        else:
-            end_point = end_segment.ingestion_start_date + timedelta(seconds=cut_at_end)
+        cut_kwargs.update(
+            {
+                "cut_at_start": cut_at_start,
+                "cut_at_end": cut_at_end,
+            }
+        )
         actual_date_interval = DateInterval(
-            start_segment.ingestion_start_date + timedelta(seconds=cut_at_start),
-            end_point,
+            rewind_interval.start.date, rewind_interval.end.date
         )
 
     print_summary_info(requested_date_interval, actual_date_interval, rewind_interval)
