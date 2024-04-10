@@ -5,15 +5,15 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 
 .. _Calendar Versioning: https://calver.org
 
-Unreleased
-**********
+`2024.4.10`_
+************
 
 - Add the `Python package
   <https://ytpb.readthedocs.io/en/latest/package/index.html>`__ page with the
   basic usage and API reference
 - Add :attr:`ytpb.representations.RepresentationInfo.type` property
 - Add :attr:`ytpb.playback.RewindInterval.duration` and
-  :attr:`~ytpb.playback.RewindInterval.sequences` property
+  :attr:`~ytpb.playback.RewindInterval.sequences` properties
 - Add ``options`` to :meth:`ytpb.fetchers.YoutubeDLInfoFetcher.__init__`
 - Accept Unix timestamps for moments and intervals (`b7dcbaf
   <https://github.com/xymaxim/ytpb/commit/b7dcbaf6eebe3f6022b7fa8eefe98f4b8af7c4cb>`__)
@@ -71,6 +71,7 @@ Breaking changes
 - Change the first segment locating step: don't limit it to two jumps (`#8
   <https://github.com/xymaxim/ytpb/pull/8>`__)
 
+.. _2024.4.10: https://github.com/xymaxim/ytpb/compare/v2024.3.27..v2024.4.10
 .. _2024.3.27: https://github.com/xymaxim/ytpb/compare/v2024.3.16..v2024.3.27
 .. _2024.3.16: https://github.com/xymaxim/ytpb/compare/v2024.3.13..v2024.3.16
 .. _2024.3.13: https://github.com/xymaxim/ytpb/compare/v2024.3.9..v2024.3.13
