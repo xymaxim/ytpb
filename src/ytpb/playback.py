@@ -531,6 +531,7 @@ class Playback:
         for index, (point, is_start) in enumerate(
             ((start_point, True), (end_point, False))
         ):
+            start_moment, end_moment = start_and_end_moments
             if isinstance(point, RelativePointInStream):
                 start_moment, end_moment = start_and_end_moments
                 # Given the current relative point as delta, the resulted point:
@@ -550,6 +551,8 @@ class Playback:
                         date = contrary_op(contrary_moment.date, time_delta)
                         moment = self.locate_moment(date, itag, not is_start)
             else:
+                if end_moment:
+                    continue
                 moment = self.locate_moment(point, itag, not is_start)
 
             start_and_end_moments[index] = moment

@@ -32,7 +32,12 @@ from ytpb.fetchers import YtpbInfoFetcher
 from ytpb.info import YouTubeVideoInfo
 from ytpb.playback import Playback, RewindInterval, RewindMoment
 from ytpb.streams import AudioOrVideoStream
-from ytpb.types import RelativeSegmentSequence
+from ytpb.types import (
+    AbsolutePointInStream,
+    RelativePointInStream,
+    RelativeSegmentSequence,
+    SegmentSequence,
+)
 
 
 class TestLocateMoment:
@@ -124,7 +129,8 @@ def test_locate_interval(
     tmp_path: Path,
 ) -> None:
     # Given:
-    if not (isinstance(start, int) and isinstance(end, int)):
+    any_datetime = isinstance(start, datetime) or isinstance(end, datetime)
+    if type(start) is not SegmentSequence and any_datetime:
         add_responses_callback_for_reference_base_url()
     add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
 
@@ -186,7 +192,7 @@ def test_locate_interval_with_swapped_start_and_end(
     tmp_path: Path,
 ) -> None:
     # Given:
-    if not (isinstance(start, int) and isinstance(end, int)):
+    if not isinstance(start, int):
         add_responses_callback_for_reference_base_url()
     add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
 
