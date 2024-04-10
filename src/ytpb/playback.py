@@ -383,6 +383,14 @@ class Playback:
             )
         return self._streams
 
+    @property
+    def locations(self) -> dict[str, Path]:
+        temp_directory = self.get_temp_directory()
+        return {
+            ".": temp_directory,
+            "segments": temp_directory / "segments",
+        }
+
     def _write_to_cache_if_needed(self):
         if self._need_to_cache:
             item_to_cache = {
@@ -440,7 +448,8 @@ class Playback:
         self,
         sequence: SegmentSequence,
         base_url: str,
-        location: Literal[".", "segments"] = ".",
+        output_directory: Path | None = None,
+        output_filename: Path | None = compose_default_segment_filename,
         force_download: bool = False,
     ) -> Path:
         """Downloads a segment.
@@ -453,10 +462,13 @@ class Playback:
         Returns:
             A path to the downloaded segment.
         """
+        if output_directory is None:
+            output_directory = self.locations["."]
         path = download_segment(
             sequence,
             base_url,
-            self.get_temp_directory() / location,
+            output_directory=output_directory,
+            output_filename=output_filename,
             session=self.session,
             force_download=force_download,
         )

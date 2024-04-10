@@ -139,7 +139,7 @@ def download_segments(
         progress_reporter = NullProgressReporter()
 
     if output_directory is None:
-        output_directory = playback.get_temp_directory() / "segments"
+        output_directory = playback.locations["segments"]
         output_directory.mkdir(parents=True, exist_ok=True)
 
     base_urls: list[str] = [s.base_url for s in streams]
@@ -204,7 +204,7 @@ def download_excerpt(
 
     all_streams = [x for x in [audio_stream, video_stream] if x is not None]
 
-    segments_output_directory = playback.get_temp_directory() / "segments"
+    segments_output_directory = playback.locations["segments"]
     segments_output_directory.mkdir(parents=True, exist_ok=True)
 
     _downloaded_paths: list[list[Path]] = download_segments(
