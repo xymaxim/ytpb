@@ -6,7 +6,7 @@ import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable, Literal
+from typing import Iterable, Literal, Self, TypeGuard
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -34,6 +34,7 @@ from ytpb.types import (
     RelativePointInStream,
     RelativeSegmentSequence,
     SegmentSequence,
+    Timestamp,
 )
 from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.url import (
@@ -46,6 +47,71 @@ from ytpb.utils.url import (
 logger = structlog.get_logger(__name__)
 
 SEGMENT_URL_PATTERN = r"https://.+\.googlevideo\.com/videoplayback/.+"
+
+
+@dataclass
+class RewindTreeNode:
+    key: Timestamp
+    value: SegmentSequence
+    left: Self | None = None
+    right: Self | None = None
+
+
+@dataclass
+class RewindTreeMap:
+    """A binary search tree implementation to store key-value pairs.
+
+    Keys represent timestamps of segments, while values are sequence numbers.
+    """
+
+    root: RewindTreeNode | None = None
+
+    @staticmethod
+    def _is_tree_node(node: RewindTreeNode | None) -> TypeGuard[RewindTreeNode]:
+        return node is not None
+
+    @staticmethod
+    def _insert(
+        node: RewindTreeNode | None, key: Timestamp, value: SegmentSequence
+    ) -> RewindTreeNode:
+        if not RewindTreeMap._is_tree_node(node):
+            return RewindTreeNode(key, value, None, None)
+        else:
+            if key < node.key:
+                left = RewindTreeMap._insert(node.left, key, value)
+                return RewindTreeNode(node.key, node.value, left, node.right)
+            elif key > node.key:
+                right = RewindTreeMap._insert(node.right, key, value)
+                return RewindTreeNode(node.key, node.value, node.left, right)
+            else:
+                return RewindTreeNode(node.key, value, node.left, node.right)
+
+    def insert(self, key: Timestamp, value: SegmentSequence) -> None:
+        """Inserts a pair of timestamp and sequence number into the tree."""
+        self.root = RewindTreeMap._insert(self.root, key, value)
+
+    @staticmethod
+    def _closest(
+        node: RewindTreeNode | None, target: Timestamp, closest: RewindTreeNode
+    ) -> RewindTreeNode | None:
+        if not RewindTreeMap._is_tree_node(node):
+            return closest
+        else:
+            result = closest
+            if abs(target - closest.key) > abs(target - node.key):
+                result = node
+            if target < node.key:
+                return RewindTreeMap._closest(node.left, target, result)
+            elif target > node.key:
+                return RewindTreeMap._closest(node.right, target, result)
+            else:
+                return result
+
+    def closest(self, target: Timestamp) -> RewindTreeNode | None:
+        """Finds the node closest to the target timestamp."""
+        if self.root is None:
+            return None
+        return RewindTreeMap._closest(self.root, target, self.root)
 
 
 @dataclass(frozen=True)
@@ -196,6 +262,8 @@ class Playback:
         self._streams: SetOfStreams | None = None
         self._temp_directory: Path | None = None
         self._cache_directory: Path | None = None
+
+        self.rewind_history = RewindTreeMap()
 
     @classmethod
     def from_url(cls, video_url: str, **kwargs) -> "Playback":
@@ -457,31 +525,40 @@ class Playback:
         itag = itag or next(iter(self.streams)).itag
         base_url = self._get_reference_base_url(itag)
 
+        def _get_non_located_date(segment: Segment) -> datetime:
+            if is_end:
+                date = segment.ingestion_end_date
+            else:
+                date = segment.ingestion_start_date
+            return date
+
+        segment: Segment | None = None
+
         match point:
             case SegmentSequence() as sequence:
                 self.download_segment(sequence, base_url)
                 segment = self.get_segment(sequence, base_url)
-                if is_end:
-                    date = segment.ingestion_end_date
-                else:
-                    date = segment.ingestion_start_date
+                date = _get_non_located_date(segment)
                 moment = RewindMoment(date, sequence, 0, is_end)
             case datetime() as date:
+                reference_sequence: SegmentSequence | None = None
+                if reference := self.rewind_history.closest(date.timestamp()):
+                    reference_sequence = reference.value
                 sl = SegmentLocator(
                     base_url,
+                    reference_sequence=reference_sequence,
                     temp_directory=self.get_temp_directory(),
                     session=self.session,
                 )
-                locate_result = sl.find_sequence_by_time(point.timestamp(), end=is_end)
-                segment = self.get_segment(locate_result.sequence, base_url)
+                locate_result = sl.find_sequence_by_time(date.timestamp(), end=is_end)
+
                 if locate_result.falls_in_gap:
-                    if is_end:
-                        date = segment.ingestion_end_date
-                    else:
-                        date = segment.ingestion_start_date
+                    segment = self.get_segment(locate_result.sequence, base_url)
+                    date = _get_non_located_date(segment)
                     cut_at = 0
                 else:
                     cut_at = locate_result.time_difference
+
                 moment = RewindMoment(
                     date=date,
                     sequence=locate_result.sequence,
@@ -489,6 +566,12 @@ class Playback:
                     is_end=is_end,
                     falls_in_gap=locate_result.falls_in_gap,
                 )
+
+        if segment is None:
+            segment = self.get_segment(moment.sequence, base_url)
+        self.rewind_history.insert(
+            segment.ingestion_start_date.timestamp(), moment.sequence
+        )
 
         return moment
 

@@ -113,7 +113,6 @@ class TestLocateMoment:
         (timedelta(seconds=2), datetime.fromisoformat("2023-03-25T23:33:57Z")),
         (RelativeSegmentSequence(1), 7959121),
         (RelativeSegmentSequence(1), datetime.fromisoformat("2023-03-25T23:33:57Z")),
-        (RelativeSegmentSequence(1), 7959121),
     ],
 )
 def test_locate_interval(
@@ -203,6 +202,29 @@ def test_locate_interval_with_swapped_start_and_end(
     # Then:
     with pytest.raises((ValueError, SequenceLocatingError)):
         playback.locate_interval(start, end, "140")
+
+
+def test_insert_to_rewind_history(
+    fake_info_fetcher: "FakeInfoFetcher",
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    # Given:
+    add_responses_callback_for_segment_urls(urljoin(audio_base_url, r"sq/\w+"))
+
+    # When:
+    playback = Playback(stream_url, fetcher=fake_info_fetcher)
+    playback.fetch_and_set_essential()
+    playback.locate_moment(7959120, "140")
+    playback.locate_moment(7959122, "140")
+
+    # Then:
+    assert playback.rewind_history.closest(1679787234.491176).value == 7959120
+    assert playback.rewind_history.closest(1679787238.491916).value == 7959122
 
 
 def test_create_playback_from_url(
