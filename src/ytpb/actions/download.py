@@ -1,6 +1,6 @@
 """Actions to download excerpts."""
 
-from itertools import product
+from itertools import repeat
 from pathlib import Path
 from typing import Any, Callable, Iterable, NamedTuple, Protocol, Union
 
@@ -145,11 +145,11 @@ def download_segments(
     base_urls: list[str] = [s.base_url for s in streams]
     download_generator = chained_zip(
         *[
-            product(
+            zip(
                 iter_segments(
                     rewind_interval.sequences, base_url, session=playback.session
                 ),
-                [task],
+                repeat(task, len(rewind_interval.sequences)),
             )
             for task, base_url in enumerate(base_urls)
         ]
