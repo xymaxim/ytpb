@@ -149,6 +149,10 @@ def merge_segments(
 ) -> Path:
     """Merges and cuts media segments.
 
+    The ``cut_at_start`` and ``cut_at_end`` arguments define the values to be
+    passed to FFmpeg: ``-ss <cut_at_start>s`` and ``-to <cut_at_end>s``,
+    respectively.
+
     Args:
         audio_segment_paths: Paths to audio segments.
         video_segment_paths: Paths to video segments.
