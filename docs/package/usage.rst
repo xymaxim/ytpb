@@ -172,10 +172,11 @@ download progress:
 
 .. code-block:: python
 
+   from datetime import datetime, timedelta, timezone
    from ytpb.actions.download import download_excerpt, RichProgressReporter
 
    rewind_interval = playback.locate_interval(
-       datetime(2024, 1, 2, 12, tzinfo=datetime.timezone.utc),
+       datetime(2024, 1, 2, 12, tzinfo=timezone.utc),
        timedelta(minutes=30),
    )
 
