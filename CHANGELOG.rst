@@ -12,21 +12,23 @@ Unreleased
   <https://ytpb.readthedocs.io/en/latest/package/index.html>`__ page with the
   basic usage and API reference
 - Add :attr:`ytpb.representations.RepresentationInfo.type` property
+- Add :attr:`ytpb.playback.RewindInterval.duration` and
+  :attr:`~ytpb.playback.RewindInterval.sequences` property
 - Add ``options`` to :meth:`ytpb.fetchers.YoutubeDLInfoFetcher.__init__`
 - Accept Unix timestamps for moments and intervals (`b7dcbaf
   <https://github.com/xymaxim/ytpb/commit/b7dcbaf6eebe3f6022b7fa8eefe98f4b8af7c4cb>`__)
+- Add :class:`ytpb.playback.RewindTreeMap` to keep rewind history (`91fd078 <https://github.com/xymaxim/ytpb/commit/91fd078caf37f31fee167e0c2a20a38aa2badcd8>`__)
 
 Breaking changes
 ================
 
+- Rename :mod:`ytpb.mpd` to :mod:`ytpb.representations`
+- Rename :mod:`ytpb.exceptions` to :mod:`ytpb.errors`
 - Rename :meth:`ytpb.playback.Playback.get_downloaded_segment` to
   :meth:`~ytpb.playback.Playback.get_segment`
-- Rename :mod:`ytpb.mpd` to :mod:`ytpb.representations`
 - Rename :meth:`ytpb.representations.extract_representations_info` to
   :meth:`~ytpb.representations.extract_representations`
 - Remove unused :meth:`ytpb.representations.strip_manifest`
-- Change ``merge_kwargs`` of :meth:`ytpb.actions.download.download_excerpt` from
-  keyword to positional argument
 
 `2024.3.27`_
 ************
