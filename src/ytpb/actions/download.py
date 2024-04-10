@@ -119,7 +119,7 @@ def download_segments(
     output_filename: Callable[
         [SegmentSequence, str], str
     ] = compose_default_segment_filename,
-    progress_reporter: ProgressReporter = NullProgressReporter(),
+    progress_reporter: ProgressReporter | None = None,
 ) -> list[Path]:
     """Downloads segments.
 
@@ -135,6 +135,9 @@ def download_segments(
     Returns:
         A list of downloaded segment paths.
     """
+    if progress_reporter is None:
+        progress_reporter = NullProgressReporter()
+
     if output_directory is None:
         output_directory = playback.get_temp_directory() / "segments"
         output_directory.mkdir(parents=True, exist_ok=True)
@@ -172,7 +175,7 @@ def download_excerpt(
     video_stream: VideoStream | None = None,
     need_cut: bool = True,
     merge_kwargs: dict[str, Any] | None = None,
-    progress_reporter: ProgressReporter = NullProgressReporter(),
+    progress_reporter: ProgressReporter | None = None,
 ) -> ExcerptDownloadResult:
     """Downloads and merges audio and/or video segments.
 
@@ -195,6 +198,9 @@ def download_excerpt(
     """
     if not (audio_stream or video_stream):
         raise AssertionError("At least audio or video stream should be provided")
+
+    if progress_reporter is None:
+        progress_reporter = NullProgressReporter()
 
     all_streams = [x for x in [audio_stream, video_stream] if x is not None]
 
