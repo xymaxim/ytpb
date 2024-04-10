@@ -6,13 +6,12 @@ from ytpb.config import AddressableChainMap
 from ytpb.representations import AudioRepresentationInfo, VideoRepresentationInfo
 
 
+class RelativeSegmentSequence(int): ...
+
+
 Timestamp: TypeAlias = float
 
 SegmentSequence: TypeAlias = int
-
-
-class RelativeSegmentSequence(int): ...
-
 
 AbsolutePointInStream: TypeAlias = datetime | SegmentSequence
 RelativePointInStream: TypeAlias = timedelta | RelativeSegmentSequence
@@ -23,12 +22,11 @@ VideoStream: TypeAlias = VideoRepresentationInfo
 AudioOrVideoStream: TypeAlias = AudioStream | VideoStream
 SetOfStreams: TypeAlias = "Streams[AudioOrVideoStream]"
 
+ConfigMap: TypeAlias = AddressableChainMap
+
 
 class AddressableMappingProtocol(Protocol):
     def traverse(self, address: str, default: Any, delimiter: str) -> Any: ...
-
-
-ConfigMap: TypeAlias = AddressableChainMap
 
 
 @dataclass
