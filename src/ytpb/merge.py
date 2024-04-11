@@ -161,7 +161,7 @@ def merge_segments(
         temp_directory: Where to store intermediate files.
         cut_at_start: An offset (in seconds) to cut at start.
         cut_at_end: An offset (in seconds) to cut at end.
-        cleanup: Wether to cleanup intermediate files.
+        cleanup: Whether to cleanup intermediate files.
 
     Returns:
         A path of the merged file.

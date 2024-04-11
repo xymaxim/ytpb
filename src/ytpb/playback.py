@@ -130,9 +130,9 @@ class RewindMoment:
     #: A difference (in seconds) between segment start ingestion date and target
     #: date.
     cut_at: float
-    #: Wether a moment represents the end of an interval.
+    #: Whether a moment represents the end of an interval.
     is_end: bool = False
-    #: Wether a moment falls in gap.
+    #: Whether a moment falls in gap.
     falls_in_gap: bool = False
 
 
@@ -256,7 +256,7 @@ class Playback:
             video_url: A video URL.
             session: An instance of :class:`requests.Session`.
             fetcher: A fetcher used to gather the video information and streams.
-            write_to_cache: Wether to write to cache.
+            write_to_cache: Whether to write to cache.
         """
         self.video_url = video_url
         self.session = session or PlaybackSession(self)
@@ -430,7 +430,7 @@ class Playback:
 
         Args:
             value: Streams to set.
-            fetch_video_info: Wether fetch information about a video or not. If
+            fetch_video_info: Whether fetch information about a video or not. If
               not, the :attr:`.info` attribute will be set to
               :attr:`ytpb.info.LEFT_NOT_FETCHED`.
 
@@ -472,7 +472,7 @@ class Playback:
             stream: A stream to which segment belongs.
             output_directory: Where to download a segment.
             output_filename: A segment output filename.
-            force_download: Wether to force download a segment even if it exists.
+            force_download: Whether to force download a segment even if it exists.
 
         Returns:
             A path to the downloaded segment.
@@ -509,7 +509,7 @@ class Playback:
             location: Where a segment is located relative to
               :meth:`get_temp_directory`. The single dot ('.') represents the
               run temporary directory itself.
-            download: Wether to download a segment if it doesn't exist.
+            download: Whether to download a segment if it doesn't exist.
 
         Returns:
             A :class:`Segment` object.
@@ -545,7 +545,7 @@ class Playback:
             point: An absolute point.
             stream: A stream to which segments used in locating belong. If not
               set, the first available stream will be used.
-            is_end: Wether a moment represents the end of an interval.
+            is_end: Whether a moment represents the end of an interval.
 
         Notes:
             See also :class:`ytpb.locate.SegmentLocator`.

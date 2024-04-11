@@ -90,7 +90,7 @@ def download_segment(
         output_filename: A segment output filename.
         size: An amount of bytes to download.
         session: A :class:`requests.Session` object.
-        force_download: Wether to download a segment if it already exists.
+        force_download: Whether to download a segment if it already exists.
 
     Returns:
         A path where a segment was downloaded.

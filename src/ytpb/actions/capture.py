@@ -23,8 +23,8 @@ def extract_frame_as_image(
     Args:
         segment: A :class:`~ytpb.segment.Segment` object.
         target_date: A frame target date.
-        last_as_fallback: Wether to use a last frame as a fallback if the target
-          date is out of a video.
+        last_as_fallback: Whether to use a last frame as a fallback if the
+          target date is out of a video.
 
     Returns:
         An extracted image as a :class:`PIL.Image.Image` object.

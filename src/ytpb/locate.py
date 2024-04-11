@@ -220,7 +220,7 @@ class SegmentLocator:
 
         Args:
             desired_time: A target Unix timestamp.
-            end: Wether a segment belongs to the end of an interval.
+            end: Whether a segment belongs to the end of an interval.
 
         Returns:
             A :class:`LocateResult` object.
