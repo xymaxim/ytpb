@@ -246,7 +246,7 @@ def download_command(
         rewind_interval = playback.locate_interval(
             requested_start,
             requested_end,
-            reference_stream.itag,
+            reference_stream,
         )
     except SequenceLocatingError:
         message = "\nerror: An error occured during segment locating, exit."
@@ -270,9 +270,9 @@ def download_command(
         click.echo("info: The preview mode is enabled, interval end is ignored.")
 
     start_segment = playback.get_segment(
-        rewind_interval.start.sequence, reference_base_url
+        rewind_interval.start.sequence, reference_stream
     )
-    end_segment = playback.get_segment(rewind_interval.end.sequence, reference_base_url)
+    end_segment = playback.get_segment(rewind_interval.end.sequence, reference_stream)
 
     requested_start_date: datetime
     match requested_start:

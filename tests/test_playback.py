@@ -11,7 +11,7 @@ used in the tests:
 """
 
 import json
-from dataclasses import asdict
+from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Callable
@@ -40,6 +40,15 @@ from ytpb.types import (
 )
 
 
+@pytest.fixture
+def fake_stream(audio_base_url: str) -> "FakeStream":
+    @dataclass
+    class FakeStream:
+        base_url: str
+
+    return FakeStream(audio_base_url)
+
+
 class TestLocateMoment:
     @pytest.fixture(autouse=True)
     def setup_method(
@@ -56,23 +65,25 @@ class TestLocateMoment:
         self.playback = Playback(stream_url, fetcher=fake_info_fetcher)
         self.playback.fetch_and_set_essential()
 
-    def test_start_sequence(self):
+    def test_start_sequence(self, fake_stream):
         sequence = 7959120
         date = datetime.fromtimestamp(1679787234.491176, tz=timezone.utc)
         expected = RewindMoment(date, sequence, 0, False)
-        assert expected == self.playback.locate_moment(sequence, "140")
+        assert expected == self.playback.locate_moment(sequence, fake_stream)
 
-    def test_end_sequence(self):
+    def test_end_sequence(self, fake_stream):
         sequence = 7959120
         date = datetime(2023, 3, 25, 23, 33, 56, 488092, tzinfo=timezone.utc)
         expected = RewindMoment(date, sequence, 0, True)
-        assert expected == self.playback.locate_moment(sequence, "140", True)
+        assert expected == self.playback.locate_moment(sequence, fake_stream, True)
 
-    def test_start_date(self, add_responses_callback_for_reference_base_url: Callable):
+    def test_start_date(
+        self, add_responses_callback_for_reference_base_url: Callable, fake_stream
+    ):
         add_responses_callback_for_reference_base_url()
         date = datetime.fromisoformat("2023-03-25T23:33:55Z")
         expected = RewindMoment(date, 7959120, 0.508824, False, False)
-        actual = self.playback.locate_moment(date, "140")
+        actual = self.playback.locate_moment(date, fake_stream)
         assert expected == RewindMoment(
             actual.date,
             actual.sequence,
@@ -81,11 +92,13 @@ class TestLocateMoment:
             actual.falls_in_gap,
         )
 
-    def test_end_date(self, add_responses_callback_for_reference_base_url: Callable):
+    def test_end_date(
+        self, add_responses_callback_for_reference_base_url: Callable, fake_stream
+    ):
         add_responses_callback_for_reference_base_url()
         date = datetime.fromisoformat("2023-03-25T23:33:55Z")
         expected = RewindMoment(date, 7959120, 0.508824, True, False)
-        actual = self.playback.locate_moment(date, "140", True)
+        actual = self.playback.locate_moment(date, fake_stream, True)
         assert expected == RewindMoment(
             actual.date,
             actual.sequence,
@@ -125,6 +138,7 @@ def test_locate_interval(
     stream_url: str,
     active_live_video_info: YouTubeVideoInfo,
     audio_base_url: str,
+    fake_stream: "FakeStream",
     tmp_path: Path,
 ) -> None:
     # Given:
@@ -136,7 +150,7 @@ def test_locate_interval(
     # When:
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
-    interval = playback.locate_interval(start, end, "140")
+    interval = playback.locate_interval(start, end, fake_stream)
 
     # Then:
     assert interval.start.sequence == 7959120
@@ -157,12 +171,13 @@ def test_local_interval_with_relative_start_and_end(
     end: timedelta | RelativeSegmentSequence,
     stream_url: str,
     fake_info_fetcher: "FakeInfoFetcher",
+    fake_stream: "FakeStream",
     tmp_path: Path,
 ):
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
     with pytest.raises(ValueError):
-        playback.locate_interval(start, end, "140")
+        playback.locate_interval(start, end, fake_stream)
 
 
 @pytest.mark.parametrize(
@@ -188,6 +203,7 @@ def test_locate_interval_with_swapped_start_and_end(
     stream_url: str,
     active_live_video_info: YouTubeVideoInfo,
     audio_base_url: str,
+    fake_stream: "FakeStream",
     tmp_path: Path,
 ) -> None:
     # Given:
@@ -201,7 +217,7 @@ def test_locate_interval_with_swapped_start_and_end(
 
     # Then:
     with pytest.raises((ValueError, SequenceLocatingError)):
-        playback.locate_interval(start, end, "140")
+        playback.locate_interval(start, end, fake_stream)
 
 
 def test_insert_to_rewind_history(
@@ -211,6 +227,7 @@ def test_insert_to_rewind_history(
     mocked_responses: responses.RequestsMock,
     stream_url: str,
     audio_base_url: str,
+    fake_stream: "FakeStream",
     tmp_path: Path,
 ) -> None:
     # Given:
@@ -219,8 +236,8 @@ def test_insert_to_rewind_history(
     # When:
     playback = Playback(stream_url, fetcher=fake_info_fetcher)
     playback.fetch_and_set_essential()
-    playback.locate_moment(7959120, "140")
-    playback.locate_moment(7959122, "140")
+    playback.locate_moment(7959120, fake_stream)
+    playback.locate_moment(7959122, fake_stream)
 
     # Then:
     assert playback.rewind_history.closest(1679787234.491176).value == 7959120

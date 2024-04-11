@@ -15,7 +15,11 @@ from platformdirs import user_cache_path
 
 from ytpb.cache import read_from_cache, write_to_cache
 from ytpb.config import USER_AGENT
-from ytpb.download import compose_default_segment_filename, download_segment
+from ytpb.download import (
+    compose_default_segment_filename,
+    download_segment,
+    SegmentOutputFilename,
+)
 from ytpb.errors import (
     BaseUrlExpiredError,
     CachedItemNotFoundError,
@@ -30,6 +34,7 @@ from ytpb.segment import Segment
 from ytpb.streams import SetOfStreams, Streams
 from ytpb.types import (
     AbsolutePointInStream,
+    AudioOrVideoStream,
     PointInStream,
     RelativePointInStream,
     RelativeSegmentSequence,
@@ -441,22 +446,21 @@ class Playback:
             self._info = LEFT_NOT_FETCHED
         self._write_to_cache_if_needed()
 
-    def _get_reference_base_url(self, itag: str) -> str:
-        return self.streams.get_by_itag(itag).base_url
-
     def download_segment(
         self,
         sequence: SegmentSequence,
-        base_url: str,
+        stream: AudioOrVideoStream,
         output_directory: Path | None = None,
-        output_filename: Path | None = compose_default_segment_filename,
+        output_filename: (
+            SegmentOutputFilename | None
+        ) = compose_default_segment_filename,
         force_download: bool = False,
     ) -> Path:
         """Downloads a segment.
 
         Args:
             sequence: A segment sequence number.
-            base_url: A segment base URL.
+            stream: A stream to which segment belongs.
             force_download: Wether to force download a segment even if it exists.
 
         Returns:
@@ -466,7 +470,7 @@ class Playback:
             output_directory = self.locations["."]
         path = download_segment(
             sequence,
-            base_url,
+            stream.base_url,
             output_directory=output_directory,
             output_filename=output_filename,
             session=self.session,
@@ -477,7 +481,7 @@ class Playback:
     def get_segment(
         self,
         sequence: SegmentSequence,
-        base_url: str,
+        stream: AudioOrVideoStream,
         location: Literal[".", "segments"] = ".",
         download: bool = True,
     ) -> Segment:
@@ -487,7 +491,7 @@ class Playback:
 
         Args:
             sequence: A segment sequence number.
-            base_url: A segment base URL.
+            stream: A stream to which segment belongs.
             location: Where a segment is located relative to
                 :meth:`get_temp_directory`. The single dot ('.') represents the run
                 temporary directory itself.
@@ -499,13 +503,13 @@ class Playback:
         Raises:
             FileNotFoundError: If couldn't find a downloaded segment.
         """
-        segment_filename = compose_default_segment_filename(sequence, base_url)
+        segment_filename = compose_default_segment_filename(sequence, stream.base_url)
         segment_directory = self.get_temp_directory() / location
         try:
             segment = Segment.from_file(segment_directory / segment_filename)
         except FileNotFoundError as exc:
             if download:
-                downloaded_path = self.download_segment(sequence, base_url)
+                downloaded_path = self.download_segment(sequence, stream)
                 segment = Segment.from_file(downloaded_path)
             else:
                 exc.add_note(
@@ -518,14 +522,15 @@ class Playback:
     def locate_moment(
         self,
         point: AbsolutePointInStream,
-        itag: str | None = None,
+        stream: AudioOrVideoStream | None = None,
         is_end: bool = False,
     ) -> RewindMoment:
         """Locates a moment by a point in stream.
 
         Args:
             point: An absolute point.
-            itag: An itag value.
+            stream: A stream to which segments used in locating belong. If not
+              set, the first available stream will be used.
             is_end: Wether a moment represents the end of an interval.
 
         Notes:
@@ -534,8 +539,7 @@ class Playback:
         Returns:
             A located moment of :class:`RewindMoment`.
         """
-        itag = itag or next(iter(self.streams)).itag
-        base_url = self._get_reference_base_url(itag)
+        stream = stream or next(iter(self.streams))
 
         def _get_non_located_date(segment: Segment) -> datetime:
             if is_end:
@@ -548,8 +552,7 @@ class Playback:
 
         match point:
             case SegmentSequence() as sequence:
-                self.download_segment(sequence, base_url)
-                segment = self.get_segment(sequence, base_url)
+                segment = Segment.from_file(self.download_segment(sequence, stream))
                 date = _get_non_located_date(segment)
                 moment = RewindMoment(date, sequence, 0, is_end)
             case datetime() as date:
@@ -557,7 +560,7 @@ class Playback:
                 if reference := self.rewind_history.closest(date.timestamp()):
                     reference_sequence = reference.value
                 sl = SegmentLocator(
-                    base_url,
+                    stream.base_url,
                     reference_sequence=reference_sequence,
                     temp_directory=self.get_temp_directory(),
                     session=self.session,
@@ -565,7 +568,7 @@ class Playback:
                 locate_result = sl.find_sequence_by_time(date.timestamp(), end=is_end)
 
                 if locate_result.falls_in_gap:
-                    segment = self.get_segment(locate_result.sequence, base_url)
+                    segment = self.get_segment(locate_result.sequence, stream)
                     date = _get_non_located_date(segment)
                     cut_at = 0
                 else:
@@ -580,7 +583,7 @@ class Playback:
                 )
 
         if segment is None:
-            segment = self.get_segment(moment.sequence, base_url)
+            segment = self.get_segment(moment.sequence, stream)
         self.rewind_history.insert(
             segment.ingestion_start_date.timestamp(), moment.sequence
         )
@@ -591,14 +594,15 @@ class Playback:
         self,
         start_point: PointInStream,
         end_point: PointInStream,
-        itag: str | None = None,
+        stream: AudioOrVideoStream | None = None,
     ) -> RewindInterval:
         """Locates an interval by start and end points in stream.
 
         Args:
             start_point: A start absolute or relative point.
             end_point: An end absolute or relative point.
-            itag: An itag value.
+            stream: A stream to which segments used in locating belong. If not
+              set, the first available stream will be used.
 
         Notes:
             See also :class:`ytpb.locate.SegmentLocator`.
@@ -609,15 +613,15 @@ class Playback:
         # First, resolve relativity where it's possible, without locating:
         start_point, end_point = resolve_relativity_in_interval(start_point, end_point)
 
-        itag = itag or next(iter(self.streams)).itag
+        stream = stream or next(iter(self.streams))
         if type(start_point) is type(end_point) is SegmentSequence:
-            start_moment = self.locate_moment(start_point, itag=itag)
-            end_moment = self.locate_moment(end_point, itag=itag, is_end=True)
+            start_moment = self.locate_moment(start_point, stream=stream)
+            end_moment = self.locate_moment(end_point, stream=stream, is_end=True)
             return RewindInterval(start_moment, end_moment)
 
         # Then, locate end if start is relative:
         if isinstance(start_point, RelativePointInStream):
-            end_moment = self.locate_moment(end_point, itag=itag, is_end=True)
+            end_moment = self.locate_moment(end_point, stream=stream, is_end=True)
         else:
             end_moment = None
 
@@ -641,14 +645,14 @@ class Playback:
                 match point:
                     case RelativeSegmentSequence() as sequence_delta:
                         sequence = contrary_op(contrary_moment.sequence, sequence_delta)
-                        moment = self.locate_moment(sequence, itag, not is_start)
+                        moment = self.locate_moment(sequence, stream, not is_start)
                     case timedelta() as time_delta:
                         date = contrary_op(contrary_moment.date, time_delta)
-                        moment = self.locate_moment(date, itag, not is_start)
+                        moment = self.locate_moment(date, stream, not is_start)
             else:
                 if end_moment:
                     continue
-                moment = self.locate_moment(point, itag, not is_start)
+                moment = self.locate_moment(point, stream, not is_start)
 
             start_and_end_moments[index] = moment
 

@@ -191,14 +191,14 @@ def compose_command(
 
     click.echo("(<<) Locating start and end in the stream... ", nl=False)
     rewind_interval = playback.locate_interval(
-        requested_start, requested_end, reference_stream.itag
+        requested_start, requested_end, reference_stream
     )
     click.echo("done.")
 
     start_segment = playback.get_segment(
-        rewind_interval.start.sequence, reference_base_url
+        rewind_interval.start.sequence, reference_stream
     )
-    end_segment = playback.get_segment(rewind_interval.end.sequence, reference_base_url)
+    end_segment = playback.get_segment(rewind_interval.end.sequence, reference_stream)
 
     requested_start_date: datetime
     match requested_start:

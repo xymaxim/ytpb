@@ -240,7 +240,7 @@ def frame_command(
     click.echo("done.")
 
     try:
-        segment_path = playback.download_segment(moment_sequence, reference_base_url)
+        segment_path = playback.download_segment(moment_sequence, reference_stream)
         moment_segment = Segment.from_file(segment_path)
     except SegmentDownloadError as exc:
         click.echo()
@@ -399,7 +399,7 @@ def timelapse_command(
 
     try:
         rewind_interval = playback.locate_interval(
-            requested_start, requested_end, reference_stream.itag
+            requested_start, requested_end, reference_stream
         )
     except SequenceLocatingError:
         message = "\nerror: An error occured during segment locating, exit."
@@ -409,9 +409,9 @@ def timelapse_command(
     click.echo("done.")
 
     start_segment = playback.get_segment(
-        rewind_interval.start.sequence, reference_base_url
+        rewind_interval.start.sequence, reference_stream
     )
-    end_segment = playback.get_segment(rewind_interval.end.sequence, reference_base_url)
+    end_segment = playback.get_segment(rewind_interval.end.sequence, reference_stream)
 
     requested_start_date: datetime
     match requested_start:
@@ -499,7 +499,7 @@ def timelapse_command(
         capturing_progress.advance(capturing_task)
 
         captured = capture_frames(
-            playback, dates_to_capture[1:], reference_base_url, start_segment.sequence
+            playback, dates_to_capture[1:], reference_stream, start_segment.sequence
         )
         for i, (image, _) in enumerate(captured, 1):
             _save_ith_frame_as_image(image, final_output_path, i)

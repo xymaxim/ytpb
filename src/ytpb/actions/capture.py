@@ -10,7 +10,7 @@ from PIL import Image
 from ytpb.locate import SegmentLocator
 from ytpb.playback import Playback
 from ytpb.segment import Segment
-from ytpb.types import SegmentSequence
+from ytpb.types import AudioOrVideoStream, SegmentSequence
 
 logger = structlog.get_logger(__name__)
 
@@ -50,7 +50,7 @@ def extract_frame_as_image(
 def capture_frames(
     playback: Playback,
     target_dates: list[datetime],
-    base_url: str,
+    stream: AudioOrVideoStream,
     reference_sequence: SegmentSequence | None = None,
 ) -> Iterator[Image.Image, Segment]:
     """Captures frames as images.
@@ -67,7 +67,7 @@ def capture_frames(
           dates_to_capture = [start_date + timedelta(hours=h) for h in range(25)]
 
           captured = capture_frames(
-              playback, dates_to_capture, best_stream.base_url
+              playback, dates_to_capture, best_stream
           )
           for i, (image, _) in enumerate(captured):
               image.save(f"output-{i:02d}.jpg", quality=80)
@@ -75,7 +75,7 @@ def capture_frames(
     Args:
         playback: A :class:`~ytpb.playback.Playback` object.
         target_dates: A list of dates to capture.
-        base_url: A segment base URL.
+        stream: A stream to which segments used for capturing belongs.
         reference_sequence: A segment sequence number used as a start reference.
 
     Returns:
@@ -85,7 +85,7 @@ def capture_frames(
     previous_sequence = reference_sequence
     for i, target_date in enumerate(target_dates):
         sl = SegmentLocator(
-            base_url,
+            stream.base_url,
             reference_sequence=previous_sequence,
             temp_directory=playback.get_temp_directory(),
             session=playback.session,
@@ -94,7 +94,7 @@ def capture_frames(
         found_sequence, *_ = sl.find_sequence_by_time(target_date.timestamp(), is_end)
         previous_sequence = found_sequence
 
-        segment = playback.get_segment(found_sequence, base_url)
+        segment = playback.get_segment(found_sequence, stream)
         image = extract_frame_as_image(segment, target_date)
 
         yield image, segment

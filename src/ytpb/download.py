@@ -15,7 +15,7 @@ from ytpb.utils.url import extract_media_type_from_url, extract_parameter_from_u
 
 logger = structlog.get_logger(__name__)
 
-_SegmentOutputFilename = str | Callable[[SegmentSequence, str], str]
+SegmentOutputFilename = str | Callable[[SegmentSequence, str], str]
 
 
 def _request_segment(
@@ -76,7 +76,7 @@ def download_segment(
     sequence: int,
     base_url: str,
     output_directory: Path,
-    output_filename: _SegmentOutputFilename = compose_default_segment_filename,
+    output_filename: SegmentOutputFilename = compose_default_segment_filename,
     size: int | None = None,
     session: requests.Session | None = None,
     force_download: bool = True,
