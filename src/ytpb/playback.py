@@ -458,9 +458,20 @@ class Playback:
     ) -> Path:
         """Downloads a segment.
 
+        Examples:
+            Download a segment to a file, and read it:
+
+                from ytpb.segment import Segment
+                downloaded_path = playback.download_segment(
+                    0, playback.streams.get_by_itag("140")
+                )
+                segment = Segment.from_file(downloaded_path)
+
         Args:
             sequence: A segment sequence number.
             stream: A stream to which segment belongs.
+            output_directory: Where to download a segment.
+            output_filename: A segment output filename.
             force_download: Wether to force download a segment even if it exists.
 
         Returns:
@@ -489,12 +500,15 @@ class Playback:
 
         By default, if a segment file cannot be found, it will be downloaded.
 
+        Notes:
+            See also :meth:`ytpb.segment.Segment.from_file`.
+
         Args:
             sequence: A segment sequence number.
             stream: A stream to which segment belongs.
             location: Where a segment is located relative to
-                :meth:`get_temp_directory`. The single dot ('.') represents the run
-                temporary directory itself.
+              :meth:`get_temp_directory`. The single dot ('.') represents the
+              run temporary directory itself.
             download: Wether to download a segment if it doesn't exist.
 
         Returns:
