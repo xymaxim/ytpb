@@ -50,14 +50,14 @@ Features
 - Capture a single frame or create time-lapse images
 - Makes use of yt-dlp to reliably extract information about videos (optionally)
 
-Demo
-****
+Demos
+*****
 
-.. image:: https://asciinema.org/a/645203.svg
-   :target: https://asciinema.org/a/645203
-   :alt: Asciinema
-
-*A demo of ytpb usage, showing downloading a live stream excerpt.*
+- Downloading a live stream excerpt (`link <https://asciinema.org/a/653861>`__)
+- Composing an MPEG-DASH MPD and transcoding it to MP4 (`link
+  <https://asciinema.org/a/653865>`__)
+- Creating a time-lapse of a live stream excerpt (`link
+  <https://asciinema.org/a/653865>`__)
 
 Install
 *******
