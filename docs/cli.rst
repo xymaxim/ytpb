@@ -15,25 +15,34 @@ Overview
 Synopsis
 ========
 
+The general synopsis of ``ytpb`` commands is as follows::
+
+  ytpb [GLOBAL_OPTIONS] COMMAND [SUBCOMMAND] [OPTIONS] [ARGS]...
+
 Commands
 --------
 
 .. code:: man
 
-  Usage: ytpb [OPTIONS] COMMAND [ARGS]...
+   Usage: ytpb [OPTIONS] COMMAND [ARGS]...
 
-  Global options:
-    --no-config    Do not load any configuration files.
-    --config PATH  Specifies a path to a configuration file.
-    --debug        Enable verbose output for debugging.
+   A playback for YouTube live streams
 
-  Other options:
-    --help         Show this message and exit.
+   Global options:
+     --no-config    Do not load any configuration files.
+     --config PATH  Specifies a path to a configuration file.
+     --report       Dump all output to a file. It implies --debug.
+     --debug        Enable verbose output for debugging.
+     -q, --quiet    Supress all normal output.
 
-  Top-level commands:
-    download  Download excerpts.
-    capture   Capture a single or many frames.
-    mpd       Compose MPEG-DASH manifests.
+   Other options:
+     -V, --version  Show the version and exit.
+     --help         Show this message and exit.
+
+   Top-level commands:
+     download  Download excerpts.
+     capture   Capture a single or many frames.
+     mpd       Compose MPEG-DASH manifests.
 
 Subcommands
 -----------
@@ -43,31 +52,30 @@ Subcommands
 
 .. code:: man
 
-  Usage: ytpb capture [OPTIONS] COMMAND [ARGS]...
+   Usage: ytpb capture [OPTIONS] COMMAND [ARGS]...
 
-    Capture a single or many frames.
+     Capture a single or many frames.
 
-  Options:
-    --help  Show this message and exit.
+   Options:
+     --help  Show this message and exit.
 
-  Commands:
-    frame      Capture a single frame.
-    timelapse  Capture time-lapse frames.
+   Commands:
+     frame      Capture a single frame.
+     timelapse  Capture time-lapse frames.
 
 *mpd*
 ^^^^^
 
 .. code:: man
 
-  Usage: ytpb mpd [OPTIONS] COMMAND [ARGS]...
+   Usage: ytpb mpd [OPTIONS] COMMAND [ARGS]...
 
-  Options:
-    --help  Show this message and exit.
+   Options:
+     --help  Show this message and exit.
 
-  Commands:
-    compose  Compose an MPEG-DASH manifest.
-    refresh  Refresh a composed MPEG-DASH manifest.
-
+   Commands:
+     compose  Compose an MPEG-DASH manifest.
+     refresh  Refresh a composed MPEG-DASH manifest.
 
 Getting help
 ============
