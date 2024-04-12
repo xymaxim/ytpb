@@ -303,7 +303,7 @@ class Playback:
 
         if not check_base_url_is_expired(some_base_url):
             playback = cls(video_url, **kwargs)
-            playback.set_streams(streams, fetch_video_info=fetch_video_info)
+            playback._set_streams(streams, fetch_video_info=fetch_video_info)
         else:
             logger.debug("Found expired base url, ignore the manifest")
             raise BaseUrlExpiredError
@@ -396,34 +396,7 @@ class Playback:
             "segments": temp_directory / "segments",
         }
 
-    def _write_to_cache_if_needed(self):
-        if self._need_to_cache:
-            item_to_cache = {
-                "info": asdict(self._info),
-                "streams": [asdict(stream) for stream in self.streams],
-            }
-            some_base_url = next(iter(self.streams)).base_url
-            expires_at = extract_parameter_from_url("expire", some_base_url)
-            cache_directory = Playback.get_cache_directory()
-            write_to_cache(self.video_id, expires_at, item_to_cache, cache_directory)
-
-    def _fetch_and_set_video_info(self) -> None:
-        self._info = self.fetcher.fetch_video_info()
-
-    def _fetch_and_set_streams(self) -> None:
-        self._streams = self.fetcher.fetch_streams()
-
-    def fetch_and_set_essential(self) -> None:
-        """Fetches and sets essential information.
-
-        Such information includes information about a video and streams.
-        """
-
-        self._fetch_and_set_video_info()
-        self._fetch_and_set_streams()
-        self._write_to_cache_if_needed()
-
-    def set_streams(self, value: SetOfStreams, fetch_video_info: bool = True) -> None:
+    def _set_streams(self, value: SetOfStreams, fetch_video_info: bool = True) -> None:
         """Sets streams manually.
 
         By default, it also fetches information about a video.
@@ -446,6 +419,32 @@ class Playback:
             self._info = LEFT_NOT_FETCHED
         self._write_to_cache_if_needed()
 
+    def _write_to_cache_if_needed(self):
+        if self._need_to_cache:
+            item_to_cache = {
+                "info": asdict(self._info),
+                "streams": [asdict(stream) for stream in self.streams],
+            }
+            some_base_url = next(iter(self.streams)).base_url
+            expires_at = extract_parameter_from_url("expire", some_base_url)
+            cache_directory = Playback.get_cache_directory()
+            write_to_cache(self.video_id, expires_at, item_to_cache, cache_directory)
+
+    def _fetch_and_set_video_info(self) -> None:
+        self._info = self.fetcher.fetch_video_info()
+
+    def _fetch_and_set_streams(self) -> None:
+        self._streams = self.fetcher.fetch_streams()
+
+    def fetch_and_set_essential(self) -> None:
+        """Fetches and sets essential information.
+
+        Such information includes information about a video and streams.
+        """
+        self._fetch_and_set_video_info()
+        self._fetch_and_set_streams()
+        self._write_to_cache_if_needed()
+
     def download_segment(
         self,
         sequence: SegmentSequence,
@@ -459,7 +458,7 @@ class Playback:
         """Downloads a segment.
 
         Examples:
-            Download a segment to a file, and read it:
+            Download a segment to a file, and read it::
 
                 from ytpb.segment import Segment
                 downloaded_path = playback.download_segment(
