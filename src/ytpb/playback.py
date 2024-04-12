@@ -81,15 +81,14 @@ class RewindTreeMap:
     ) -> RewindTreeNode:
         if not RewindTreeMap._is_tree_node(node):
             return RewindTreeNode(key, value, None, None)
+        if key < node.key:
+            left = RewindTreeMap._insert(node.left, key, value)
+            return RewindTreeNode(node.key, node.value, left, node.right)
+        elif key > node.key:
+            right = RewindTreeMap._insert(node.right, key, value)
+            return RewindTreeNode(node.key, node.value, node.left, right)
         else:
-            if key < node.key:
-                left = RewindTreeMap._insert(node.left, key, value)
-                return RewindTreeNode(node.key, node.value, left, node.right)
-            elif key > node.key:
-                right = RewindTreeMap._insert(node.right, key, value)
-                return RewindTreeNode(node.key, node.value, node.left, right)
-            else:
-                return RewindTreeNode(node.key, value, node.left, node.right)
+            return RewindTreeNode(node.key, value, node.left, node.right)
 
     def insert(self, key: Timestamp, value: SegmentSequence) -> None:
         """Inserts a pair of timestamp and sequence number into the tree."""
@@ -101,16 +100,14 @@ class RewindTreeMap:
     ) -> RewindTreeNode | None:
         if not RewindTreeMap._is_tree_node(node):
             return closest
+        if abs(target - closest.key) > abs(target - node.key):
+            closest = node
+        if target < node.key:
+            return RewindTreeMap._closest(node.left, target, closest)
+        elif target > node.key:
+            return RewindTreeMap._closest(node.right, target, closest)
         else:
-            result = closest
-            if abs(target - closest.key) > abs(target - node.key):
-                result = node
-            if target < node.key:
-                return RewindTreeMap._closest(node.left, target, result)
-            elif target > node.key:
-                return RewindTreeMap._closest(node.right, target, result)
-            else:
-                return result
+            return closest
 
     def closest(self, target: Timestamp) -> RewindTreeNode | None:
         """Finds the node closest to the target timestamp."""
