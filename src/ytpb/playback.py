@@ -6,7 +6,7 @@ import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable, Literal, Self, TypeGuard
+from typing import Iterable, Self, TypeGuard
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -489,7 +489,10 @@ class Playback:
         self,
         sequence: SegmentSequence,
         stream: AudioOrVideoStream,
-        location: Literal[".", "segments"] = ".",
+        segment_directory: Path | None = None,
+        segment_filename: (
+            SegmentOutputFilename | None
+        ) = compose_default_segment_filename,
         download: bool = True,
     ) -> Segment:
         """Gets a :class:`Segment` representing a downloaded segment.
@@ -502,21 +505,26 @@ class Playback:
         Args:
             sequence: A segment sequence number.
             stream: A stream to which segment belongs.
-            location: Where a segment is located relative to
-              :meth:`get_temp_directory`. The single dot ('.') represents the
-              run temporary directory itself.
+            segment_directory: Where a segment is stored.
+            segment_filename: A segment filename.
             download: Whether to download a segment if it doesn't exist.
 
         Returns:
             A :class:`Segment` object.
 
         Raises:
-            FileNotFoundError: If couldn't find a downloaded segment.
+            FileNotFoundError: If couldn't find a downloaded segment, when
+              download is not requested.
         """
-        segment_filename = compose_default_segment_filename(sequence, stream.base_url)
-        segment_directory = self.get_temp_directory() / location
+        segment_directory = segment_directory or self.get_temp_directory()
+        if callable(segment_filename):
+            segment_filename_value = segment_filename(sequence, stream.base_url)
+            segment_path = segment_directory / segment_filename_value
+        else:
+            segment_path = segment_directory / segment_filename
+
         try:
-            segment = Segment.from_file(segment_directory / segment_filename)
+            segment = Segment.from_file(segment_path)
         except FileNotFoundError as exc:
             if download:
                 downloaded_path = self.download_segment(sequence, stream)
@@ -524,7 +532,7 @@ class Playback:
             else:
                 exc.add_note(
                     "Couldn't find a segment. Make sure to download it before "
-                    "and the same segment filename compose function is used"
+                    "and the same segment filename is used"
                 )
                 raise
         return segment
