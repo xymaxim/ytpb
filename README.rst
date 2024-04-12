@@ -57,7 +57,7 @@ Demos
 - Composing an MPEG-DASH MPD and transcoding it to MP4 (`link
   <https://asciinema.org/a/653865>`__)
 - Creating a time-lapse of a live stream excerpt (`link
-  <https://asciinema.org/a/653865>`__)
+  <https://asciinema.org/a/653869>`__)
 
 Install
 *******
