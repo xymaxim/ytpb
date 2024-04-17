@@ -123,6 +123,7 @@ def render_download_output_path_context(
     help="Run without downloading.",
 )
 @yt_dlp_option
+@click.option("--no-metadata", is_flag=True, help="Do not write metadata tags.")
 @click.option("--no-cut", is_flag=True, help="Do not perform excerpt cutting.")
 @click.option(
     "--no-merge",
@@ -146,6 +147,7 @@ def download_command(
     from_manifest: Path,
     dry_run: bool,
     yt_dlp: bool,
+    no_metadata: bool,
     no_cut: bool,
     no_merge: bool,
     no_cleanup: bool,
@@ -397,12 +399,35 @@ def download_command(
             else:
                 click.echo("2. Merging segments (may take a while)... ", nl=False)
 
+            metadata_tags: dict[str, str] = {}
+            if not (no_metadata or no_merge):
+                convert_timestamp_to_string = lambda timestamp: f"{timestamp:.6f}"
+                metadata_tags = {
+                    "title": playback.info.title,
+                    "youtube_video_id": playback.video_id,
+                    "actual_start_time": convert_timestamp_to_string(
+                        actual_date_interval.start.timestamp()
+                    ),
+                    "actual_end_time": convert_timestamp_to_string(
+                        actual_date_interval.end.timestamp()
+                    ),
+                    "input_start_time": convert_timestamp_to_string(
+                        requested_date_interval.start.timestamp()
+                    ),
+                    "input_end_time": convert_timestamp_to_string(
+                        requested_date_interval.end.timestamp()
+                    ),
+                    "start_sequence_number": rewind_interval.start.sequence,
+                    "end_sequence_number": rewind_interval.end.sequence,
+                }
+
             merged_path = merge_segments(
                 audio_and_video_segment_paths[0],
                 audio_and_video_segment_paths[1],
                 output_directory=final_output_path.parent,
                 output_stem=final_output_path.name,
                 temp_directory=playback.get_temp_directory(),
+                metadata_tags=metadata_tags,
                 **cut_kwargs,
             )
             click.echo("done.\n")

@@ -16,6 +16,7 @@ from freezegun import freeze_time
 from helpers import assert_approx_duration
 
 from ytpb.config import DEFAULT_CONFIG
+from ytpb.ffmpeg import ffprobe_show_entries
 
 
 @pytest.mark.parametrize(
@@ -1379,3 +1380,106 @@ def test_dump_segment_urls_option(
         f"{audio_base_url.rstrip('/')}/sq/[7959120-7959121]\n"
         f"{video_base_url.rstrip('/')}/sq/[7959120-7959121]\n"
     )
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_metadata_tags_with_cutting(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    video_id: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    expected_out,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                "2023-03-25T23:33:55+00/2023-03-25T23:33:57+00",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                video_id,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    format_tags = ffprobe_show_entries(
+        tmp_path / "Webcam-Zurich-HB_20230325T233355+00.mp4", "format_tags", "default"
+    )
+    assert "TAG:title=Webcam Zürich HB" in format_tags
+    assert f"TAG:youtube_video_id={video_id}" in format_tags
+    assert "TAG:input_start_time=1679787235.000000" in format_tags
+    assert "TAG:input_end_time=1679787237.000000" in format_tags
+    assert "TAG:actual_start_time=1679787235.000000" in format_tags
+    assert "TAG:actual_end_time=1679787237.000000" in format_tags
+    assert "TAG:start_sequence_number=7959120" in format_tags
+    assert "TAG:end_sequence_number=7959121" in format_tags
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_metadata_tags_without_cutting(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    video_id: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    expected_out,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                "2023-03-25T23:33:55+00/2023-03-25T23:33:57+00",
+                "--no-cut",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                video_id,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    format_tags = ffprobe_show_entries(
+        tmp_path / "Webcam-Zurich-HB_20230325T233355+00.mp4", "format_tags", "default"
+    )
+    assert "TAG:title=Webcam Zürich HB" in format_tags
+    assert f"TAG:youtube_video_id={video_id}" in format_tags
+    assert "TAG:input_start_time=1679787235.000000" in format_tags
+    assert "TAG:input_end_time=1679787237.000000" in format_tags
+    assert "TAG:actual_start_time=1679787234.491176" in format_tags
+    assert "TAG:actual_end_time=1679787238.486826" in format_tags
+    assert "TAG:start_sequence_number=7959120" in format_tags
+    assert "TAG:end_sequence_number=7959121" in format_tags

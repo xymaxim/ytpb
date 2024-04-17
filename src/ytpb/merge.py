@@ -145,6 +145,7 @@ def merge_segments(
     temp_directory: str | Path | None = None,
     cut_at_start: float = 0,
     cut_at_end: float = 0,
+    metadata_tags: dict[str, str] = None,
     cleanup: bool = True,
 ) -> Path:
     """Merges and cuts media segments.
@@ -161,6 +162,7 @@ def merge_segments(
         temp_directory: Where to store intermediate files.
         cut_at_start: An offset (in seconds) to cut at start.
         cut_at_end: An offset (in seconds) to cut at end.
+        metadata_tags: Metadata tags to write to the merged file.
         cleanup: Whether to cleanup intermediate files.
 
     Returns:
@@ -189,6 +191,12 @@ def merge_segments(
         output_directory = Path.cwd()
     output_path = output_directory / f"{output_stem}{output_extension}"
 
+    metadata_options: list[str] = []
+    if metadata_tags:
+        metadata_options = ["-movflags", "use_metadata_tags", "-map_metadata", "0"]
+        for k, v in metadata_tags.items():
+            metadata_options.extend(["-metadata", f"{k}={v}"])
+
     safe_concat_options = ["-safe", "0", "-f", "concat"]
 
     should_cut = bool(cut_at_start or cut_at_end)
@@ -206,7 +214,9 @@ def merge_segments(
             )
             merge_segments.paths_to_cleanup.append(concat_file_path)
             no_cut_concat_options += safe_concat_options + ["-i", concat_file_path]
-        ffmpeg.run_ffmpeg(no_cut_concat_options + ["-c", "copy", output_path])
+        ffmpeg.run_ffmpeg(
+            [*no_cut_concat_options, "-c", "copy", *metadata_options, output_path]
+        )
     else:
         num_of_segments = len(audio_segment_paths or video_segment_paths)
 
@@ -299,13 +309,27 @@ def merge_segments(
 
         if num_of_segments == 1:
             ffmpeg.run_ffmpeg(
-                ["-i", str(parts_to_merge[0]), "-c", "copy", str(output_path)]
+                [
+                    "-i",
+                    str(parts_to_merge[0]),
+                    "-c",
+                    "copy",
+                    *metadata_options,
+                    str(output_path),
+                ]
             )
         else:
             concat_file_path = _compose_concat_file(parts_to_merge, temp_directory)
             ffmpeg.run_ffmpeg(
-                safe_concat_options
-                + ["-i", str(concat_file_path), "-c", "copy", str(output_path)]
+                [
+                    *safe_concat_options,
+                    "-i",
+                    str(concat_file_path),
+                    "-c",
+                    "copy",
+                    *metadata_options,
+                    str(output_path),
+                ]
             )
             merge_segments.paths_to_cleanup.append(concat_file_path)
 
