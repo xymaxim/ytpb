@@ -540,10 +540,10 @@ download`` command.  Use the ``--no-metadata`` option to disable it.
    | ``end_sequence_number``   | End segment sequence number   | 1001                                        |
    +---------------------------+-------------------------------+---------------------------------------------+
 
-The input and actual time values are expected to be different in only two cases:
-if the boundary (start and end) points fall in gaps or the ``--no-cut`` option
-is requested. In the opposite cases, after accurate cut, they're supposed to be
-identical.
+The input and actual time values (represented as seconds since the epoch) are
+expected to be different in only two cases: if the boundary (start and end)
+points fall in gaps or the ``--no-cut`` option is requested. In the opposite
+cases, after accurate cut, they're supposed to be identical.
 
 Configuring
 ***********
