@@ -1388,7 +1388,7 @@ def test_metadata_tags_with_cutting(
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
     fake_info_fetcher: MagicMock,
-    video_id: str,
+    stream_url: str,
     audio_base_url: str,
     tmp_path: Path,
     expected_out,
@@ -1413,7 +1413,7 @@ def test_metadata_tags_with_cutting(
                 "itag eq 140",
                 "-vf",
                 "none",
-                video_id,
+                stream_url,
             ],
             catch_exceptions=False,
             standalone_mode=False,
@@ -1424,7 +1424,8 @@ def test_metadata_tags_with_cutting(
         tmp_path / "Webcam-Zurich-HB_20230325T233355+00.mp4", "format_tags", "default"
     )
     assert "TAG:title=Webcam Zürich HB" in format_tags
-    assert f"TAG:youtube_video_id={video_id}" in format_tags
+    assert "TAG:author=David Gubler" in format_tags
+    assert f"TAG:comment={stream_url}" in format_tags
     assert "TAG:input_start_time=1679787235.000000" in format_tags
     assert "TAG:input_end_time=1679787237.000000" in format_tags
     assert "TAG:actual_start_time=1679787235.000000" in format_tags
@@ -1439,7 +1440,7 @@ def test_metadata_tags_without_cutting(
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
     fake_info_fetcher: MagicMock,
-    video_id: str,
+    stream_url: str,
     audio_base_url: str,
     tmp_path: Path,
     expected_out,
@@ -1465,7 +1466,7 @@ def test_metadata_tags_without_cutting(
                 "itag eq 140",
                 "-vf",
                 "none",
-                video_id,
+                stream_url,
             ],
             catch_exceptions=False,
             standalone_mode=False,
@@ -1476,7 +1477,8 @@ def test_metadata_tags_without_cutting(
         tmp_path / "Webcam-Zurich-HB_20230325T233355+00.mp4", "format_tags", "default"
     )
     assert "TAG:title=Webcam Zürich HB" in format_tags
-    assert f"TAG:youtube_video_id={video_id}" in format_tags
+    assert "TAG:author=David Gubler" in format_tags
+    assert f"TAG:comment={stream_url}" in format_tags
     assert "TAG:input_start_time=1679787235.000000" in format_tags
     assert "TAG:input_end_time=1679787237.000000" in format_tags
     assert "TAG:actual_start_time=1679787234.491176" in format_tags

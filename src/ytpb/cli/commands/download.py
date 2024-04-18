@@ -400,11 +400,12 @@ def download_command(
                 click.echo("2. Merging segments (may take a while)... ", nl=False)
 
             metadata_tags: dict[str, str] = {}
-            if not (no_metadata or no_merge):
+            if not no_metadata:
                 convert_timestamp_to_string = lambda timestamp: f"{timestamp:.6f}"
                 metadata_tags = {
                     "title": playback.info.title,
-                    "youtube_video_id": playback.video_id,
+                    "author": playback.info.author,
+                    "comment": playback.video_url,
                     "actual_start_time": convert_timestamp_to_string(
                         actual_date_interval.start.timestamp()
                     ),
@@ -430,6 +431,7 @@ def download_command(
                 metadata_tags=metadata_tags,
                 **cut_kwargs,
             )
+
             click.echo("done.\n")
 
             try:
