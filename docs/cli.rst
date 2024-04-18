@@ -510,6 +510,41 @@ examples:
           # 20240102T1220+02
 	  styles = "basic,reduced,z"
 
+Writing metadata tags
+=====================
+
+By default, metadata tags will be added to the output file by the ``ytpb
+download`` command.  Use the ``--no-metadata`` option to disable it.
+
+.. table:: Metadata tags overview
+
+   +---------------------------+-------------------------------+---------------------------------------------+
+   | Tag                       | Description                   |                   Example                   |
+   +===========================+===============================+=============================================+
+   | ``title``                 | Video's title                 | Stream Title                                |
+   +---------------------------+-------------------------------+---------------------------------------------+
+   | ``author``                | Video's channel name          | Author or Channel Name                      |
+   +---------------------------+-------------------------------+---------------------------------------------+
+   | ``comment``               | YouTube video URL             | https://www.youtube.com/watch?v=abcdefgh123 |
+   +---------------------------+-------------------------------+---------------------------------------------+
+   | ``input_start_time``      | Input start time              | 1700000000.000000                           |
+   +---------------------------+-------------------------------+---------------------------------------------+
+   | ``input_end_time``        | Input end time                | 1700000030.000000                           |
+   +---------------------------+-------------------------------+---------------------------------------------+
+   | ``actual_start_time``     | Actual start time             | 1700000000.000000                           |
+   +---------------------------+-------------------------------+---------------------------------------------+
+   | ``actual_start_time``     | Actual end time               | 1700000030.000000                           |
+   +---------------------------+-------------------------------+---------------------------------------------+
+   | ``start_sequence_number`` | Start segment sequence number | 0                                           |
+   +---------------------------+-------------------------------+---------------------------------------------+
+   | ``end_sequence_number``   | End segment sequence number   | 1001                                        |
+   +---------------------------+-------------------------------+---------------------------------------------+
+
+The input and actual time values are expected to be different in only two cases:
+if the boundary (start and end) points fall in gaps or the ``--no-cut`` option
+is requested. In the opposite cases, after accurate cut, they're supposed to be
+identical.
+
 Configuring
 ***********
 
