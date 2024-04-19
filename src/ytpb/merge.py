@@ -32,7 +32,11 @@ def get_nth_or_none(iterable, n: int) -> Any | None:
 
 
 def mux_and_cut_boundary_segment(
-    audio_segment_path: Path, video_segment_path: Path, output_path: Path, **cut_kwargs
+    audio_segment_path: Path,
+    video_segment_path: Path,
+    output_path: Path,
+    video_codec: str | None = None,
+    **cut_kwargs,
 ) -> None:
     """Muxes and cuts a boundary segment.
 
@@ -40,6 +44,7 @@ def mux_and_cut_boundary_segment(
         audio_segment_path: A path to an audio segment.
         video_segment_path: A path to a video segment.
         output_path: An output path of the muxed segment.
+        video_codec: A video codec name.
         cut_kwargs: Cut keyword arguments: ``cut_at_start`` and ``cut_at_end``.
     """
 
@@ -57,6 +62,11 @@ def mux_and_cut_boundary_segment(
     if not {"cut_at_start", "cut_at_end"} > cut_kwargs.keys():
         raise ValueError(
             "only cut_at_start or cut_at_end keyword argument is accepted in cut_kwargs"
+        )
+
+    if video_segment_path and video_codec is None:
+        video_codec = ffmpeg.ffprobe_show_entries(
+            video_segment_path, "stream=codec_name"
         )
 
     ffmpeg_input_options = []
@@ -77,24 +87,20 @@ def mux_and_cut_boundary_segment(
                 video_segment_path, **cut_kwargs
             )
 
-            video_codec_name = ffmpeg.ffprobe_show_entries(
-                video_segment_path, "stream=codec_name"
-            )
-
             user_encoding_settings = os.environ.get(
-                f"YTPB_{video_codec_name.upper()}_ENCODING_SETTINGS", None
+                f"YTPB_{video_codec.upper()}_ENCODING_SETTINGS", None
             )
             if user_encoding_settings:
                 ffmpeg_codecs_options += ["-c:v"] + shlex.split(user_encoding_settings)
             else:
                 try:
                     ffmpeg_codecs_options += ["-c:v"] + shlex.split(
-                        DEFAULT_VIDEO_ENCODING_SETTINGS[video_codec_name]
+                        DEFAULT_VIDEO_ENCODING_SETTINGS[video_codec]
                     )
                 except KeyError:
                     raise ValueError(
                         "No encoding settings are availabe for"
-                        f"'{video_codec_name}' video codec"
+                        f"'{video_codec}' video codec"
                     )
 
         if audio_segment_path:
@@ -103,8 +109,19 @@ def mux_and_cut_boundary_segment(
             )
             ffmpeg_codecs_options += ["-c:a", "copy"]
 
+        additional_options: list[str] = []
+        if video_segment_path and video_codec == "h264":
+            # Ensure to have the same tbn values after re-encoding of segments
+            # and their concatenation (see the merge_segments() function).
+            additional_options += ["-video_track_timescale", "1k"]
+
         ffmpeg.run_ffmpeg(
-            ffmpeg_input_options + ffmpeg_codecs_options + [str(output_path)]
+            [
+                *ffmpeg_input_options,
+                *additional_options,
+                *ffmpeg_codecs_options,
+                str(output_path),
+            ]
         )
 
 
@@ -226,12 +243,19 @@ def merge_segments(
         end_audio_segment_path = get_nth_or_none(audio_segment_paths, -1)
         end_video_segment_path = get_nth_or_none(video_segment_paths, -1)
 
+        video_codec: str | None = None
+        if video_segment_paths:
+            video_codec = ffmpeg.ffprobe_show_entries(
+                video_segment_paths[0], "stream=codec_name"
+            )
+
         if num_of_segments == 1:
             segment_trimmed_path = Path(temp_directory, "a.a" + output_extension)
             mux_and_cut_boundary_segment(
                 start_audio_segment_path,
                 start_video_segment_path,
                 segment_trimmed_path,
+                video_codec,
                 cut_at_start=cut_at_start,
             )
             parts_to_merge = [segment_trimmed_path]
@@ -241,6 +265,7 @@ def merge_segments(
                 start_audio_segment_path,
                 start_video_segment_path,
                 start_trimmed_path,
+                video_codec,
                 cut_at_start=cut_at_start,
             )
 
@@ -249,6 +274,7 @@ def merge_segments(
                 end_audio_segment_path,
                 end_video_segment_path,
                 end_trimmed_path,
+                video_codec,
                 cut_at_end=cut_at_end,
             )
 
@@ -259,6 +285,7 @@ def merge_segments(
                 start_audio_segment_path,
                 start_video_segment_path,
                 start_trimmed_path,
+                video_codec,
                 cut_at_start=cut_at_start,
             )
 
@@ -269,6 +296,7 @@ def merge_segments(
                 end_audio_segment_path,
                 end_video_segment_path,
                 end_trimmed_path,
+                video_codec,
                 cut_at_end=cut_at_end,
             )
 
@@ -293,8 +321,18 @@ def merge_segments(
                 concat_filter_options += safe_concat_options + ["-i", concat_file_path]
                 merge_segments.paths_to_cleanup.append(concat_file_path)
 
+            additional_options: list[str] = []
+            if video_segment_paths and video_codec == "h264":
+                additional_options += ["-video_track_timescale", "1k"]
+
             ffmpeg.run_ffmpeg(
-                concat_filter_options + ["-c", "copy", middle_concatenated_path],
+                [
+                    *concat_filter_options,
+                    *additional_options,
+                    "-c",
+                    "copy",
+                    str(middle_concatenated_path),
+                ],
                 capture_output=True,
                 check=True,
             )
