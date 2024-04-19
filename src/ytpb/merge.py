@@ -2,9 +2,9 @@
 
 Note:
     The current implementation of segment merging is not optimal in terms of
-    disk space, as it requires triple the amount of the total size of
-    segments. Should be changed to use different techniques, without the need
-    for intermediate files.
+    disk space, as it requires triple the amount of the total size of segments
+    if cutting is requested (by default). Should be changed to use different
+    techniques, without the need for intermediate files.
 """
 
 import functools
