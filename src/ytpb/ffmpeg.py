@@ -14,14 +14,13 @@ def run_ffmpeg(
     args: str | list[str], **subprocess_kwargs: Any
 ) -> subprocess.CompletedProcess:
     command = ["ffmpeg", "-v", "error", "-hide_banner", "-y"]
-
     if isinstance(args, str):
         command.extend(shlex.split(args))
     else:
         command.extend(args)
 
+    logger.debug(" ".join([str(x) for x in command]))
     cp = subprocess.run(command, **subprocess_kwargs)
-
     try:
         cp.check_returncode()
     except subprocess.CalledProcessError as e:
