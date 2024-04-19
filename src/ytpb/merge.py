@@ -53,9 +53,9 @@ def mux_and_cut_boundary_segment(
     ):
         assert cut_at_start or cut_at_end
         if cut_at_start > 0:
-            return ["-ss", f"{cut_at_start}s", "-i", segment_path]
+            return ["-ss", f"{cut_at_start:.6f}s", "-i", segment_path]
         elif cut_at_end > 0:
-            return ["-i", segment_path, "-to", f"{cut_at_end}s"]
+            return ["-i", segment_path, "-to", f"{cut_at_end:.6f}s"]
         else:
             return ["-i", segment_path]
 
