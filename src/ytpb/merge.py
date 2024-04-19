@@ -77,10 +77,10 @@ def mux_and_cut_boundary_segment(
     )
     if should_cut is False:
         if video_segment_path:
-            ffmpeg_input_options += ["-i", str(video_segment_path)]
+            ffmpeg_input_options += ["-i", video_segment_path]
         if audio_segment_path:
-            ffmpeg_input_options += ["-i", str(audio_segment_path)]
-        ffmpeg.run_ffmpeg(ffmpeg_input_options + ["-c", "copy", str(output_path)])
+            ffmpeg_input_options += ["-i", audio_segment_path]
+        ffmpeg.run_ffmpeg(ffmpeg_input_options + ["-c", "copy", output_path])
     else:
         if video_segment_path:
             ffmpeg_input_options += prepare_ffmpeg_input_options(
@@ -120,7 +120,7 @@ def mux_and_cut_boundary_segment(
                 *ffmpeg_input_options,
                 *additional_options,
                 *ffmpeg_codecs_options,
-                str(output_path),
+                output_path,
             ]
         )
 
@@ -331,7 +331,7 @@ def merge_segments(
                     *additional_options,
                     "-c",
                     "copy",
-                    str(middle_concatenated_path),
+                    middle_concatenated_path,
                 ],
                 capture_output=True,
                 check=True,
@@ -349,11 +349,11 @@ def merge_segments(
             ffmpeg.run_ffmpeg(
                 [
                     "-i",
-                    str(parts_to_merge[0]),
+                    parts_to_merge[0],
                     "-c",
                     "copy",
                     *metadata_options,
-                    str(output_path),
+                    output_path,
                 ]
             )
         else:
@@ -362,11 +362,11 @@ def merge_segments(
                 [
                     *safe_concat_options,
                     "-i",
-                    str(concat_file_path),
+                    concat_file_path,
                     "-c",
                     "copy",
                     *metadata_options,
-                    str(output_path),
+                    output_path,
                 ]
             )
             merge_segments.paths_to_cleanup.append(concat_file_path)

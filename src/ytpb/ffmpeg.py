@@ -11,7 +11,7 @@ logger = structlog.get_logger(__name__)
 
 
 def run_ffmpeg(
-    args: str | list[str], **subprocess_kwargs: Any
+    args: str | list[str | Path], **subprocess_kwargs: Any
 ) -> subprocess.CompletedProcess:
     command = ["ffmpeg", "-v", "error", "-hide_banner", "-y"]
     if isinstance(args, str):
