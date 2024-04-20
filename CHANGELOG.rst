@@ -11,8 +11,9 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 - Fix wrong frame rate values of the video-only merged files when boundary
   segments are cut and encoded with H.264 (`e1120bf
   <https://github.com/xymaxim/ytpb/commit/e1120bf4514333ff3ac5d4eac862ccb6a9d5f606>`__)
-- Add metadata tags with basic and rewind information to merged files (`aa7adf1
+- Write metadata tags with basic and rewind information to merged files (`aa7adf1
   <https://github.com/xymaxim/ytpb/commit/aa7adf1580e5a83c9abaa76f2836b9a0570cc4ba>`__)
+- Add the ``-no-metadata`` option to not write metadata tags to merged files
 
 `2024.4.12`_
 ************
