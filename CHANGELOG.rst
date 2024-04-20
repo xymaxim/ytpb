@@ -5,6 +5,15 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 
 .. _Calendar Versioning: https://calver.org
 
+`2024.4.20`_
+************
+
+- Fix wrong frame rate values of the video-only merged files when boundary
+  segments are cut and encoded with H.264 (`e1120bf
+  <https://github.com/xymaxim/ytpb/commit/e1120bf4514333ff3ac5d4eac862ccb6a9d5f606>`__)
+- Add metadata tags with basic and rewind information to merged files (`aa7adf1
+  <https://github.com/xymaxim/ytpb/commit/aa7adf1580e5a83c9abaa76f2836b9a0570cc4ba>`__)
+
 `2024.4.12`_
 ************
 
@@ -72,6 +81,7 @@ Breaking changes
 - Change the first segment locating step: don't limit it to two jumps (`#8
   <https://github.com/xymaxim/ytpb/pull/8>`__)
 
+.. _2024.4.20: https://github.com/xymaxim/ytpb/compare/v2024.4.12..v2024.4.20
 .. _2024.4.12: https://github.com/xymaxim/ytpb/compare/v2024.3.27..v2024.4.12
 .. _2024.3.27: https://github.com/xymaxim/ytpb/compare/v2024.3.16..v2024.3.27
 .. _2024.3.16: https://github.com/xymaxim/ytpb/compare/v2024.3.13..v2024.3.16
