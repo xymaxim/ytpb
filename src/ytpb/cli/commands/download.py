@@ -1,5 +1,8 @@
+import os
+import pickle
 import shutil
 import sys
+import tempfile
 from datetime import datetime, timedelta
 from functools import partial
 from pathlib import Path
@@ -24,12 +27,13 @@ from ytpb.cli.common import (
 from ytpb.cli.options import (
     cache_options,
     interval_option,
-    no_cleanup_option,
+    keep_temp_option,
     preview_option,
     validate_output_path,
     yt_dlp_option,
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewindInterval
+from ytpb.download import compose_default_segment_filename
 from ytpb.errors import SequenceLocatingError
 from ytpb.merge import merge_segments
 from ytpb.types import (
@@ -44,8 +48,10 @@ from ytpb.utils.path import (
     IntervalOutputPathContext,
     MinimalOutputPathContext,
     OUTPUT_PATH_PLACEHOLDER_RE,
+    remove_directories_between,
     render_interval_output_path_context,
     render_minimal_output_path_context,
+    try_get_relative_path,
 )
 from ytpb.utils.remote import request_reference_sequence
 from ytpb.utils.url import build_segment_url, extract_parameter_from_url
@@ -56,6 +62,20 @@ logger = structlog.get_logger(__name__)
 class DownloadOutputPathContext(
     MinimalOutputPathContext, IntervalOutputPathContext
 ): ...
+
+
+def compose_resume_filename(video_id: str) -> str:
+    for i, arg in enumerate(sys.argv):
+        if arg in ("--interval", "-i"):
+            interval_option_value = sys.argv[i + 1]
+            break
+
+    interval_part = interval_option_value
+    for char in "-:@":
+        interval_part = interval_part.replace(char, "")
+    interval_part = interval_part.replace("/", "-")
+
+    return f"{video_id}~{interval_part}.resume"
 
 
 def render_download_output_path_context(
@@ -123,15 +143,23 @@ def render_download_output_path_context(
     help="Run without downloading.",
 )
 @yt_dlp_option
+@click.option(
+    "--segments-output-dir",
+    "segments_output_dir_option",
+    type=click.Path(path_type=Path),
+    help="Location where to download segments to.",
+)
+@click.option("-S", "--keep-segments", is_flag=True, help="Keep downloaded segments.")
 @click.option("--no-metadata", is_flag=True, help="Do not write metadata tags.")
 @click.option("--no-cut", is_flag=True, help="Do not perform excerpt cutting.")
 @click.option(
     "--no-merge",
     is_flag=True,
-    help="Only download segments, without merging. This implies '--no-cleanup'.",
+    help="Only download segments, without merging. Implies --keep-segments.",
 )
-@no_cleanup_option
+@click.option("--no-resume", is_flag=True, help="Avoid resuming unfinished downloads.")
 @cache_options
+@keep_temp_option
 @stream_argument
 @constraint(require_any, ["audio_format", "video_format"])
 @click.pass_context
@@ -147,19 +175,22 @@ def download_command(
     from_manifest: Path,
     dry_run: bool,
     yt_dlp: bool,
+    segments_output_dir_option: Path,
+    keep_segments: bool,
     no_metadata: bool,
     no_cut: bool,
     no_merge: bool,
-    no_cleanup: bool,
+    no_resume: bool,
     force_update_cache: bool,
     no_cache: bool,
+    keep_temp: bool,
     stream_url: str,
 ) -> int:
     if dump_base_urls or dump_segment_urls:
         suppress_output()
 
     if no_merge:
-        no_cleanup = True
+        keep_segments = True
 
     playback = create_playback(ctx)
 
@@ -210,6 +241,7 @@ def download_command(
         sys.exit()
 
     click.echo()
+
     click.echo("(<<) Locating start and end in the stream... ", nl=False)
 
     reference_stream = video_stream or audio_stream
@@ -239,21 +271,35 @@ def download_command(
                 )
 
     if preview:
+        no_resume = True
         preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
         segment_duration = float(extract_parameter_from_url("dur", reference_base_url))
         number_of_segments = round(preview_duration_value / segment_duration)
         requested_end = RelativeSegmentSequence(number_of_segments)
 
-    try:
-        rewind_interval = playback.locate_interval(
-            requested_start,
-            requested_end,
-            reference_stream,
-        )
-    except SequenceLocatingError:
-        message = "\nerror: An error occured during segment locating, exit."
-        click.echo(message, err=True)
-        sys.exit(1)
+    resume_run: bool = False
+    resume_file_path = Path.cwd() / compose_resume_filename(playback.video_id)
+
+    if not no_resume and resume_file_path.exists():
+        logger.debug("Load resume file from %s", resume_file_path)
+        with open(resume_file_path, "rb") as f:
+            resume_run = True
+            pickled = pickle.load(f)
+            rewind_interval = pickled["interval"]
+            previous_segments_output_directory = Path.absolute(
+                pickled["segments_output_directory"]
+            )
+
+    if not resume_run:
+        try:
+            rewind_interval = playback.locate_interval(
+                requested_start,
+                requested_end,
+                reference_stream,
+            )
+        except SequenceLocatingError:
+            message = "\nerror: An error occured during segment locating, exit."
+            click.echo(message, err=True)
 
     click.echo("done.")
 
@@ -320,6 +366,57 @@ def download_command(
     print_summary_info(requested_date_interval, actual_date_interval, rewind_interval)
     click.echo()
 
+    if preview:
+        segments_output_directory = playback.get_temp_directory()
+    else:
+        segments_output_directory = (
+            segments_output_dir_option
+            or resume_file_path.with_name(f"{resume_file_path.stem}-segments")
+        )
+    segments_output_directory = segments_output_directory.absolute()
+    logger.debug("Segments output directory set to %s", segments_output_directory)
+
+    if resume_run:
+        click.echo(
+            f"~ Found unfinished download, continue from {resume_file_path.name}\n"
+        )
+        if segments_output_directory != previous_segments_output_directory:
+            click.echo(
+                "fatal: The previous segments output directory is not "
+                "the same as the current run:\n'{}' != '{}'.".format(
+                    try_get_relative_path(previous_segments_output_directory),
+                    try_get_relative_path(segments_output_directory),
+                ),
+                err=True,
+            )
+            click.echo(
+                "\nUse '--segments-output-dir {}' or '--no-resume'.".format(
+                    try_get_relative_path(previous_segments_output_directory)
+                ),
+                err=True,
+            )
+            sys.exit(1)
+
+    if segments_output_dir_option is None or not segments_output_directory.exists():
+        need_to_remove_segments_directory = True
+        segments_directory_to_remove = segments_output_directory
+        for directory in segments_output_directory.parents:
+            if directory.exists():
+                break
+            segments_directory_to_remove = directory
+        segments_output_directory.mkdir(parents=True, exist_ok=True)
+    else:
+        need_to_remove_segments_directory = False
+
+    if not resume_run:
+        with open(resume_file_path, "wb") as f:
+            logger.debug("Write resume file to %s", resume_file_path)
+            to_pickle = {
+                "interval": rewind_interval,
+                "segments_output_directory": segments_output_directory,
+            }
+            pickle.dump(to_pickle, f)
+
     if dry_run:
         click.echo("notice: This is a dry run. Skip downloading and exit.")
     else:
@@ -349,19 +446,42 @@ def download_command(
             final_output_path = output_path
         final_output_path = resolve_output_path(final_output_path)
 
-        total_segments = (
-            rewind_interval.end.sequence - rewind_interval.start.sequence + 1
-        )
+        if resume_run:
+            extract_sequence_number = lambda p: int(p.name.split(".")[0])
+            latest_sequence_number = extract_sequence_number(
+                sorted(
+                    segments_output_directory.glob(
+                        f"*.i{(audio_stream or video_stream).itag}*"
+                    ),
+                    key=extract_sequence_number,
+                )[-1]
+            )
+            sequences_to_download = range(
+                latest_sequence_number, rewind_interval.end.sequence + 1
+            )
+            completed_segments = latest_sequence_number - rewind_interval.start.sequence
+        else:
+            sequences_to_download = rewind_interval.sequences
+            completed_segments = 0
+
+        total_segments = len(rewind_interval.sequences)
+
         progress_reporter = actions.download.RichProgressReporter()
         if audio_stream:
-            progress_reporter.progress.add_task("   - Audio", total=total_segments)
+            progress_reporter.progress.add_task(
+                "   - Audio", total=total_segments, completed=completed_segments
+            )
         if video_stream:
-            progress_reporter.progress.add_task("   - Video", total=total_segments)
+            progress_reporter.progress.add_task(
+                "   - Video", total=total_segments, completed=completed_segments
+            )
+
         do_download_segments = partial(
             actions.download.download_segments,
-            playback,
-            rewind_interval,
-            [x for x in [audio_stream, video_stream] if x is not None],
+            playback=playback,
+            sequence_numbers=sequences_to_download,
+            streams=[x for x in [audio_stream, video_stream] if x is not None],
+            output_directory=segments_output_directory,
             progress_reporter=progress_reporter,
         )
 
@@ -372,9 +492,10 @@ def download_command(
                 )
             )
             downloaded_segment_paths = do_download_segments()
-            some_downloaded_path = downloaded_segment_paths[0][0]
             click.echo(
-                "\nSuccess! Segments saved to {}/.".format(some_downloaded_path.parent)
+                "\nSuccess! Segments saved to {}/.".format(
+                    try_get_relative_path(segments_output_directory)
+                )
             )
         else:
             click.echo("(<<) Preparing and saving the excerpt...")
@@ -386,13 +507,18 @@ def download_command(
 
             downloaded_segment_paths = do_download_segments()
             audio_and_video_segment_paths: list[list[Path]] = [[], []]
-            match audio_stream, video_stream:
-                case _, None:
-                    audio_and_video_segment_paths[0] = downloaded_segment_paths[0]
-                case None, _:
-                    audio_and_video_segment_paths[1] = downloaded_segment_paths[0]
-                case _:
-                    audio_and_video_segment_paths = downloaded_segment_paths
+            if audio_stream:
+                audio_and_video_segment_paths[0] = [
+                    segments_output_directory
+                    / compose_default_segment_filename(sequence, audio_stream.base_url)
+                    for sequence in rewind_interval.sequences
+                ]
+            if video_stream:
+                audio_and_video_segment_paths[1] = [
+                    segments_output_directory
+                    / compose_default_segment_filename(sequence, video_stream.base_url)
+                    for sequence in rewind_interval.sequences
+                ]
 
             if no_cut:
                 click.echo("2. Merging segments (no cut requested)... ", nl=False)
@@ -433,20 +559,40 @@ def download_command(
             )
 
             click.echo("done.\n")
-
-            try:
-                saved_to_path_value = f"{merged_path.relative_to(Path.cwd())}"
-            except ValueError:
-                saved_to_path_value = merged_path
-            click.echo(f"Success! Saved to '{saved_to_path_value}'.")
+            click.echo(f"Success! Saved to '{try_get_relative_path(merged_path)}'.")
 
     run_temp_directory = playback.get_temp_directory()
-    if no_cleanup:
+    if keep_temp:
         click.echo(f"notice: No cleanup enabled, check {run_temp_directory}/")
     else:
         try:
             shutil.rmtree(run_temp_directory)
         except OSError:
             logger.warning(
-                "Failed to remove %s temporary directory", run_temp_directory
+                "Failed to remove temporary directory: %s", run_temp_directory
+            )
+
+    if not no_resume:
+        resume_file_path.unlink()
+
+    if not dry_run and not keep_segments and not preview:
+        try:
+            for paths in audio_and_video_segment_paths:
+                for path in paths:
+                    path.unlink()
+        except OSError:
+            logger.warning("Could not remove segment: %s", path)
+        try:
+            if need_to_remove_segments_directory:
+                logger.debug(
+                    "Remove created segments directory: %s",
+                    segments_directory_to_remove,
+                )
+                remove_directories_between(
+                    segments_directory_to_remove, segments_output_directory
+                )
+        except OSError:
+            logger.warning(
+                "Could not remove segments directory: %s",
+                segments_directory_to_remove,
             )

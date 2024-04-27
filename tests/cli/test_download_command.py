@@ -1,22 +1,26 @@
 import glob
 import os
+import pickle
 import re
+import shutil
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
 from unittest.mock import MagicMock, patch
 from urllib.parse import urljoin
 
 import click
-
 import pytest
-
+import responses
 import toml
-from freezegun import freeze_time
 
+from conftest import TEST_DATA_PATH
+from freezegun import freeze_time
 from helpers import assert_approx_duration
 
 from ytpb.config import DEFAULT_CONFIG
 from ytpb.ffmpeg import ffprobe_show_entries
+from ytpb.playback import RewindInterval, RewindMoment
 
 
 @pytest.mark.parametrize(
@@ -220,6 +224,52 @@ def test_preview_option_with_closed_interval(
     assert expected in result.output
 
 
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_segments_saved_to_temp_in_preview_mode(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    run_temp_directory: Path,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # We only have three test segments of 2 second duration.
+    DEFAULT_CONFIG["general"]["preview_duration"] = 4
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--keep-temp",
+                "--interval",
+                "7959120/7959122",
+                "--preview",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                stream_url,
+            ],
+            catch_exceptions=False,
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    assert os.path.exists(run_temp_directory / "7959120.i140.mp4")
+    assert os.path.exists(run_temp_directory / "7959121.i140.mp4")
+
+
 @pytest.mark.parametrize(
     "audio_format,video_format",
     [("itag eq 140", "itag eq 244"), ("itag eq 140", "none"), ("none", "itag eq 244")],
@@ -260,7 +310,7 @@ def test_download_audio_and_or_video(
                 audio_format,
                 "-vf",
                 video_format,
-                "--no-cleanup",
+                "--keep-temp",
                 stream_url,
             ],
             catch_exceptions=False,
@@ -411,12 +461,12 @@ def test_download_to_template_output_path(
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
-def test_no_cleanup_option(
+def test_keep_temp_option(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
     fake_info_fetcher: MagicMock,
-    stream_url: str,
+    video_id: str,
     audio_base_url: str,
     tmp_path: Path,
     run_temp_directory: Path,
@@ -435,14 +485,14 @@ def test_no_cleanup_option(
                 "--no-config",
                 "download",
                 "--no-cache",
+                "--keep-temp",
                 "--interval",
                 "7959120/7959121",
                 "-af",
                 "itag eq 140",
                 "-vf",
                 "none",
-                "--no-cleanup",
-                stream_url,
+                video_id,
             ],
         )
 
@@ -464,9 +514,6 @@ def test_no_merge_option(
     run_temp_directory: Path,
     expected_out,
 ) -> None:
-    """The expected output file for this test contains a template variable, and
-    needs to be updated manually."""
-
     # Given:
     add_responses_callback_for_reference_base_url()
     add_responses_callback_for_segment_urls(
@@ -495,19 +542,8 @@ def test_no_merge_option(
     # Then:
     assert result.exit_code == 0
     assert not os.path.exists(tmp_path / "Webcam-Zurich-HB_20230325T233354+00.mp4")
-    assert os.path.exists(run_temp_directory / "7959120.i140.mp4")
-
-    expected_output = re.sub(
-        r"Success! Segments saved to .+\.",
-        f"Success! Segments saved to {run_temp_directory}/segments/.",
-        expected_out._pattern_filename.read_text(),
-    )
-    expected_output = re.sub(
-        r"notice: No cleanup enabled, check .+",
-        f"notice: No cleanup enabled, check {run_temp_directory}/",
-        expected_output,
-    )
-    assert expected_output == result.output
+    assert not os.path.exists(run_temp_directory)
+    assert expected_out == result.output
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
@@ -1485,3 +1521,450 @@ def test_metadata_tags_without_cutting(
     assert "TAG:actual_end_time=1679787238.486826" in format_tags
     assert "TAG:start_sequence_number=7959120" in format_tags
     assert "TAG:end_sequence_number=7959121" in format_tags
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_resume_downloading(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    fake_info_fetcher: MagicMock,
+    video_id: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    expected_out,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    resume_file_stem = f"{video_id}~7959120-20230325T233359+00"
+    with open(f"{resume_file_stem}.resume", "wb") as f:
+        end_date = datetime.fromisoformat("2023-03-25T23:33:59+00")
+        pickle.dump(
+            {
+                "interval": RewindInterval(
+                    start=RewindMoment(
+                        date=datetime.fromtimestamp(1679787234.491176, timezone.utc),
+                        sequence=7959120,
+                        cut_at=0,
+                        is_end=False,
+                    ),
+                    end=RewindMoment(
+                        date=end_date,
+                        sequence=7959122,
+                        cut_at=0,
+                        is_end=True,
+                    ),
+                ),
+                "segments_output_directory": Path(f"{resume_file_stem}-segments"),
+            },
+            f,
+        )
+    segments_output_directory = tmp_path / f"{resume_file_stem}-segments"
+    segments_output_directory.mkdir()
+    for segment in (7959120, 7959121):
+        shutil.copy(
+            TEST_DATA_PATH / f"segments/{segment}.i140.mp4",
+            segments_output_directory / f"{segment}.i140.mp4",
+        )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--no-cut",
+                "--interval",
+                "7959120/2023-03-25T23:33:59+00",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                video_id,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    assert (
+        f"~ Found unfinished download, continue from {resume_file_stem}.resume"
+    ) in result.output
+    expected_path = tmp_path / "Webcam-Zurich-HB_20230325T233354+00.mp4"
+    assert os.path.exists(expected_path)
+    assert_approx_duration(expected_path, 6)
+    assert not os.path.exists(tmp_path / f"{resume_file_stem}-segments")
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_keep_segments(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    fake_info_fetcher: MagicMock,
+    video_id: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    expected_out,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--no-cut",
+                "--keep-segments",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                video_id,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    segments_directory = tmp_path / f"{video_id}~7959120-7959121-segments"
+    assert os.path.exists(segments_directory / "7959120.i140.mp4")
+    assert os.path.exists(segments_directory / "7959121.i140.mp4")
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_remove_default_segments_output_directory(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    fake_info_fetcher: MagicMock,
+    video_id: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    expected_out,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--no-cut",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                video_id,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    assert not os.path.exists(tmp_path / f"{video_id}~7959120-7959121-segments")
+
+
+@pytest.mark.parametrize("segments_output_dir_option", ["a", "a/b", "./a", "../a/b"])
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_remove_created_segments_output_directory(
+    segments_output_dir_option: str,
+    monkeypatch: pytest.MonkeyPatch,
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    fake_info_fetcher: MagicMock,
+    video_id: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    expected_out,
+) -> None:
+    # Given:
+    sub_tmp_path = tmp_path / "sub"
+    sub_tmp_path.mkdir()
+    monkeypatch.chdir(sub_tmp_path)
+
+    segments_output_directory = sub_tmp_path / segments_output_dir_option
+
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--no-cut",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                "--segments-output-dir",
+                segments_output_dir_option,
+                video_id,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    if len(segments_output_directory.parts) > 1:
+        assert not os.path.exists(segments_output_directory)
+    else:
+        assert not os.path.exists(segments_output_directory.parent)
+
+
+def test_remove_only_rewound_segments(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    fake_info_fetcher: MagicMock,
+    video_id: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    expected_out,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    segments_directory = tmp_path / f"{video_id}~7959120-7959121-segments"
+    segments_directory.mkdir()
+    open(segments_directory / "0.i140.mp4", "x")
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--no-cut",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                video_id,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    assert os.path.exists(segments_directory / "0.i140.mp4")
+    assert not os.path.exists(segments_directory / "7959120.i140.mp4")
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_do_not_remove_existing_directory(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    fake_info_fetcher: MagicMock,
+    video_id: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    expected_out,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    segments_directory = tmp_path / "existing"
+    segments_directory.mkdir()
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--no-cut",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                "--segments-output-dir",
+                "existing",
+                video_id,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    assert os.path.exists(segments_directory)
+    assert not os.path.exists(segments_directory / "7959120.i140.mp4")
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_no_resume_option(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    fake_info_fetcher: MagicMock,
+    video_id: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    expected_out,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--no-cut",
+                "--no-resume",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                video_id,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    assert result.exit_code == 0
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_no_resume_option_after_unfinished_run(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    mocked_responses: responses.RequestsMock,
+    fake_info_fetcher: MagicMock,
+    video_id: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    expected_out,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    resume_file_stem = f"{video_id}~7959120-7959122"
+    with open(f"{resume_file_stem}.resume", "wb") as f:
+        pickle.dump(
+            {
+                "interval": RewindInterval(
+                    start=RewindMoment(
+                        date=datetime.fromtimestamp(1679787234.491176, timezone.utc),
+                        sequence=7959120,
+                        cut_at=0,
+                        is_end=False,
+                    ),
+                    end=RewindMoment(
+                        date=datetime.fromtimestamp(1679787238.491916, timezone.utc),
+                        sequence=7959122,
+                        cut_at=0,
+                        is_end=True,
+                    ),
+                ),
+                "segments_output_directory": Path(f"{resume_file_stem}-segments"),
+            },
+            f,
+        )
+    segments_output_directory = tmp_path / f"{resume_file_stem}-segments"
+    segments_output_directory.mkdir()
+    for segment in (7959120, 7959121):
+        shutil.copy(
+            TEST_DATA_PATH / f"segments/{segment}.i140.mp4",
+            segments_output_directory / f"{segment}.i140.mp4",
+        )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--no-cut",
+                "--no-resume",
+                "--interval",
+                "7959120/7959122",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                video_id,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    assert os.path.exists(f"{resume_file_stem}.resume")

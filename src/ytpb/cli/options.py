@@ -144,6 +144,6 @@ yt_dlp_option = click.option(
 )
 
 
-no_cleanup_option = click.option(
-    "--no-cleanup", is_flag=True, help="Do not clean up temporary files."
+keep_temp_option = click.option(
+    "--keep-temp", is_flag=True, help="Keep temporary files."
 )
