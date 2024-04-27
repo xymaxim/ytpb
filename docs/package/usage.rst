@@ -173,6 +173,7 @@ download progress:
 .. code-block:: python
 
    from datetime import datetime, timedelta, timezone
+   from pathlib import Path
    from ytpb.actions.download import download_excerpt, RichProgressReporter
 
    rewind_interval = playback.locate_interval(
@@ -191,6 +192,7 @@ download progress:
        video_stream=playback.streams.query(
            "best(format eq webm and quality eq 720p)"
        ),
-       output_stem="path/to/output",
+       output_stem=Path("path/to/output"),
+       segments_directory=Path("path/to/segments"),
        progress_reporter=progress_reporter,
    )
