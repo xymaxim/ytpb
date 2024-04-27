@@ -34,7 +34,7 @@ from ytpb.cli.common import (
 from ytpb.cli.options import (
     cache_options,
     interval_option,
-    no_cleanup_option,
+    keep_temp_option,
     preview_option,
     validate_image_output_path,
     yt_dlp_option,
@@ -180,7 +180,7 @@ def capture_group():
     callback=validate_image_output_path(CaptureOutputPathContext),
 )
 @yt_dlp_option
-@no_cleanup_option
+@keep_temp_option
 @cache_options
 @stream_argument
 @click.pass_context
@@ -190,7 +190,7 @@ def frame_command(
     video_format: str,
     output_path: Path,
     yt_dlp: bool,
-    no_cleanup: bool,
+    keep_temp: bool,
     force_update_cache: bool,
     no_cache: bool,
     stream_url: str,
@@ -296,7 +296,7 @@ def frame_command(
     click.echo(f"\nSuccess! Saved to '{saved_to_path_value}'.")
 
     run_temp_directory = playback.get_temp_directory()
-    if no_cleanup:
+    if keep_temp:
         click.echo(f"notice: No cleanup enabled, check {run_temp_directory}/")
     else:
         try:
@@ -338,7 +338,7 @@ def frame_command(
     callback=validate_image_output_path(TimelapseOutputPathContext),
 )
 @yt_dlp_option
-@no_cleanup_option
+@keep_temp_option
 @cache_options
 @stream_argument
 @click.pass_context
@@ -350,7 +350,7 @@ def timelapse_command(
     preview: bool,
     output_path: Path,
     yt_dlp: bool,
-    no_cleanup: bool,
+    keep_temp: bool,
     force_update_cache: bool,
     no_cache: bool,
     stream_url: str,
@@ -512,7 +512,7 @@ def timelapse_command(
     click.echo(f"\nSuccess! Saved to '{saved_to_path_value}/'.")
 
     run_temp_directory = playback.get_temp_directory()
-    if no_cleanup:
+    if keep_temp:
         click.echo(f"notice: No cleanup enabled, check {run_temp_directory}/")
     else:
         try:

@@ -36,7 +36,7 @@ def test_download_audio_segments(
     add_responses_callback_for_segment_urls: Callable,
     stream_url: str,
     audio_base_url: str,
-    run_temp_directory: Path,
+    tmp_path: Path,
 ) -> None:
     # Given:
     add_responses_callback_for_segment_urls(
@@ -48,15 +48,16 @@ def test_download_audio_segments(
     playback.fetch_and_set_essential()
     output_paths = actions.download.download_segments(
         playback,
-        FakeRewindInterval(FakeRewindMoment(7959120), FakeRewindMoment(7959121)),
-        [FakeStream(audio_base_url)],
+        sequence_numbers=range(7959120, 7959122),
+        streams=[FakeStream(audio_base_url)],
+        output_directory=tmp_path,
     )
 
     # Then:
     assert output_paths == [
         [
-            run_temp_directory / "segments/7959120.i140.mp4",
-            run_temp_directory / "segments/7959121.i140.mp4",
+            tmp_path / "7959120.i140.mp4",
+            tmp_path / "7959121.i140.mp4",
         ]
     ]
 
@@ -67,7 +68,7 @@ def test_download_audio_and_video_segments(
     stream_url: str,
     audio_base_url: str,
     video_base_url: str,
-    run_temp_directory: Path,
+    tmp_path: Path,
 ) -> None:
     # Given:
     add_responses_callback_for_segment_urls(
@@ -80,19 +81,20 @@ def test_download_audio_and_video_segments(
     playback.fetch_and_set_essential()
     output_paths = actions.download.download_segments(
         playback,
-        FakeRewindInterval(FakeRewindMoment(7959120), FakeRewindMoment(7959121)),
-        [FakeStream(audio_base_url), FakeStream(video_base_url)],
+        sequence_numbers=range(7959120, 7959122),
+        streams=[FakeStream(audio_base_url), FakeStream(video_base_url)],
+        output_directory=tmp_path,
     )
 
     # Then:
     assert output_paths == [
         [
-            run_temp_directory / "segments/7959120.i140.mp4",
-            run_temp_directory / "segments/7959121.i140.mp4",
+            tmp_path / "7959120.i140.mp4",
+            tmp_path / "7959121.i140.mp4",
         ],
         [
-            run_temp_directory / "segments/7959120.i244.webm",
-            run_temp_directory / "segments/7959121.i244.webm",
+            tmp_path / "7959120.i244.webm",
+            tmp_path / "7959121.i244.webm",
         ],
     ]
 
@@ -113,12 +115,12 @@ def test_download_audio_excerpt_with_cutting(
     playback.fetch_and_set_essential()
     output_result = actions.download.download_excerpt(
         playback,
-        FakeRewindInterval(
-            FakeRewindMoment(7959120, cut_at=0.5),
-            FakeRewindMoment(7959121, cut_at=1.5),
+        rewind_interval=FakeRewindInterval(
+            FakeRewindMoment(7959120, cut_at=0.5), FakeRewindMoment(7959121, cut_at=1.5)
         ),
-        tmp_path / "output",
-        FakeStream(audio_base_url),
+        output_stem=tmp_path / "output",
+        audio_stream=FakeStream(audio_base_url),
+        segments_directory=tmp_path / "segments",
     )
 
     # Then:
@@ -126,8 +128,8 @@ def test_download_audio_excerpt_with_cutting(
         None,
         tmp_path / "output.mp4",
         [
-            run_temp_directory / "segments/7959120.i140.mp4",
-            run_temp_directory / "segments/7959121.i140.mp4",
+            tmp_path / "segments/7959120.i140.mp4",
+            tmp_path / "segments/7959121.i140.mp4",
         ],
         [],
     )
@@ -153,13 +155,14 @@ def test_download_audio_and_video_excerpt_without_cutting(
     playback.fetch_and_set_essential()
     output_result = actions.download.download_excerpt(
         playback,
-        FakeRewindInterval(
+        rewind_interval=FakeRewindInterval(
             FakeRewindMoment(7959120, cut_at=0.5),
             FakeRewindMoment(7959121, cut_at=1.5),
         ),
-        tmp_path / "output",
-        FakeStream(audio_base_url),
-        FakeStream(video_base_url),
+        output_stem=tmp_path / "output",
+        audio_stream=FakeStream(audio_base_url),
+        video_stream=FakeStream(video_base_url),
+        segments_directory=tmp_path / "segments",
         need_cut=False,
     )
 
@@ -168,12 +171,12 @@ def test_download_audio_and_video_excerpt_without_cutting(
         None,
         tmp_path / "output.mkv",
         [
-            run_temp_directory / "segments/7959120.i140.mp4",
-            run_temp_directory / "segments/7959121.i140.mp4",
+            tmp_path / "segments/7959120.i140.mp4",
+            tmp_path / "segments/7959121.i140.mp4",
         ],
         [
-            run_temp_directory / "segments/7959120.i244.webm",
-            run_temp_directory / "segments/7959121.i244.webm",
+            tmp_path / "segments/7959120.i244.webm",
+            tmp_path / "segments/7959121.i244.webm",
         ],
     )
     assert_approx_duration(output_result[1], 4)

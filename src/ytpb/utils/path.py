@@ -261,3 +261,18 @@ def format_title_for_filename(
             raise ValueError(f"Unknown title formatting style: '{style}'")
 
     return output
+
+
+def try_get_relative_path(path: Path, other: Path | None = None) -> Path:
+    try:
+        return path.relative_to(other or Path.cwd())
+    except ValueError:
+        return path
+
+
+def remove_directories_between(top: Path, until: Path) -> None:
+    until.rmdir()
+    directory = until.resolve()
+    while directory != top.resolve():
+        directory = directory.parent
+        directory.rmdir()

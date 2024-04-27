@@ -113,7 +113,7 @@ def chained_zip(*iterables) -> Iterable[Any]:
 
 def download_segments(
     playback: Playback,
-    rewind_interval: RewindInterval,
+    sequence_numbers: Iterable[SegmentSequence],
     streams: Union[SetOfStreams, list[AudioOrVideoStream]],
     output_directory: Path | None = None,
     output_filename: Callable[
@@ -125,7 +125,7 @@ def download_segments(
 
     Args:
         playback: A playback.
-        rewind_interval: A rewound interval.
+        sequence_numbers: Segment sequence numbers to rewind.
         streams: Streams to download.
         output_directory: A directory where to save downloaded segments.
         output_filename: A callable to compose segment filenames.
@@ -146,10 +146,8 @@ def download_segments(
     download_generator = chained_zip(
         *[
             zip(
-                iter_segments(
-                    rewind_interval.sequences, base_url, session=playback.session
-                ),
-                repeat(task, len(rewind_interval.sequences)),
+                iter_segments(sequence_numbers, base_url, session=playback.session),
+                repeat(task, len(sequence_numbers)),
             )
             for task, base_url in enumerate(base_urls)
         ]
@@ -171,6 +169,7 @@ def download_excerpt(
     playback: Playback,
     rewind_interval: RewindInterval,
     output_stem: str | Path,
+    segments_directory: Path,
     audio_stream: AudioStream | None = None,
     video_stream: VideoStream | None = None,
     need_cut: bool = True,
@@ -184,10 +183,11 @@ def download_excerpt(
 
     Args:
         playback: A playback.
-        rewind_interval: A rewound interval.
+        rewind_interval: A rewind interval.
         output_stem: A full path stem of the merged excerpt file.
         audio_stream: An audio stream.
         video_stream: A video stream.
+        segments_directory: A directory where to store downloaded segments.
         need_cut: Whether to cut boundary segments to exact times.
         merge_kwargs: Arguments that :meth:`ytpb.merge.merge_segments` takes.
         progress_reporter: An instance of :class:`ProgressReporter`-like class
@@ -204,11 +204,10 @@ def download_excerpt(
 
     all_streams = [x for x in [audio_stream, video_stream] if x is not None]
 
-    segments_output_directory = playback.locations["segments"]
-    segments_output_directory.mkdir(parents=True, exist_ok=True)
+    segments_directory.mkdir(parents=True, exist_ok=True)
 
     _downloaded_paths: list[list[Path]] = download_segments(
-        playback, rewind_interval, all_streams, segments_output_directory
+        playback, rewind_interval.sequences, all_streams, segments_directory
     )
     downloaded_paths: list[list[Path]] = [[], []]
     if audio_stream:
