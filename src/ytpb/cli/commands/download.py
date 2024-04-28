@@ -160,7 +160,7 @@ def render_download_output_path_context(
 @click.option(
     "--no-merge",
     is_flag=True,
-    help="Only download segments, without merging. Implies --keep-segments.",
+    help="Only download segments, without merging.",
 )
 @click.option("--no-resume", is_flag=True, help="Avoid resuming unfinished downloads.")
 @cache_options
@@ -567,6 +567,13 @@ def download_command(
 
             click.echo("done.\n")
             click.echo(f"Success! Saved to '{try_get_relative_path(merged_path)}'.")
+
+            if keep_segments and not preview:
+                click.echo(
+                    "~ Segments are kept in '{}'.".format(
+                        try_get_relative_path(segments_output_directory)
+                    )
+                )
 
     run_temp_directory = playback.get_temp_directory()
     if keep_temp:
