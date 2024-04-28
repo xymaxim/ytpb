@@ -38,6 +38,7 @@ from ytpb.errors import SequenceLocatingError
 from ytpb.merge import merge_segments
 from ytpb.types import (
     AddressableMappingProtocol,
+    AudioOrVideoStream,
     DateInterval,
     RelativeSegmentSequence,
     SegmentSequence,
@@ -64,7 +65,9 @@ class DownloadOutputPathContext(
 ): ...
 
 
-def compose_resume_filename(video_id: str) -> str:
+def compose_resume_filename(
+    video_id: str, streams: list[AudioOrVideoStream | None]
+) -> str:
     for i, arg in enumerate(sys.argv):
         if arg in ("--interval", "-i"):
             interval_option_value = sys.argv[i + 1]
@@ -75,7 +78,9 @@ def compose_resume_filename(video_id: str) -> str:
         interval_part = interval_part.replace(char, "")
     interval_part = interval_part.replace("/", "-")
 
-    return f"{video_id}~{interval_part}.resume"
+    itag_part = "+".join([stream.itag for stream in streams if stream])
+
+    return f"{video_id}~{interval_part}-{itag_part}.resume"
 
 
 def render_download_output_path_context(
@@ -278,7 +283,9 @@ def download_command(
         requested_end = RelativeSegmentSequence(number_of_segments)
 
     resume_run: bool = False
-    resume_file_path = Path.cwd() / compose_resume_filename(playback.video_id)
+    resume_file_path = Path.cwd() / compose_resume_filename(
+        playback.video_id, (audio_stream, video_stream)
+    )
 
     if not no_resume and resume_file_path.exists():
         logger.debug("Load resume file from %s", resume_file_path)
