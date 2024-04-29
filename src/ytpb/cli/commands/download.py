@@ -447,7 +447,7 @@ def download_command(
         else:
             need_to_remove_segments_directory = False
 
-        if not resume_run:
+        if not resume_run and not no_resume:
             with open(resume_file_path, "wb") as f:
                 logger.debug("Write resume file to %s", resume_file_path)
                 to_pickle = {
@@ -456,9 +456,7 @@ def download_command(
                 }
                 pickle.dump(to_pickle, f)
 
-            sequences_to_download = rewind_interval.sequences
-            completed_segments = 0
-        else:
+        if resume_run:
             extract_sequence_number = lambda p: int(p.name.split(".")[0])
             latest_sequence_number = extract_sequence_number(
                 sorted(
@@ -472,6 +470,9 @@ def download_command(
                 latest_sequence_number, rewind_interval.end.sequence + 1
             )
             completed_segments = latest_sequence_number - rewind_interval.start.sequence
+        else:
+            sequences_to_download = rewind_interval.sequences
+            completed_segments = 0
 
         total_segments = len(rewind_interval.sequences)
 
