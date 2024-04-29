@@ -444,7 +444,8 @@ def timelapse_command(
     print_timelapse_summary_info(dates_to_capture, requested_date_interval.end, every)
 
     if preview:
-        click.echo("info: Preview mode is enabled, only first 3 frames will be taken.")
+        click.echo()
+        echo_notice("Preview mode enabled, only first 3 frames will be taken.")
         dates_to_capture = dates_to_capture[:3]
 
     click.echo()

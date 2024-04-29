@@ -322,7 +322,7 @@ def download_command(
         sys.exit()
 
     if preview and interval[1] != "..":
-        click.echo("info: The preview mode is enabled, interval end is ignored.")
+        echo_notice("Preview mode enabled, interval end is ignored.")
 
     start_segment = playback.get_segment(
         rewind_interval.start.sequence, reference_stream

@@ -220,7 +220,7 @@ def test_preview_option_with_closed_interval(
     assert os.path.exists(expected_path)
     assert_approx_duration(expected_path, 5.5)
 
-    expected = "info: The preview mode is enabled, interval end is ignored."
+    expected = "~ Preview mode enabled, interval end is ignored."
     assert expected in result.output
 
 
