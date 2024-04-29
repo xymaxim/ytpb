@@ -1,8 +1,6 @@
-import os
 import pickle
 import shutil
 import sys
-import tempfile
 from datetime import datetime, timedelta
 from functools import partial
 from pathlib import Path
@@ -36,6 +34,7 @@ from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewind
 from ytpb.download import compose_default_segment_filename
 from ytpb.errors import SequenceLocatingError
 from ytpb.merge import merge_segments
+from ytpb.playback import Playback
 from ytpb.types import (
     AddressableMappingProtocol,
     AudioOrVideoStream,
@@ -78,9 +77,9 @@ def compose_resume_filename(
         interval_part = interval_part.replace(char, "")
     interval_part = interval_part.replace("/", "-")
 
-    itag_part = "+".join([stream.itag for stream in streams if stream])
+    itag_part = "-".join([stream.itag for stream in streams if stream])
 
-    return f"{video_id}~{interval_part}-{itag_part}.resume"
+    return f"{video_id}_{interval_part}_{itag_part}.resume"
 
 
 def render_download_output_path_context(
@@ -373,57 +372,6 @@ def download_command(
     print_summary_info(requested_date_interval, actual_date_interval, rewind_interval)
     click.echo()
 
-    if preview:
-        segments_output_directory = playback.get_temp_directory()
-    else:
-        segments_output_directory = (
-            segments_output_dir_option
-            or resume_file_path.with_name(f"{resume_file_path.stem}-segments")
-        )
-    segments_output_directory = segments_output_directory.absolute()
-    logger.debug("Segments output directory set to %s", segments_output_directory)
-
-    if resume_run:
-        click.echo(
-            f"~ Found unfinished download, continue from {resume_file_path.name}\n"
-        )
-        if segments_output_directory != previous_segments_output_directory:
-            click.echo(
-                "fatal: The previous segments output directory is not "
-                "the same as the current run:\n'{}' != '{}'.".format(
-                    try_get_relative_path(previous_segments_output_directory),
-                    try_get_relative_path(segments_output_directory),
-                ),
-                err=True,
-            )
-            click.echo(
-                "\nUse '--segments-output-dir {}' or '--no-resume'.".format(
-                    try_get_relative_path(previous_segments_output_directory)
-                ),
-                err=True,
-            )
-            sys.exit(1)
-
-    if segments_output_dir_option is None or not segments_output_directory.exists():
-        need_to_remove_segments_directory = True
-        segments_directory_to_remove = segments_output_directory
-        for directory in segments_output_directory.parents:
-            if directory.exists():
-                break
-            segments_directory_to_remove = directory
-        segments_output_directory.mkdir(parents=True, exist_ok=True)
-    else:
-        need_to_remove_segments_directory = False
-
-    if not resume_run:
-        with open(resume_file_path, "wb") as f:
-            logger.debug("Write resume file to %s", resume_file_path)
-            to_pickle = {
-                "interval": rewind_interval,
-                "segments_output_directory": segments_output_directory,
-            }
-            pickle.dump(to_pickle, f)
-
     if dry_run:
         click.echo("notice: This is a dry run. Skip downloading and exit.")
     else:
@@ -453,7 +401,63 @@ def download_command(
             final_output_path = output_path
         final_output_path = resolve_output_path(final_output_path)
 
+        if preview:
+            segments_output_directory = playback.get_temp_directory()
+        elif segments_output_dir_option:
+            segments_output_directory = segments_output_dir_option
+        elif keep_segments or no_merge:
+            segments_output_directory = final_output_path
+        else:
+            segments_output_directory = resume_file_path.with_name(
+                f"{resume_file_path.stem}"
+            )
+        segments_output_directory = segments_output_directory.absolute()
+        logger.debug("Segments output directory set to %s", segments_output_directory)
+
         if resume_run:
+            click.echo(
+                f"~ Found unfinished download, continue from {resume_file_path.name}\n"
+            )
+            if segments_output_directory != previous_segments_output_directory:
+                click.echo(
+                    "fatal: The previous segments output directory is not "
+                    "the same as the current run:\n'{}' != '{}'.".format(
+                        try_get_relative_path(previous_segments_output_directory),
+                        try_get_relative_path(segments_output_directory),
+                    ),
+                    err=True,
+                )
+                click.echo(
+                    "\nUse '--segments-output-dir {}' or '--no-resume'.".format(
+                        try_get_relative_path(previous_segments_output_directory)
+                    ),
+                    err=True,
+                )
+                sys.exit(1)
+
+        if segments_output_dir_option is None or not segments_output_directory.exists():
+            need_to_remove_segments_directory = True
+            segments_directory_to_remove = segments_output_directory
+            for directory in segments_output_directory.parents:
+                if directory.exists():
+                    break
+                segments_directory_to_remove = directory
+            segments_output_directory.mkdir(parents=True, exist_ok=True)
+        else:
+            need_to_remove_segments_directory = False
+
+        if not resume_run:
+            with open(resume_file_path, "wb") as f:
+                logger.debug("Write resume file to %s", resume_file_path)
+                to_pickle = {
+                    "interval": rewind_interval,
+                    "segments_output_directory": segments_output_directory,
+                }
+                pickle.dump(to_pickle, f)
+
+            sequences_to_download = rewind_interval.sequences
+            completed_segments = 0
+        else:
             extract_sequence_number = lambda p: int(p.name.split(".")[0])
             latest_sequence_number = extract_sequence_number(
                 sorted(
@@ -467,9 +471,6 @@ def download_command(
                 latest_sequence_number, rewind_interval.end.sequence + 1
             )
             completed_segments = latest_sequence_number - rewind_interval.start.sequence
-        else:
-            sequences_to_download = rewind_interval.sequences
-            completed_segments = 0
 
         total_segments = len(rewind_interval.sequences)
 
@@ -498,7 +499,7 @@ def download_command(
                     rewind_interval.start.sequence, rewind_interval.end.sequence
                 )
             )
-            downloaded_segment_paths = do_download_segments()
+            do_download_segments()
             click.echo(
                 "\nSuccess! Segments saved to {}/.".format(
                     try_get_relative_path(segments_output_directory)
@@ -512,7 +513,7 @@ def download_command(
                 )
             )
 
-            downloaded_segment_paths = do_download_segments()
+            do_download_segments()
             audio_and_video_segment_paths: list[list[Path]] = [[], []]
             if audio_stream:
                 audio_and_video_segment_paths[0] = [
@@ -586,10 +587,10 @@ def download_command(
                 "Failed to remove temporary directory: %s", run_temp_directory
             )
 
-    if not no_resume:
+    if not dry_run and not no_resume:
         resume_file_path.unlink()
 
-    if not dry_run and not keep_segments and not preview:
+    if not (dry_run or keep_segments or preview):
         try:
             for paths in audio_and_video_segment_paths:
                 for path in paths:
