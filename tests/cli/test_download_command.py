@@ -1541,7 +1541,7 @@ def test_resume_downloading(
         urljoin(audio_base_url, r"sq/\w+"),
     )
 
-    resume_file_stem = f"{video_id}~7959120-20230325T233359+00-140"
+    resume_file_stem = f"{video_id}_7959120-20230325T233359+00_140"
     with open(f"{resume_file_stem}.resume", "wb") as f:
         end_date = datetime.fromisoformat("2023-03-25T23:33:59+00")
         pickle.dump(
@@ -1560,11 +1560,11 @@ def test_resume_downloading(
                         is_end=True,
                     ),
                 ),
-                "segments_output_directory": Path(f"{resume_file_stem}-segments"),
+                "segments_output_directory": Path(f"{resume_file_stem}"),
             },
             f,
         )
-    segments_output_directory = tmp_path / f"{resume_file_stem}-segments"
+    segments_output_directory = tmp_path / f"{resume_file_stem}"
     segments_output_directory.mkdir()
     for segment in (7959120, 7959121):
         shutil.copy(
@@ -1601,7 +1601,7 @@ def test_resume_downloading(
     expected_path = tmp_path / "Webcam-Zurich-HB_20230325T233354+00.mp4"
     assert os.path.exists(expected_path)
     assert_approx_duration(expected_path, 6)
-    assert not os.path.exists(tmp_path / f"{resume_file_stem}-segments")
+    assert not os.path.exists(tmp_path / f"{resume_file_stem}")
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
@@ -1646,7 +1646,7 @@ def test_keep_segments(
 
     # Then:
     assert result.exit_code == 0
-    segments_directory = tmp_path / f"{video_id}~7959120-7959121-140-segments"
+    segments_directory = tmp_path / "Webcam-Zurich-HB_20230325T233354+00"
     assert os.path.exists(segments_directory / "7959120.i140.mp4")
     assert os.path.exists(segments_directory / "7959121.i140.mp4")
 
@@ -1692,7 +1692,7 @@ def test_remove_default_segments_output_directory(
 
     # Then:
     assert result.exit_code == 0
-    assert not os.path.exists(tmp_path / f"{video_id}~7959120-7959121-140-segments")
+    assert not os.path.exists(tmp_path / f"{video_id}_7959120-7959121_140")
 
 
 @pytest.mark.parametrize("segments_output_dir_option", ["a", "a/b", "./a", "../a/b"])
@@ -1770,7 +1770,7 @@ def test_remove_only_rewound_segments(
         urljoin(audio_base_url, r"sq/\w+"),
     )
 
-    segments_directory = tmp_path / f"{video_id}~7959120-7959121-segments"
+    segments_directory = tmp_path / f"{video_id}_7959120-7959121_140"
     segments_directory.mkdir()
     open(segments_directory / "0.i140.mp4", "x")
 
@@ -1913,7 +1913,7 @@ def test_no_resume_option_after_unfinished_run(
         urljoin(audio_base_url, r"sq/\w+"),
     )
 
-    resume_file_stem = f"{video_id}~7959120-7959122-140"
+    resume_file_stem = f"{video_id}_7959120-7959122_140"
     with open(f"{resume_file_stem}.resume", "wb") as f:
         pickle.dump(
             {
@@ -1931,11 +1931,11 @@ def test_no_resume_option_after_unfinished_run(
                         is_end=True,
                     ),
                 ),
-                "segments_output_directory": Path(f"{resume_file_stem}-segments"),
+                "segments_output_directory": Path(f"{resume_file_stem}"),
             },
             f,
         )
-    segments_output_directory = tmp_path / f"{resume_file_stem}-segments"
+    segments_output_directory = tmp_path / f"{resume_file_stem}"
     segments_output_directory.mkdir()
     for segment in (7959120, 7959121):
         shutil.copy(
