@@ -148,13 +148,13 @@ def render_download_output_path_context(
     help="Run without downloading.",
 )
 @yt_dlp_option
+@click.option("-S", "--keep-segments", is_flag=True, help="Keep downloaded segments.")
 @click.option(
     "--segments-output-dir",
     "segments_output_dir_option",
     type=click.Path(path_type=Path),
     help="Location where to download segments to.",
 )
-@click.option("-S", "--keep-segments", is_flag=True, help="Keep downloaded segments.")
 @click.option(
     "--ignore-resume", is_flag=True, help="Avoid resuming unfinished download."
 )
@@ -182,8 +182,8 @@ def download_command(
     from_manifest: Path,
     dry_run: bool,
     yt_dlp: bool,
-    segments_output_dir_option: Path,
     keep_segments: bool,
+    segments_output_dir_option: Path,
     ignore_resume: bool,
     no_metadata: bool,
     no_cut: bool,
