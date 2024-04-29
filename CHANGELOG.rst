@@ -13,8 +13,8 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 - Download media segments to a segments output directory under the current
   working one instead of the run temporary directory (`#13
   <https://github.com/xymaxim/ytpb/pull/13>`__)
-- Add ``--no-resume``, ``-S / --keep-segments``, and ``--segments-output-dir``
-  options
+- Add ``--ignore-resume``, ``-S / --keep-segments``, and
+  ``--segments-output-dir`` options
 - Rename the ``--no-cleanup`` option to ``--keep-temp``
 - Change the default output path to ``<title>_<id>_<input_start_date>``
 
