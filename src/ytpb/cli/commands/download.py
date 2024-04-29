@@ -186,8 +186,8 @@ def download_command(
     no_cut: bool,
     no_merge: bool,
     no_resume: bool,
-    force_update_cache: bool,
     no_cache: bool,
+    force_update_cache: bool,
     keep_temp: bool,
     stream_url: str,
 ) -> int:
