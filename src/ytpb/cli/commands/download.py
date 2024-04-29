@@ -78,9 +78,9 @@ def compose_resume_filename(
         interval_part = interval_part.replace(char, "")
     interval_part = interval_part.replace("/", "-")
 
-    itag_part = "-".join([stream.itag for stream in streams if stream])
+    itag_part = "".join([stream.itag for stream in streams if stream])
 
-    return f"{video_id}_{interval_part}_{itag_part}.resume"
+    return f"{video_id}-{interval_part}-{itag_part}.resume"
 
 
 def render_download_output_path_context(

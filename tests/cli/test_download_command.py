@@ -1545,7 +1545,7 @@ def test_resume_downloading(
         urljoin(audio_base_url, r"sq/\w+"),
     )
 
-    resume_file_stem = f"{video_id}_7959120-20230325T233359+00_140"
+    resume_file_stem = f"{video_id}-7959120-20230325T233359+00-140"
     with open(f"{resume_file_stem}.resume", "wb") as f:
         end_date = datetime.fromisoformat("2023-03-25T23:33:59+00")
         pickle.dump(
@@ -1696,7 +1696,7 @@ def test_remove_default_segments_output_directory(
 
     # Then:
     assert result.exit_code == 0
-    assert not os.path.exists(tmp_path / f"{video_id}_7959120-7959121_140")
+    assert not os.path.exists(tmp_path / f"{video_id}-7959120-7959121-140")
 
 
 @pytest.mark.parametrize("segments_output_dir_option", ["a", "a/b", "./a", "../a/b"])
@@ -1774,7 +1774,7 @@ def test_remove_only_rewound_segments(
         urljoin(audio_base_url, r"sq/\w+"),
     )
 
-    segments_directory = tmp_path / f"{video_id}_7959120-7959121_140"
+    segments_directory = tmp_path / f"{video_id}-7959120-7959121-140"
     segments_directory.mkdir()
     open(segments_directory / "0.i140.mp4", "x")
 
@@ -1917,7 +1917,7 @@ def test_ignore_resume_option_after_unfinished_run(
         urljoin(audio_base_url, r"sq/\w+"),
     )
 
-    resume_file_stem = f"{video_id}_7959120-7959122_140"
+    resume_file_stem = f"{video_id}-7959120-7959122-140"
     with open(f"{resume_file_stem}.resume", "wb") as f:
         pickle.dump(
             {
@@ -1974,5 +1974,5 @@ def test_ignore_resume_option_after_unfinished_run(
 
     # Then:
     assert result.exit_code == 0
-    assert os.path.exists(tmp_path / f"{video_id}_7959120-7959122_140")
+    assert os.path.exists(tmp_path / f"{video_id}-7959120-7959122-140")
     assert os.path.exists(tmp_path / "segments")
