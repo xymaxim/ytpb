@@ -1856,7 +1856,7 @@ def test_do_not_remove_existing_directory(
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
-def test_no_resume_option(
+def test_ignore_resume_option(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -1882,7 +1882,7 @@ def test_no_resume_option(
                 "download",
                 "--no-cache",
                 "--no-cut",
-                "--no-resume",
+                "--ignore-resume",
                 "--interval",
                 "7959120/7959121",
                 "-af",
@@ -1900,7 +1900,7 @@ def test_no_resume_option(
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
-def test_no_resume_option_after_unfinished_run(
+def test_ignore_resume_option_after_unfinished_run(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -1956,7 +1956,10 @@ def test_no_resume_option_after_unfinished_run(
                 "download",
                 "--no-cache",
                 "--no-cut",
-                "--no-resume",
+                "--ignore-resume",
+                "--segments-output-dir",
+                "segments",
+                "--keep-segments",
                 "--interval",
                 "7959120/7959122",
                 "-af",
@@ -1971,4 +1974,5 @@ def test_no_resume_option_after_unfinished_run(
 
     # Then:
     assert result.exit_code == 0
-    assert os.path.exists(f"{resume_file_stem}.resume")
+    assert os.path.exists(tmp_path / f"{video_id}_7959120-7959122_140")
+    assert os.path.exists(tmp_path / "segments")

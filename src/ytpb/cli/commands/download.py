@@ -155,6 +155,9 @@ def render_download_output_path_context(
     help="Location where to download segments to.",
 )
 @click.option("-S", "--keep-segments", is_flag=True, help="Keep downloaded segments.")
+@click.option(
+    "--ignore-resume", is_flag=True, help="Avoid resuming unfinished download."
+)
 @click.option("--no-metadata", is_flag=True, help="Do not write metadata tags.")
 @click.option("--no-cut", is_flag=True, help="Do not perform excerpt cutting.")
 @click.option(
@@ -162,7 +165,6 @@ def render_download_output_path_context(
     is_flag=True,
     help="Only download segments, without merging.",
 )
-@click.option("--no-resume", is_flag=True, help="Avoid resuming unfinished downloads.")
 @cache_options
 @keep_temp_option
 @stream_argument
@@ -182,10 +184,10 @@ def download_command(
     yt_dlp: bool,
     segments_output_dir_option: Path,
     keep_segments: bool,
+    ignore_resume: bool,
     no_metadata: bool,
     no_cut: bool,
     no_merge: bool,
-    no_resume: bool,
     no_cache: bool,
     force_update_cache: bool,
     keep_temp: bool,
@@ -276,7 +278,6 @@ def download_command(
                 )
 
     if preview:
-        no_resume = True
         preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
         segment_duration = float(extract_parameter_from_url("dur", reference_base_url))
         number_of_segments = round(preview_duration_value / segment_duration)
@@ -287,7 +288,7 @@ def download_command(
         playback.video_id, (audio_stream, video_stream)
     )
 
-    if not no_resume and resume_file_path.exists():
+    if not ignore_resume and resume_file_path.exists():
         logger.debug("Load resume file from %s", resume_file_path)
         with open(resume_file_path, "rb") as f:
             resume_run = True
@@ -429,7 +430,7 @@ def download_command(
                     err=True,
                 )
                 click.echo(
-                    "\nUse '--segments-output-dir {}' or '--no-resume'.".format(
+                    "\nUse '--segments-output-dir {}' or '--ignore-resume'.".format(
                         try_get_relative_path(previous_segments_output_directory)
                     ),
                     err=True,
@@ -447,7 +448,7 @@ def download_command(
         else:
             need_to_remove_segments_directory = False
 
-        if not resume_run and not no_resume:
+        if not resume_run and not preview:
             with open(resume_file_path, "wb") as f:
                 logger.debug("Write resume file to %s", resume_file_path)
                 to_pickle = {
@@ -589,7 +590,7 @@ def download_command(
                 "Failed to remove temporary directory: %s", run_temp_directory
             )
 
-    if not dry_run and not no_resume:
+    if not dry_run and not preview:
         resume_file_path.unlink()
 
     if not (dry_run or keep_segments or preview):
