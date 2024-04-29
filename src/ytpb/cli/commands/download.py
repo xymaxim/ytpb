@@ -126,13 +126,32 @@ def render_download_output_path_context(
         help="Print segment URLs and exit.",
     ),
 )
-@click.option(
-    "-o",
-    "--output",
-    "output_path",
-    type=click.Path(path_type=Path),
-    help="Output path (without extension).",
-    callback=validate_output_path(DownloadOutputPathContext),
+@cloup.option_group(
+    "Output options",
+    cloup.option(
+        "-o",
+        "--output",
+        "output_path",
+        type=click.Path(path_type=Path),
+        help="Output path (without extension).",
+        callback=validate_output_path(DownloadOutputPathContext),
+    ),
+    cloup.option(
+        "-S", "--keep-segments", is_flag=True, help="Keep downloaded segments."
+    ),
+    cloup.option(
+        "--segments-output-dir",
+        "segments_output_dir_option",
+        type=click.Path(path_type=Path),
+        help="Location where to download segments to.",
+    ),
+    cloup.option("--no-metadata", is_flag=True, help="Do not write metadata tags."),
+    cloup.option("--no-cut", is_flag=True, help="Do not perform excerpt cutting."),
+    cloup.option(
+        "--no-merge",
+        is_flag=True,
+        help="Only download segments, without merging.",
+    ),
 )
 @click.option(
     "-m",
@@ -148,22 +167,8 @@ def render_download_output_path_context(
     help="Run without downloading.",
 )
 @yt_dlp_option
-@click.option("-S", "--keep-segments", is_flag=True, help="Keep downloaded segments.")
-@click.option(
-    "--segments-output-dir",
-    "segments_output_dir_option",
-    type=click.Path(path_type=Path),
-    help="Location where to download segments to.",
-)
 @click.option(
     "--ignore-resume", is_flag=True, help="Avoid resuming unfinished download."
-)
-@click.option("--no-metadata", is_flag=True, help="Do not write metadata tags.")
-@click.option("--no-cut", is_flag=True, help="Do not perform excerpt cutting.")
-@click.option(
-    "--no-merge",
-    is_flag=True,
-    help="Only download segments, without merging.",
 )
 @cache_options
 @keep_temp_option
@@ -179,15 +184,15 @@ def download_command(
     dump_base_urls: bool,
     dump_segment_urls: bool,
     output_path: Path,
-    from_manifest: Path,
-    dry_run: bool,
-    yt_dlp: bool,
     keep_segments: bool,
     segments_output_dir_option: Path,
-    ignore_resume: bool,
     no_metadata: bool,
     no_cut: bool,
     no_merge: bool,
+    from_manifest: Path,
+    dry_run: bool,
+    yt_dlp: bool,
+    ignore_resume: bool,
     no_cache: bool,
     force_update_cache: bool,
     keep_temp: bool,
@@ -280,8 +285,9 @@ def download_command(
     if preview:
         preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
         segment_duration = float(extract_parameter_from_url("dur", reference_base_url))
-        number_of_segments = round(preview_duration_value / segment_duration)
-        requested_end = RelativeSegmentSequence(number_of_segments)
+        requested_end = RelativeSegmentSequence(
+            round(preview_duration_value / segment_duration)
+        )
 
     resume_run: bool = False
     resume_file_path = Path.cwd() / compose_resume_filename(
