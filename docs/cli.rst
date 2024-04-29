@@ -592,8 +592,8 @@ used to keep information needed for resumption, which is cleaned after
 successful completion. The commands are matched based on the following input
 option values: ``--interval``, ``--audio-format``, ``--video-format``, and
 ``--segments-output-dir``. Resuming behavior can be disabled by the
-``--no-resume`` option to avoid: (1) creating a resume file at all and (2)
-continuing an existing download.
+``--ignore-resume`` option to avoid using an existing resume file and start
+download from scratch.
 
 .. _Configuring:
 
