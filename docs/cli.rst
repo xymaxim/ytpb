@@ -513,8 +513,10 @@ examples:
 Writing metadata tags
 =====================
 
-By default, metadata tags will be added to the output file by the ``ytpb
-download`` command.  Use the ``--no-metadata`` option to disable it.
+*Related command:* ``ytpb download``
+
+By default, metadata tags will be added to an output excerpt file. Use the
+``--no-metadata`` option to disable it.
 
 .. table:: Metadata tags overview
 
@@ -545,6 +547,50 @@ expected to be different in only two cases: if the boundary (start and end)
 points fall in gaps or the ``--no-cut`` option is requested. In the opposite
 cases, after accurate cut, they're supposed to be identical.
 
+Saving segment files
+====================
+
+*Related command:* ``ytpb download``
+
+After merging downloaded segment files to make an excerpt, the segments will be
+deleted. Do you want to keep them? There are two options here.
+
+*First*, download an excerpt and keep segment files by using the ``-S /
+--keep-segments`` option::
+
+  $ ytpb download ... -S <STREAM>
+  ...
+  Success! Saved to 'Stream-Title_20240102T102030+00.mkv'.
+  ~ Segments are kept in 'Stream-Title_20240102T102030+00'.
+
+The download destination can be changed via ``--segments-output-dir``::
+
+  $ ytpb download ... -S --segments-output-dir segments <STREAM>
+  ...
+  Success! Saved to 'Stream-Title_20240102T102030+00.mkv'.
+  ~ Segments are kept in 'segments'.
+
+*Second*, download only segment files without merging them::
+
+  $ ytpb download ... --no-merge <STREAM>
+  ...
+  Success! Segments saved to 'Stream-Title_20240102T102030+00'.
+
+Resuming unfinished downloads
+=============================
+
+*Related command:* ``ytpb download``
+
+If a download gets interrupted for some reason (network problems, unhandled
+exceptions, aborting with ``Ctrl+C``, etc.), you can continue the unfinished
+download by execution of the same command again. Each run creates a resume file
+used to keep information needed for resumption, which is cleaned after
+successful completion. The commands are matched based on the following input
+option values: ``--interval``, ``--audio-format``, ``--video-format``, and
+``--segments-output-dir``. Resuming behavior can be disabled by the
+``--no-resume`` option to avoid: (1) creating a resume file at all and (2)
+continuing an existing download.
+
 Configuring
 ***********
 
@@ -569,9 +615,9 @@ Advanced usage
 Merging without cutting
 =======================
 
-By default, boundary segments are cutted to exact times during the merging step
-to produce an excerpt. It may take some time to re-encode boundary segments. If
-you don't need exact precision, it could be practical to omit cutting via the
+The boundary segments are cutted to exact times during the merging step to
+make an excerpt. It may take some time to re-encode boundary segments. If you
+don't need exact precision, it could be practical to omit cutting via the
 ``--no-cut`` option. In this case the accuracy will be slightly reduced, which
 will depend on the constant segment duration (or type of `live-streaming latency
 <https://support.google.com/youtube/answer/7444635?hl=en>`_): in the worst case,
@@ -580,44 +626,19 @@ latency) seconds.
 
 ::
 
-   $ ytpb download ... --no-cut
-
-Keep segment files
-==================
-
-By default, after merging downloaded segment files to produce an excerpt, the
-segments will be deleted. Do you want to keep them? There are two options here.
-
-*First*, download only segment files without merging them (it also implies
-another option, ``--no-cleanup``): ::
-
-  $ ytpb download ... --no-merge
-  ...
-  Success! Segments saved to /tmp/.../segments/.
-  notice: No cleanup enabled, check /tmp/.../
-
-Actually, it keeps not only segments (in ``/tmp/.../segments``) but some other
-auxiliary files in the run temporary directory (``/tmp/...``). Note that, in
-this case, the temporary directory shall be removed manually afterward.
-
-*Second*, download an excerpt and keep segment files: ::
-
-  $ ytpb download ... --no-cleanup
-  ...
-  notice: No cleanup enabled, check /tmp/.../
-
+   $ ytpb download ... --no-cut <STREAM>
 
 Running without downloading
 ===========================
 
-There is a dry run mode to run without downloading. It could be useful if you
-are not interested in having an output excerpt file: for example, you want to
-locate the desired segments or debug just the first steps (by combining a dry
-run mode with the logging options; see the subsection below).
+There is a dry run mode (``-X / --dry-run``) to run without downloading. It
+could be useful if you are not interested in having an output excerpt file: for
+example, you want to locate the rewind interval or debug just the first steps
+(by combining a dry run mode with the ``--debug`` global option).
 
-For example, just to locate start and end segments, use: ::
+For example, just to locate start and end moments, use::
 
-  $ ytpb download ... --dry-run
+  $ ytpb download ... --dry-run <STREAM>
   ...
   (<<) Locating start and end in the stream... done.
   Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
@@ -625,17 +646,18 @@ For example, just to locate start and end segments, use: ::
 
   notice: This is a dry run. Skip downloading and exit.
 
-It can be combined with the ``--no-cleanup`` option as well: ::
+It can be combined with the ``--keep-temp`` option to keep temporary
+files::
 
-  $ ytpb download ... --dry-run --no-cleanup
+  $ ytpb download ... --dry-run --keep-temp <STREAM>
 
 Using cache
 ===========
 
-Using cache helps to avoid getting info about videos and downloading MPEG-DASH
-manifest on every run. The cached files contain the info and the base URLs for
-segments, and are stored under ``XDG_CACHE_HOME/ytpb``. It's a default
-behavior. The cache expiration is defined by the base URLs expiration time. The
-``--no-cache`` option allows avoiding touching cache: no reading and
-writing. Another option, ``--force-update-cache``, exists to trigger cache
-update.
+Using cache helps to avoid getting information about videos and downloading
+MPEG-DASH manifest on every run. The cached files contain the basic information
+and the base URLs for segments, and are stored under
+``$XDG_CACHE_HOME/ytpb``. It's a default behavior. The cache expiration is
+defined by the segment base URLs expiration time. The ``--no-cache`` option allows
+avoiding touching cache: no reading and writing. Another option,
+``--force-update-cache``, exists to trigger cache update.
