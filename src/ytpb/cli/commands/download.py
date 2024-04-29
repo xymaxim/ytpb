@@ -502,7 +502,7 @@ def download_command(
             )
             do_download_segments()
             click.echo(
-                "\nSuccess! Segments saved to {}/.".format(
+                "\nSuccess! Segments saved to '{}'.".format(
                     try_get_relative_path(segments_output_directory)
                 )
             )

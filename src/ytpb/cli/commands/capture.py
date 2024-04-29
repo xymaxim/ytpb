@@ -511,7 +511,7 @@ def timelapse_command(
         saved_to_path_value = final_output_path.parent.relative_to(Path.cwd())
     except ValueError:
         saved_to_path_value = final_output_path.parent
-    click.echo(f"\nSuccess! Saved to '{saved_to_path_value}/'.")
+    click.echo(f"\nSuccess! Saved to '{saved_to_path_value}'.")
 
     run_temp_directory = playback.get_temp_directory()
     if keep_temp:
