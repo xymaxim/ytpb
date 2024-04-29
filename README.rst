@@ -59,13 +59,17 @@ Demos
 - Creating a time-lapse of a live stream excerpt (`link
   <https://asciinema.org/a/653869>`__)
 
-Install
-*******
+Installation
+************
 
 Ytpb requires Python 3.11 or higher. The recommended way is to use `pipx
-<https://pypa.github.io/pipx/>`_: ::
+<https://pypa.github.io/pipx/>`_::
 
   $ pipx install ytpb
+
+To upgrade to the newer version, do::
+
+  $ pipx upgrade ytpb
 
 Further reading
 ***************
