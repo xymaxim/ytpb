@@ -13,6 +13,7 @@ from cloup.constraints import constraint, require_any
 from ytpb import actions
 from ytpb.cli.common import (
     create_playback,
+    echo_notice,
     get_parameter_by_name,
     print_summary_info,
     query_streams_or_exit,
@@ -373,7 +374,7 @@ def download_command(
     click.echo()
 
     if dry_run:
-        click.echo("notice: This is a dry run. Skip downloading and exit.")
+        echo_notice("This is a dry run. Skip downloading and exit.")
     else:
         # Absolute output path of an excerpt without extension.
         final_output_path: Path
@@ -578,7 +579,7 @@ def download_command(
 
     run_temp_directory = playback.get_temp_directory()
     if keep_temp:
-        click.echo(f"notice: No cleanup enabled, check {run_temp_directory}/")
+        echo_notice(f"No cleanup enabled, check {run_temp_directory}")
     else:
         try:
             shutil.rmtree(run_temp_directory)

@@ -24,6 +24,7 @@ from ytpb.actions.capture import capture_frames, extract_frame_as_image
 from ytpb.cli.commands.download import render_download_output_path_context
 from ytpb.cli.common import (
     create_playback,
+    echo_notice,
     get_parameter_by_name,
     prepare_line_for_summary_info,
     raise_for_sequence_ahead_of_current,
@@ -297,7 +298,7 @@ def frame_command(
 
     run_temp_directory = playback.get_temp_directory()
     if keep_temp:
-        click.echo(f"notice: No cleanup enabled, check {run_temp_directory}/")
+        echo_notice(f"No cleanup enabled, check {run_temp_directory}")
     else:
         try:
             shutil.rmtree(run_temp_directory)
@@ -513,7 +514,7 @@ def timelapse_command(
 
     run_temp_directory = playback.get_temp_directory()
     if keep_temp:
-        click.echo(f"notice: No cleanup enabled, check {run_temp_directory}/")
+        echo_notice(f"No cleanup enabled, check {run_temp_directory}")
     else:
         try:
             shutil.rmtree(run_temp_directory)

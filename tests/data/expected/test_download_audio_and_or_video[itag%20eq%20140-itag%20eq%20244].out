@@ -16,4 +16,3 @@ Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
 2. Merging segments (no cut requested)... done.
 
 Success! Saved to 'Webcam-Zurich-HB_20230325T233354+00.mkv'.
-notice: No cleanup enabled, check /tmp/pytest-of-ms/pytest-4/test_download_audio_and_or_vid0/tmpe21_1mta/

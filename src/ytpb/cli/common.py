@@ -281,3 +281,7 @@ def resolve_output_path(output_path: Path) -> Path:
 
 def suppress_output() -> None:
     sys.stdout = open(os.devnull, "w")
+
+
+def echo_notice(message: str) -> None:
+    click.echo(f"~ {message}")

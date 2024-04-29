@@ -310,7 +310,6 @@ def test_download_audio_and_or_video(
                 audio_format,
                 "-vf",
                 video_format,
-                "--keep-temp",
                 stream_url,
             ],
             catch_exceptions=False,
@@ -318,12 +317,7 @@ def test_download_audio_and_or_video(
 
     # Then:
     assert result.exit_code == 0
-    expected_output = re.sub(
-        r"notice: No cleanup enabled, check .+",
-        f"notice: No cleanup enabled, check {run_temp_directory}/",
-        expected_out._pattern_filename.read_text(),
-    )
-    assert expected_output == result.output
+    assert expected_out == result.output
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")

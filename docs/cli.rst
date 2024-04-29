@@ -644,7 +644,7 @@ For example, just to locate start and end moments, use::
   Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
   Actual end: 25 Mar 2023 23:33:58 +0000, seq. 7959121
 
-  notice: This is a dry run. Skip downloading and exit.
+  ~ This is a dry run. Skip downloading and exit.
 
 It can be combined with the ``--keep-temp`` option to keep temporary
 files::
