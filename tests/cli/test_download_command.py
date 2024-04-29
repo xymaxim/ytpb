@@ -124,7 +124,7 @@ def test_providing_start_and_end_equals_now(
 
     # Then:
     assert result.exit_code == 0
-    expected_path = tmp_path / "Webcam-Zurich-HB_20230325T233354+00.mp4"
+    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00.mp4"
     assert os.path.exists(expected_path)
     assert_approx_duration(expected_path, 4.0)
 
@@ -169,7 +169,7 @@ def test_preview_option_with_open_interval(
 
     # Then:
     assert result.exit_code == 0
-    expected_path = tmp_path / "Webcam-Zurich-HB_20230325T233355+00.mp4"
+    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
     assert os.path.exists(expected_path)
     assert_approx_duration(expected_path, 5.5)
 
@@ -216,7 +216,7 @@ def test_preview_option_with_closed_interval(
     # Then:
     assert result.exit_code == 0
 
-    expected_path = tmp_path / "Webcam-Zurich-HB_20230325T233355+00.mp4"
+    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
     assert os.path.exists(expected_path)
     assert_approx_duration(expected_path, 5.5)
 
@@ -492,7 +492,9 @@ def test_keep_temp_option(
 
     # Then:
     assert result.exit_code == 0
-    assert os.path.exists(tmp_path / "Webcam-Zurich-HB_20230325T233354+00.mp4")
+    assert os.path.exists(
+        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00.mp4"
+    )
     assert os.path.exists(run_temp_directory / "7959120.i140.mp4")
 
 
@@ -535,7 +537,9 @@ def test_no_merge_option(
 
     # Then:
     assert result.exit_code == 0
-    assert not os.path.exists(tmp_path / "Webcam-Zurich-HB_20230325T233354+00.mp4")
+    assert not os.path.exists(
+        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00.mp4"
+    )
     assert not os.path.exists(run_temp_directory)
     assert expected_out == result.output
 
@@ -580,7 +584,9 @@ def test_dry_run_option(
     # Then:
     assert result.exit_code == 0
     assert result.output == expected_out
-    assert not os.path.exists(tmp_path / "Webcam-Zurich-HB_20230325T233355+00.mp4")
+    assert not os.path.exists(
+        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
+    )
     assert not os.path.exists(run_temp_directory)
 
 
@@ -623,7 +629,7 @@ def test_no_cut_option(
 
     # Then:
     assert result.exit_code == 0
-    expected_path = tmp_path / "Webcam-Zurich-HB_20230325T233355+00.mp4"
+    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
     assert os.path.exists(expected_path)
     assert_approx_duration(expected_path, 4.0)
 
@@ -708,7 +714,7 @@ def test_from_empty_cache(
 
     # Then:
     assert result.exit_code == 0
-    expected_path = tmp_path / "Webcam-Zurich-HB_20230325T233354+00.mp4"
+    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00.mp4"
     assert os.path.exists(expected_path)
 
 
@@ -792,7 +798,7 @@ def test_yt_dlp_option(
         )
 
     assert result.exit_code == 0
-    expected_path = tmp_path / "Webcam-Zurich-HB_20230325T233354+00.mp4"
+    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00.mp4"
     assert os.path.exists(expected_path)
 
 
@@ -1451,7 +1457,9 @@ def test_metadata_tags_with_cutting(
 
     # Then:
     format_tags = ffprobe_show_entries(
-        tmp_path / "Webcam-Zurich-HB_20230325T233355+00.mp4", "format_tags", "default"
+        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4",
+        "format_tags",
+        "default",
     )
     assert "TAG:title=Webcam Zürich HB" in format_tags
     assert "TAG:author=David Gubler" in format_tags
@@ -1504,7 +1512,9 @@ def test_metadata_tags_without_cutting(
 
     # Then:
     format_tags = ffprobe_show_entries(
-        tmp_path / "Webcam-Zurich-HB_20230325T233355+00.mp4", "format_tags", "default"
+        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4",
+        "format_tags",
+        "default",
     )
     assert "TAG:title=Webcam Zürich HB" in format_tags
     assert "TAG:author=David Gubler" in format_tags
@@ -1592,7 +1602,7 @@ def test_resume_downloading(
     assert (
         f"~ Found unfinished download, continue from {resume_file_stem}.resume"
     ) in result.output
-    expected_path = tmp_path / "Webcam-Zurich-HB_20230325T233354+00.mp4"
+    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00.mp4"
     assert os.path.exists(expected_path)
     assert_approx_duration(expected_path, 6)
     assert not os.path.exists(tmp_path / f"{resume_file_stem}")
@@ -1640,7 +1650,7 @@ def test_keep_segments(
 
     # Then:
     assert result.exit_code == 0
-    segments_directory = tmp_path / "Webcam-Zurich-HB_20230325T233354+00"
+    segments_directory = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00"
     assert os.path.exists(segments_directory / "7959120.i140.mp4")
     assert os.path.exists(segments_directory / "7959121.i140.mp4")
 

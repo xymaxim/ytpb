@@ -17,20 +17,20 @@
 [options.download]
 audio_format = "itag eq 140"
 video_format = "best(@mp4 and <=1080p and @30fps)"
-output_path = "<title>_<input_start_date>"
+output_path = "<title>_<id>_<input_start_date>"
 
 [options.capture.frame]
 video_format = "best(@mp4 and @30fps)"
-output_path = "<title>_<moment_date>.jpg"
+output_path = "<title>_<id>_<moment_date>.jpg"
 
 [options.capture.timelapse]
 video_format = "best(@mp4 and @30fps)"
-output_path = "<title>/<input_start_date>/<every>/<title>_<input_start_date>_<every>_%04d.jpg"
+output_path = "<title>_<id>/<input_start_date>/<every>/<title>_<id>_<input_start_date>_<every>_%04d.jpg"
 
 [options.mpd.compose]
 audio_formats = "itag eq 140"
 video_formats = "@webm and [@720p or @1080p] and @30fps"
-output_path = "<title>_<input_start_date>.mpd"
+output_path = "<title>_<id>_<input_start_date>.mpd"
 
 # General settings.
 [general]

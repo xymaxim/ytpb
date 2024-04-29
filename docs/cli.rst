@@ -364,10 +364,10 @@ different cases and make expressions much shorter. For example: ::
 Default values
 --------------
 
-The format specs can be provided using the following ways (in order of increasing
-priority): (a) using the default, built-in option values, (b) parsing
-custom, user-defined configuration file, e.g. ``~/.config/ytpb/config.toml``,
-and (c) via ``-af/--audio-format(s)`` and ``-vf/--video-format(s)`` options.
+The format specs can be provided using the following ways (in order of
+increasing priority): (a) using the default, built-in option values, (b) parsing
+custom, user-defined :ref:`configuration <Configuring>` file, ``config.toml``, and (c) via ``-af/--audio-format(s)`` and
+``-vf/--video-format(s)`` options.
 
 The default option values are as follows:
 
@@ -387,18 +387,22 @@ The default option values are as follows:
 	  audio_formats = "@140"
 	  video_formats = "@webm and [@720p or @1080p] and @30fps"
 
-See `Configuring`_ for more information on configuring.
-
 Specifying output name
 ======================
 
-There are two options to change the default output naming: (a) specify a full output
-path or (b) provide a template output path (both without extension). The extension
-will be automatically determined during the merging stage. ::
+There are two options to change the output naming: (a) specify a full output
+path, (b) provide a template output path (both without extension). The extension
+will be automatically determined during the merging step.
 
-  $ ytpb download -o '<title>_<input_start_date>_<duration>' ...
-  $ ls
-  $ Stream-Title_20240102T102000+00_PT30S.mp4
+Specify values directly via the ``-o / --output`` option::
+
+  $ ytpb download -o '<title>_<input_start_date>' ... && ls
+  $ Stream-Title_20240102T102000+00.mp4
+
+Or set default option values in the ``config.toml`` file::
+
+  [options.download]
+  output = <title>_<input_start_date>
 
 See :ref:`reference:Output name context` for the available template variables.
 
@@ -560,21 +564,21 @@ deleted. Do you want to keep them? There are two options here.
 
   $ ytpb download ... -S <STREAM>
   ...
-  Success! Saved to 'Stream-Title_20240102T102030+00.mkv'.
-  ~ Segments are kept in 'Stream-Title_20240102T102030+00'.
+  Success! Saved to 'Stream-Title_abcdefgh123_20240102T102030+00.mkv'.
+  ~ Segments are kept in 'Stream-Title_abcdefgh123_20240102T102030+00'.
 
 The download destination can be changed via ``--segments-output-dir``::
 
   $ ytpb download ... -S --segments-output-dir segments <STREAM>
   ...
-  Success! Saved to 'Stream-Title_20240102T102030+00.mkv'.
+  Success! Saved to 'Stream-Title_abcdefgh123_20240102T102030+00.mkv'.
   ~ Segments are kept in 'segments'.
 
 *Second*, download only segment files without merging them::
 
   $ ytpb download ... --no-merge <STREAM>
   ...
-  Success! Segments saved to 'Stream-Title_20240102T102030+00'.
+  Success! Segments saved to 'Stream-Title_abcdefgh123_20240102T102030+00'.
 
 Resuming unfinished downloads
 =============================
@@ -590,6 +594,8 @@ option values: ``--interval``, ``--audio-format``, ``--video-format``, and
 ``--segments-output-dir``. Resuming behavior can be disabled by the
 ``--no-resume`` option to avoid: (1) creating a resume file at all and (2)
 continuing an existing download.
+
+.. _Configuring:
 
 Configuring
 ***********

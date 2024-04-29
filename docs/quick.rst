@@ -12,8 +12,7 @@ Download
 Let's start with downloading a 30-second excerpt of audio and video by
 specifying start and end dates and stream URL or ID: ::
 
-  $ ytpb download -i 2024-01-02T10:20:00+00/PT30S <STREAM>
-  $ ls
+  $ ytpb download -i 2024-01-02T10:20:00+00/PT30S <STREAM> && ls
   Stream-Title_20240102T102000+00.mp4
 
 By default, it will download an excerpt in the best :ref:`pre-defined
@@ -77,8 +76,7 @@ One frame
 
 For example, let's take a picture of the moment happening right now: ::
 
-  $ ytpb capture frame --moment now <STREAM>
-  $ ls
+  $ ytpb capture frame --moment now <STREAM> && ls
   Stream-Title_20231227T012954+00.jpg
 
 Timelapse
