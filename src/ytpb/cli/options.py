@@ -74,14 +74,6 @@ interval_option = click.option(
 )
 
 
-preview_option = click.option(
-    "-p",
-    "--preview",
-    help="Run in preview mode.",
-    is_flag=True,
-)
-
-
 def config_options(f):
     f = click.option(
         "--config",

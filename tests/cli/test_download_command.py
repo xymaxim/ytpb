@@ -129,8 +129,21 @@ def test_providing_start_and_end_equals_now(
     assert_approx_duration(expected_path, 4.0)
 
 
+@pytest.mark.parametrize(
+    "interval",
+    [
+        "7959120/7959200",
+        "2023-03-25T23:33:55+00/2023-03-26T00+00",
+        "2023-03-25T23:33:55+00/PT1H",
+        "2023-03-25T23:33:55+00/7959200",
+        "PT3S/2023-03-25T23:33:58+00",
+        "PT3S/7959121",
+        "7959120/..",
+    ],
+)
 @freeze_time("2023-03-26T00:00:00+00:00")
-def test_preview_option_with_open_interval(
+def test_preview_start_option(
+    interval: str,
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -142,10 +155,12 @@ def test_preview_option_with_open_interval(
     # Given:
     add_responses_callback_for_reference_base_url()
     add_responses_callback_for_segment_urls(
-        urljoin(audio_base_url, r"sq/\w+"),
+        urljoin(audio_base_url, "sq/7959203"),
+        urljoin(audio_base_url, "sq/7959120"),
+        urljoin(audio_base_url, "sq/7959121"),
+        urljoin(audio_base_url, "sq/7959122"),
     )
 
-    # We only have three test segments of 2 second duration.
     DEFAULT_CONFIG["general"]["preview_duration"] = 4
 
     # When:
@@ -157,53 +172,8 @@ def test_preview_option_with_open_interval(
                 "download",
                 "--no-cache",
                 "--interval",
-                "2023-03-25T23:33:55+00/..",
-                "--preview",
-                "-af",
-                "itag eq 140",
-                "-vf",
-                "none",
-                stream_url,
-            ],
-        )
-
-    # Then:
-    assert result.exit_code == 0
-    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
-    assert os.path.exists(expected_path)
-    assert_approx_duration(expected_path, 5.5)
-
-
-@freeze_time("2023-03-26T00:00:00+00:00")
-def test_preview_option_with_closed_interval(
-    ytpb_cli_invoke: Callable,
-    add_responses_callback_for_reference_base_url: Callable,
-    add_responses_callback_for_segment_urls: Callable,
-    fake_info_fetcher: MagicMock,
-    stream_url: str,
-    audio_base_url: str,
-    tmp_path: Path,
-) -> None:
-    # Given:
-    add_responses_callback_for_reference_base_url()
-    add_responses_callback_for_segment_urls(
-        urljoin(audio_base_url, r"sq/\w+"),
-    )
-
-    # We only have three test segments of 2 second duration.
-    DEFAULT_CONFIG["general"]["preview_duration"] = 4
-
-    # When:
-    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
-        mock_fetcher.return_value = fake_info_fetcher
-        result = ytpb_cli_invoke(
-            [
-                "--no-config",
-                "download",
-                "--no-cache",
-                "--interval",
-                "2023-03-25T23:33:55+00/2023-03-25T23:33:57:00+00",
-                "--preview",
+                interval,
+                "--preview-start",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -211,21 +181,123 @@ def test_preview_option_with_closed_interval(
                 stream_url,
             ],
             catch_exceptions=False,
+            standalone_mode=False,
         )
 
     # Then:
     assert result.exit_code == 0
+    if not ".." in interval:
+        assert "~ Preview mode enabled, interval end is ignored." in result.output
+    assert os.path.exists(tmp_path / "Webcam-Zurich-HB_kHwmzef842g_preview.mp4")
 
-    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
-    assert os.path.exists(expected_path)
-    assert_approx_duration(expected_path, 5.5)
 
-    expected = "~ Preview mode enabled, interval end is ignored."
-    assert expected in result.output
+@pytest.mark.parametrize(
+    "interval",
+    [
+        "7959000/7959122",
+        "2023-03-24T00+00/2023-03-25T23:33:58.500+00",
+        "PT1H/2023-03-25T23:33:58.500+00",
+        "7959000/2023-03-25T23:33:58.500+00",
+        "2023-03-25T23:33:55.500+00/PT3S",
+        "7959121/PT3S",
+    ],
+)
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_preview_end_option(
+    interval: str,
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, "sq/7959203"),
+        urljoin(audio_base_url, "sq/7959120"),
+        urljoin(audio_base_url, "sq/7959121"),
+        urljoin(audio_base_url, "sq/7959122"),
+    )
+
+    DEFAULT_CONFIG["general"]["preview_duration"] = 4
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                interval,
+                "--preview-end",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                stream_url,
+            ],
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    assert "~ Preview mode enabled, interval start is ignored." in result.output
+    assert os.path.exists(tmp_path / "Webcam-Zurich-HB_kHwmzef842g_preview.mp4")
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
-def test_segments_saved_to_temp_in_preview_mode(
+def test_preview_and_output_option(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, "sq/7959203"),
+        urljoin(audio_base_url, "sq/7959120"),
+        urljoin(audio_base_url, "sq/7959121"),
+        urljoin(audio_base_url, "sq/7959122"),
+    )
+
+    DEFAULT_CONFIG["general"]["preview_duration"] = 4
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                "7959120/7959200",
+                "--preview-start",
+                "--output",
+                "preview",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                stream_url,
+            ],
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    assert os.path.exists(tmp_path / "preview.mp4")
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_save_segments_to_temp_in_preview_mode(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -254,7 +326,7 @@ def test_segments_saved_to_temp_in_preview_mode(
                 "--keep-temp",
                 "--interval",
                 "7959120/7959122",
-                "--preview",
+                "--preview-start",
                 "-af",
                 "itag eq 140",
                 "-vf",

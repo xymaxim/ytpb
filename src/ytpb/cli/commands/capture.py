@@ -36,7 +36,6 @@ from ytpb.cli.options import (
     cache_options,
     interval_option,
     keep_temp_option,
-    preview_option,
     validate_image_output_path,
     yt_dlp_option,
 )
@@ -328,7 +327,12 @@ def frame_command(
         type=FormatSpecParamType(FormatSpecType.VIDEO),
         help="Video format to capture.",
     ),
-    preview_option,
+    cloup.option(
+        "-p",
+        "--preview",
+        help="Run in preview mode.",
+        is_flag=True,
+    ),
 )
 @click.option(
     "-o",

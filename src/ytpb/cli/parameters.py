@@ -146,15 +146,20 @@ class RewindIntervalParamType(click.ParamType):
             # Two durations
             case [timedelta(), timedelta()]:
                 raise click.BadParameter("Two durations are ambiguous.")
-            case ["now" | ".." as x, _]:
+            case ["now" as x, _]:
                 raise click.BadParameter(
                     f"Keyword '{x}' is only allowed for the end part."
                 )
             # Duration and '..'
-            case [timedelta(), ".."]:
-                raise click.BadParameter("Keyword '..' not compatible with duration.")
+            case [timedelta(), ".."] | ["..", timedelta()]:
+                raise click.BadParameter(
+                    "Keyword '..' is not compatible with duration."
+                )
             # Anything compatible and 'now' or '..'
-            case [int() | datetime() | timedelta(), "now" | ".."]:
+            case [int() | datetime() | timedelta(), "now" | ".."] | [
+                "..",
+                int() | datetime() | timedelta(),
+            ]:
                 start = parsed_start
                 end = parsed_end
             # Replacing components and date and time
@@ -168,7 +173,7 @@ class RewindIntervalParamType(click.ParamType):
             # Replacing components and anything remaining, non-compatible
             case (str(), _) | (_, str()):
                 raise click.BadParameter(
-                    "Replacement components is only compatible with date and time."
+                    "Replacement components are only compatible with date and time."
                 )
             # Remaining and compatible
             case [_, _]:

@@ -8,7 +8,7 @@ from pathlib import Path
 import click
 import cloup
 import structlog
-from cloup.constraints import constraint, require_any
+from cloup.constraints import constraint, mutually_exclusive, require_any
 
 from ytpb import actions
 from ytpb.cli.common import (
@@ -27,7 +27,6 @@ from ytpb.cli.options import (
     cache_options,
     interval_option,
     keep_temp_option,
-    preview_option,
     validate_output_path,
     yt_dlp_option,
 )
@@ -40,6 +39,7 @@ from ytpb.types import (
     AddressableMappingProtocol,
     AudioOrVideoStream,
     DateInterval,
+    RelativePointInStream,
     RelativeSegmentSequence,
     SegmentSequence,
 )
@@ -111,7 +111,18 @@ def render_download_output_path_context(
         type=FormatSpecParamType(FormatSpecType.VIDEO),
         help="Video format to download.",
     ),
-    preview_option,
+    cloup.option(
+        "-ps",
+        "--preview-start",
+        help="Preview interval start.",
+        is_flag=True,
+    ),
+    cloup.option(
+        "-pe",
+        "--preview-end",
+        help="Preview interval end.",
+        is_flag=True,
+    ),
 )
 @cloup.option_group(
     "Dump options",
@@ -174,13 +185,15 @@ def render_download_output_path_context(
 @keep_temp_option
 @stream_argument
 @constraint(require_any, ["audio_format", "video_format"])
+@constraint(mutually_exclusive, ["preview_start", "preview_end"])
 @click.pass_context
 def download_command(
     ctx: click.Context,
     interval: InputRewindInterval,
     audio_format: str,
     video_format: str,
-    preview: bool,
+    preview_start: bool,
+    preview_end: bool,
     dump_base_urls: bool,
     dump_segment_urls: bool,
     output_path: Path,
@@ -275,19 +288,43 @@ def download_command(
             raise_for_sequence_ahead_of_current(x, head_sequence, ctx, "interval")
         case "now":
             requested_end = head_sequence - 1
-        case "..":
-            if not preview:
-                raise click.BadParameter(
-                    "Open interval is only valid in the preview mode",
-                    param=get_parameter_by_name("interval", ctx),
-                )
 
-    if preview:
+    preview_mode = preview_start or preview_end
+    if not preview_mode and (requested_start == ".." or requested_end == ".."):
+        raise click.BadParameter(
+            "Open interval is only valid in the preview mode.",
+            param=get_parameter_by_name("interval", ctx),
+        )
+
+    if preview_mode:
         preview_duration_value = ctx.obj.config.traverse("general.preview_duration")
         segment_duration = float(extract_parameter_from_url("dur", reference_base_url))
-        requested_end = RelativeSegmentSequence(
-            round(preview_duration_value / segment_duration)
-        )
+        preview_segments = round(preview_duration_value / segment_duration)
+
+        if preview_start:
+            if requested_start == "..":
+                raise click.BadParameter(
+                    "Start '..' is only valid in the end preview mode.",
+                    param=get_parameter_by_name("interval", ctx),
+                )
+            elif isinstance(requested_start, timedelta):
+                located_moment = playback.locate_moment(
+                    requested_end, reference_stream, is_end=True
+                )
+                requested_start = located_moment.date - requested_start
+            requested_end = RelativeSegmentSequence(preview_segments)
+        if preview_end:
+            if requested_end == "..":
+                raise click.BadParameter(
+                    "End '..' is only valid in the start preview mode.",
+                    param=get_parameter_by_name("interval", ctx),
+                )
+            elif isinstance(requested_end, timedelta):
+                located_moment = playback.locate_moment(
+                    requested_start, reference_stream
+                )
+                requested_end = located_moment.date + requested_end
+            requested_start = RelativeSegmentSequence(preview_segments)
 
     resume_run: bool = False
     resume_file_path = Path.cwd() / compose_resume_filename(
@@ -306,14 +343,16 @@ def download_command(
 
     if not resume_run:
         try:
+            # assert False, requested_start
             rewind_interval = playback.locate_interval(
                 requested_start,
                 requested_end,
                 reference_stream,
             )
-        except SequenceLocatingError:
+        except SequenceLocatingError as e:
             message = "\nerror: An error occured during segment locating, exit."
             click.echo(message, err=True)
+            sys.exit(1)
 
     click.echo("done.")
 
@@ -328,8 +367,13 @@ def download_command(
             click.echo(build_dump_url(video_stream.base_url), ctx.obj.original_stdout)
         sys.exit()
 
-    if preview and interval[1] != "..":
-        echo_notice("Preview mode enabled, interval end is ignored.")
+    # if preview_mode and interval[1] != "..":
+    if preview_mode:
+        echo_notice(
+            "Preview mode enabled, interval {} is ignored.".format(
+                "end" if preview_start else "start"
+            )
+        )
 
     start_segment = playback.get_segment(
         rewind_interval.start.sequence, reference_stream
@@ -362,11 +406,8 @@ def download_command(
 
     cut_kwargs: dict[str, float] = {}
     if not no_cut:
-        cut_at_start = rewind_interval.start.cut_at
-        if preview:
-            cut_at_end = 0
-        else:
-            cut_at_end = rewind_interval.end.cut_at
+        cut_at_start = rewind_interval.start.cut_at if preview_start else 0
+        cut_at_end = rewind_interval.end.cut_at if preview_end else 0
         cut_kwargs.update(
             {
                 "cut_at_start": cut_at_start,
@@ -385,6 +426,13 @@ def download_command(
     else:
         # Absolute output path of an excerpt without extension.
         final_output_path: Path
+
+        if preview_mode:
+            default_output_path = ctx.obj.config.traverse(
+                "options.download.output_path"
+            )
+            if str(output_path) == default_output_path:
+                output_path = "<title>_<id>_preview"
 
         if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output_path)):
             input_timezone = requested_date_interval.start.tzinfo
@@ -409,7 +457,7 @@ def download_command(
             final_output_path = output_path
         final_output_path = resolve_output_path(final_output_path)
 
-        if preview:
+        if preview_mode:
             segments_output_directory = playback.get_temp_directory()
         elif segments_output_dir_option:
             segments_output_directory = segments_output_dir_option
@@ -454,7 +502,7 @@ def download_command(
         else:
             need_to_remove_segments_directory = False
 
-        if not resume_run and not preview:
+        if not resume_run and not preview_mode:
             with open(resume_file_path, "wb") as f:
                 logger.debug("Write resume file to %s", resume_file_path)
                 to_pickle = {
@@ -578,7 +626,7 @@ def download_command(
             click.echo("done.\n")
             click.echo(f"Success! Saved to '{try_get_relative_path(merged_path)}'.")
 
-            if keep_segments and not preview:
+            if keep_segments and not preview_mode:
                 click.echo(
                     "~ Segments are kept in '{}'.".format(
                         try_get_relative_path(segments_output_directory)
@@ -596,10 +644,10 @@ def download_command(
                 "Failed to remove temporary directory: %s", run_temp_directory
             )
 
-    if not dry_run and not preview:
+    if not dry_run and not preview_mode:
         resume_file_path.unlink()
 
-    if not (dry_run or keep_segments or preview):
+    if not (dry_run or keep_segments or preview_mode):
         try:
             for paths in audio_and_video_segment_paths:
                 for path in paths:
