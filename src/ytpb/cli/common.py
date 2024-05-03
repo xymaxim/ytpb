@@ -100,26 +100,6 @@ stream_argument = cloup.argument(
 )
 
 
-def check_end_options(start, end, duration, preview):
-    if not (end or duration or preview):
-        raise click.UsageError(
-            "One of --end, --duration, or --preview must be specified."
-        )
-
-    if isinstance(end, datetime) and isinstance(start, datetime):
-        if end <= start:
-            raise click.BadParameter(
-                "End date is ahead or equal to the start date.",
-                param_hint="'-e' / '--end'",
-            )
-
-
-def get_downloaded_segment(playback, sequence, base_url):
-    segment_filename = compose_default_segment_filename(sequence, base_url)
-    segment = Segment.from_file(playback.get_temp_directory() / segment_filename)
-    return segment
-
-
 def prepare_line_for_summary_info(
     date: datetime,
     input_actual_timedelta: timedelta,
@@ -172,36 +152,6 @@ def print_summary_info(
             end_time_info_line, rewind_interval.end.sequence
         )
     )
-
-    # total_duration = format_duration(
-    #     timedelta(seconds=actual_date_interval.duration),
-    #     DurationFormatPattern.IN_SENTENCE
-    # )
-    # click.echo(f"Total duration: {total_duration}, estimated size: ?")
-
-
-def check_streams_not_empty(
-    audio_stream, audio_format, video_stream, video_format, max_text_width=62
-):
-    if audio_format and not audio_stream:
-        message = (
-            "  Error! Found no audio formats matching requested format spec: "
-            f"{audio_format}."
-        )
-        if video_format and not video_stream:
-            message += " Same for the video: {video_format}."
-        click.echo(textwrap.fill(message, max_text_width))
-        click.echo("~" * max_text_width)
-        sys.exit(1)
-    elif video_format and not video_stream:
-        click.echo("~" * max_text_width)
-        message = (
-            "  Error! Found no video formats matching requested format spec: "
-            f"{video_format}."
-        )
-        click.echo(textwrap.fill(message, max_text_width))
-        click.echo("~" * max_text_width)
-        sys.exit(1)
 
 
 def query_streams_or_exit(
