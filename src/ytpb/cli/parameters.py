@@ -86,7 +86,6 @@ class RewindIntervalParamType(click.ParamType):
     def _parse_interval_part(
         self,
         part: str,
-        end: bool = False,
     ) -> int | str | Literal["now", ".."] | datetime | timedelta | isotimedelta:
         match part:
             # Sequence number
