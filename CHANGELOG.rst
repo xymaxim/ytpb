@@ -5,18 +5,19 @@ Versions follow `Calendar Versioning`_ with the ``YYYY.M.D`` scheme.
 
 .. _Calendar Versioning: https://calver.org
 
-`2024.4.29`_
-************
+`2024.5.3`_
+***********
 
 - Add support for resumable downloads (`#13
   <https://github.com/xymaxim/ytpb/pull/13>`__)
-- Download media segments to a segments output directory under the current
-  working one instead of the run temporary directory (`#13
-  <https://github.com/xymaxim/ytpb/pull/13>`__)
+- Change the segments output directory from the run temporary directory to a
+  directory under the current working one
 - Add ``--ignore-resume``, ``-S / --keep-segments``, and
   ``--segments-output-dir`` options
-- Rename the ``--no-cleanup`` option to ``--keep-temp``
 - Change the default output path to ``<title>_<id>_<input_start_date>``
+- Rename the ``--no-cleanup`` option to ``--keep-temp``
+- Replace the ``--preview`` option with ``--preview-start`` and
+  ``--preview-end``
 
 `2024.4.20`_
 ************
@@ -95,7 +96,7 @@ Breaking changes
 - Change the first segment locating step: don't limit it to two jumps (`#8
   <https://github.com/xymaxim/ytpb/pull/8>`__)
 
-.. _2024.4.29: https://github.com/xymaxim/ytpb/compare/v2024.4.20..v2024.4.29
+.. _2024.5.3: https://github.com/xymaxim/ytpb/compare/v2024.4.20..v2024.5.3
 .. _2024.4.20: https://github.com/xymaxim/ytpb/compare/v2024.4.12..v2024.4.20
 .. _2024.4.12: https://github.com/xymaxim/ytpb/compare/v2024.3.27..v2024.4.12
 .. _2024.3.27: https://github.com/xymaxim/ytpb/compare/v2024.3.16..v2024.3.27
