@@ -96,7 +96,7 @@ class RewindIntervalParamType(click.ParamType):
             case x if x[0] == "P":
                 output = isotimedelta.fromisoformat(x)
             # Replacing components
-            case x if set(x) & set("DHMS"):
+            case x if set(x) & set("YMDHS"):
                 output = x
             # Time of today
             case x if x[0] == "T" or (":" in x and "-" not in x):
@@ -146,6 +146,9 @@ class RewindIntervalParamType(click.ParamType):
             # Two durations
             case [timedelta(), timedelta()]:
                 raise click.BadParameter("Two durations are ambiguous.")
+            # Two '..' keywords
+            case ["..", ".."]:
+                raise click.BadParameter("Two '..' are ambiguous.")
             case ["now" as x, _]:
                 raise click.BadParameter(
                     f"Keyword '{x}' is only allowed for the end part."

@@ -155,3 +155,20 @@ def test_invalid_rewind_interval(value: str, invalid_part: str):
     with pytest.raises(click.BadParameter) as exc_info:
         RewindIntervalParamType().convert(value, None, None)
     assert invalid_part in str(exc_info.value)
+
+
+@pytest.mark.parametrize(
+    "interval,error",
+    [
+        ("PT10M/PT20M", "Two durations"),
+        ("../..", "Two '..'"),
+        ("PT1H/..", "Keyword '..'"),
+        ("../PT1H", "Keyword '..'"),
+        ("2024Y/PT1H", "Replacement components"),
+        ("2024Y/..", "Replacement components"),
+    ],
+)
+def test_non_compatible_interval_parts(interval: str, error: str):
+    with pytest.raises(click.BadParameter) as exc_info:
+        RewindIntervalParamType().convert(interval, None, None)
+    assert error in str(exc_info.value)
