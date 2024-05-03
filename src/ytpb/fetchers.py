@@ -112,9 +112,7 @@ class YoutubeDLInfoFetcher(InfoFetcher):
             options: Options passed to :class:`yt_dlp.YoutubeDL`.
         """
         super().__init__(video_url, session)
-        if options is not None:
-            options = self.default_options.update(options)
-        self._ydl = YoutubeDL(options)
+        self._ydl = YoutubeDL(self.default_options | (options or {}))
         self._formats: list[dict] = []
 
     def fetch_video_info(self) -> YouTubeVideoInfo:
