@@ -1,7 +1,6 @@
 import email
 import os
 import sys
-import textwrap
 from datetime import datetime, timedelta
 from pathlib import Path
 
@@ -9,7 +8,6 @@ import click
 import cloup
 import structlog
 
-from ytpb.download import compose_default_segment_filename
 from ytpb.errors import (
     BadCommandArgument,
     BaseUrlExpiredError,
@@ -20,7 +18,6 @@ from ytpb.errors import (
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
 from ytpb.playback import Playback, RewindInterval
-from ytpb.segment import Segment
 from ytpb.types import DateInterval, SetOfStreams
 from ytpb.utils.date import format_timedelta, round_date
 from ytpb.utils.url import extract_parameter_from_url, normalize_video_url

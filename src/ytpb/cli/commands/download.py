@@ -34,12 +34,10 @@ from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewind
 from ytpb.download import compose_default_segment_filename
 from ytpb.errors import SequenceLocatingError
 from ytpb.merge import merge_segments
-from ytpb.playback import Playback
 from ytpb.types import (
     AddressableMappingProtocol,
     AudioOrVideoStream,
     DateInterval,
-    RelativePointInStream,
     RelativeSegmentSequence,
     SegmentSequence,
 )
@@ -349,7 +347,7 @@ def download_command(
                 requested_end,
                 reference_stream,
             )
-        except SequenceLocatingError as e:
+        except SequenceLocatingError:
             message = "\nerror: An error occured during segment locating, exit."
             click.echo(message, err=True)
             sys.exit(1)
