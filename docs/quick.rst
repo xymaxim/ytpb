@@ -24,9 +24,9 @@ As for the start and end, they can be also defined in other ways (see
 :ref:`cli:Specifying rewind interval`). For example, it would be handy to locate
 the desired moments first by previewing them and only after download a full
 excerpt. To run downloading in the :ref:`preview mode <Preview mode>`, use the
-``-p/--preview`` option: ::
+``-ps / --preview-start`` or ``-ps / --preview-end`` options::
 
-  $ ytpb download -i 2024-01-02T10:20:00+00/.. -p <STREAM>
+  $ ytpb download -i 2024-01-02T10:20:00+00/PT30S -ps <STREAM>
 
 Check also out how to `download
 <https://ytpb.readthedocs.io/en/latest/cookbook.html#download-segments-with-curl>`__

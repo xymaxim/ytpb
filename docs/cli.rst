@@ -237,21 +237,24 @@ interval: ::
 C. Preview mode
 ---------------
 
-* ``--interval <start>/.. --preview``
-* ``--interval <start>/<end> --preview``
+* ``--interval <start>/<end> --preview-start``
+* ``--interval <start>/<end> --preview-end``
+* ``--interval <start>/.. --preview-start``
+* ``--interval ../<end> --preview-end``
 
 If you only need to preview a moment in a stream, which you can refer to later,
-the ``-p/--preview`` option exists. It's basically an alias for the short end
-duration.
+the ``-ps / --preview-start`` and ``-pe / --preview-end`` options exist. It's
+basically an alias for the short end duration.
 
-In the above, the closed intervals were used, while for the preview mode, you
+In the above, the closed intervals were used, while for the preview modes, you
 can define (not necessarily, though) intervals with an open end designated with
-the ".." literal: ::
+the '..' literal: ::
 
-  $ ytpb download -i 2024-01-02T10:20:00+00/.. -p ...
+  $ ytpb download -i 2024-01-02T10:20:00+00/.. -ps ...
+  $ ytpb download -i ../2024-01-02T10:20:00+00 -pe ...
 
-(In case of a closed interval, an end part will be ignored, and you'll see a
-note in the output that the preview mode is enabled.)
+(In case of a closed interval, the start or end part will be ignored, and you'll
+see a note in the output that the preview mode is enabled.)
 
 By default, the output preview duration varies from 10 to 10 + one segment
 duration seconds. The imprecision is due to the reliance on the full-length,

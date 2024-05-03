@@ -35,7 +35,8 @@ output_path = "<title>_<id>_<input_start_date>.mpd"
 # General settings.
 [general]
 
-# Preview duration for the --preview option (in seconds).
+# Preview duration for the preview start (--preview-start) and end
+# (--preview-end) modes (in seconds).
 preview_duration = 10
 # The User-Agent header.
 user_agent = "Mozilla/5.0 (Android 14; Mobile; rv:68.0) Gecko/68.0 Firefox/120.0"
