@@ -1,5 +1,6 @@
 import enum
 import math
+import os
 import re
 import string
 import warnings
@@ -106,12 +107,15 @@ def format_duration(duration: timedelta, pattern: DurationFormatPattern) -> str:
     total_seconds = math.floor(duration.total_seconds() + 0.5)
     total_minutes, ss = divmod(total_seconds, 60)
     hh, mm = divmod(total_minutes, 60)
-
-    output = pattern.value
     time_object = time(hh, mm, ss)
 
-    optional_parts_re = r"\[(?P<part>(?P<fmt>%-?[HMS]).*?)\]"
-    for matched in re.finditer(optional_parts_re, pattern.value):
+    pattern_value = pattern.value
+    if os.name == "nt":
+        pattern_value = pattern_value.replace("%-", "%#")
+
+    output = pattern_value
+    optional_parts_re = r"\[(?P<part>(?P<fmt>%[-#]?[HMS]).*?)\]"
+    for matched in re.finditer(optional_parts_re, pattern_value):
         if int(time_object.strftime(matched.group("fmt"))) == 0:
             output = output.replace(matched.group(0), "")
         else:
