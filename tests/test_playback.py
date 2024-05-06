@@ -300,7 +300,7 @@ def test_create_playback_from_expired_cache(
 ):
     # Given:
     test_cache_directory = Playback.get_cache_directory()
-    test_cache_directory.mkdir(parents=True)
+    test_cache_directory.mkdir(parents=True, exist_ok=True)
 
     frozen_time = datetime.fromisoformat("2123-09-28T17:00:00+00:00").timestamp()
     expired_at = int(frozen_time - 10)
