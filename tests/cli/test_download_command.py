@@ -40,6 +40,7 @@ from ytpb.playback import RewindInterval, RewindMoment
         ("PT3S/2023-03-25T23:33:58+00", "233355+00.mp4"),
     ],
 )
+@pytest.mark.expect_suffix(os.name)
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_download_within_interval(
     interval: str,
@@ -80,8 +81,8 @@ def test_download_within_interval(
         )
 
     # Then:
-    assert result.output == expected_out
     assert result.exit_code == 0
+    assert result.output == expected_out
     assert glob.glob(str(tmp_path / f"*{output_subpath}"))
 
 
@@ -346,6 +347,7 @@ def test_save_segments_to_temp_in_preview_mode(
     "audio_format,video_format",
     [("itag eq 140", "itag eq 244"), ("itag eq 140", "none"), ("none", "itag eq 244")],
 )
+@pytest.mark.expect_suffix(os.name)
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_download_audio_and_or_video(
     audio_format: str | None,
@@ -570,6 +572,7 @@ def test_keep_temp_option(
     assert os.path.exists(run_temp_directory / "7959120.i140.mp4")
 
 
+@pytest.mark.expect_suffix(os.name)
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_no_merge_option(
     ytpb_cli_invoke: Callable,
@@ -609,13 +612,14 @@ def test_no_merge_option(
 
     # Then:
     assert result.exit_code == 0
+    assert expected_out == result.output
     assert not os.path.exists(
         tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00.mp4"
     )
     assert not os.path.exists(run_temp_directory)
-    assert expected_out == result.output
 
 
+@pytest.mark.expect_suffix(os.name)
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_dry_run_option(
     ytpb_cli_invoke: Callable,
@@ -662,6 +666,7 @@ def test_dry_run_option(
     assert not os.path.exists(run_temp_directory)
 
 
+@pytest.mark.expect_suffix(os.name)
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_no_cut_option(
     ytpb_cli_invoke: Callable,
@@ -701,11 +706,10 @@ def test_no_cut_option(
 
     # Then:
     assert result.exit_code == 0
+    assert result.output == expected_out
     expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
     assert os.path.exists(expected_path)
     assert_approx_duration(expected_path, 4.0)
-
-    assert result.output == expected_out
 
 
 @freeze_time("2023-09-28T17:00:00+00:00")
@@ -1499,7 +1503,6 @@ def test_metadata_tags_with_cutting(
     stream_url: str,
     audio_base_url: str,
     tmp_path: Path,
-    expected_out,
 ) -> None:
     # Given:
     add_responses_callback_for_reference_base_url()
@@ -1553,7 +1556,6 @@ def test_metadata_tags_without_cutting(
     stream_url: str,
     audio_base_url: str,
     tmp_path: Path,
-    expected_out,
 ) -> None:
     # Given:
     add_responses_callback_for_reference_base_url()
@@ -1609,7 +1611,6 @@ def test_resume_downloading(
     video_id: str,
     audio_base_url: str,
     tmp_path: Path,
-    expected_out,
 ) -> None:
     # Given:
     add_responses_callback_for_reference_base_url()
@@ -1690,7 +1691,6 @@ def test_keep_segments(
     video_id: str,
     audio_base_url: str,
     tmp_path: Path,
-    expected_out,
 ) -> None:
     # Given:
     add_responses_callback_for_reference_base_url()
@@ -1737,7 +1737,6 @@ def test_remove_default_segments_output_directory(
     video_id: str,
     audio_base_url: str,
     tmp_path: Path,
-    expected_out,
 ) -> None:
     # Given:
     add_responses_callback_for_reference_base_url()
@@ -1784,7 +1783,6 @@ def test_remove_created_segments_output_directory(
     video_id: str,
     audio_base_url: str,
     tmp_path: Path,
-    expected_out,
 ) -> None:
     # Given:
     sub_tmp_path = tmp_path / "sub"
@@ -1838,7 +1836,6 @@ def test_remove_only_rewound_segments(
     video_id: str,
     audio_base_url: str,
     tmp_path: Path,
-    expected_out,
 ) -> None:
     # Given:
     add_responses_callback_for_reference_base_url()
@@ -1887,7 +1884,6 @@ def test_do_not_remove_existing_directory(
     video_id: str,
     audio_base_url: str,
     tmp_path: Path,
-    expected_out,
 ) -> None:
     # Given:
     add_responses_callback_for_reference_base_url()
@@ -1937,7 +1933,6 @@ def test_ignore_resume_option(
     video_id: str,
     audio_base_url: str,
     tmp_path: Path,
-    expected_out,
 ) -> None:
     # Given:
     add_responses_callback_for_reference_base_url()
@@ -1981,7 +1976,6 @@ def test_ignore_resume_option_after_unfinished_run(
     video_id: str,
     audio_base_url: str,
     tmp_path: Path,
-    expected_out,
 ) -> None:
     # Given:
     add_responses_callback_for_reference_base_url()
