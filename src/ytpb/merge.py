@@ -66,7 +66,7 @@ def mux_and_cut_boundary_segment(
 
     if video_segment_path and video_codec is None:
         video_codec = ffmpeg.ffprobe_show_entries(
-            video_segment_path, "stream=codec_name"
+            video_segment_path, "stream=codec_name", streams_to_select="v:0"
         )
 
     ffmpeg_input_options = []
@@ -99,7 +99,7 @@ def mux_and_cut_boundary_segment(
                     )
                 except KeyError:
                     raise ValueError(
-                        "No encoding settings are availabe for"
+                        "No encoding settings are availabe for "
                         f"'{video_codec}' video codec"
                     )
 
@@ -246,7 +246,7 @@ def merge_segments(
         video_codec: str | None = None
         if video_segment_paths:
             video_codec = ffmpeg.ffprobe_show_entries(
-                video_segment_paths[0], "stream=codec_name"
+                video_segment_paths[0], "stream=codec_name", streams_to_select="v:0"
             )
 
         if num_of_segments == 1:

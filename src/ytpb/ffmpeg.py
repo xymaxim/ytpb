@@ -46,9 +46,14 @@ def run_ffprobe(
 
 
 def ffprobe_show_entries(
-    input_path: Path, entries_to_show: str, of: str = "default=nw=1:nk=1"
+    input_path: Path,
+    entries_to_show: str,
+    of: str = "default=nw=1:nk=1",
+    streams_to_select: str | None = None,
 ) -> str:
     command_args = f"-show_entries {entries_to_show} -of {of}"
+    if streams_to_select:
+        command_args += f" -select_streams {streams_to_select}"
     cp = run_ffprobe(input_path, command_args, capture_output=True, check=True)
     output = cp.stdout.decode().rstrip("\n")
     return output
