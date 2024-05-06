@@ -254,7 +254,7 @@ def compose_command(
     streams = Streams(queried_audio_streams + queried_video_streams)
     composed_manifest = compose_static_mpd(playback, rewind_interval, streams)
 
-    with open(final_output_path, "w") as f:
+    with open(final_output_path, "w", encoding="utf-8") as f:
         f.write(composed_manifest)
 
     try:
@@ -296,7 +296,7 @@ def refresh_command(
         sys.exit(1)
 
     refreshed = refresh_mpd(manifest_content, playback.streams)
-    with open(manifest, "w") as f:
+    with open(manifest, "w", encoding="utf-8") as f:
         f.write(refreshed)
 
     some_base_url = next(iter(playback.streams)).base_url

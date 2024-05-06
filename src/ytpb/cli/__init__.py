@@ -120,7 +120,8 @@ def base_cli(
         os.environ["NO_COLOR"] = "1"
 
         timestamp = datetime.now(tz=timezone.utc).strftime("%Y%m%d-%H%M%S")
-        report_handle = open(Path.cwd() / f"ytpb-{timestamp}.log", "a")
+        report_file_path = Path.cwd() / f"ytpb-{timestamp}.log"
+        report_handle = open(report_file_path, "a", encoding="utf-8")
         sys.stdout = cast(
             TextIO, ReportStreamWrapper(ctx.obj.original_stdout, report_handle)
         )
