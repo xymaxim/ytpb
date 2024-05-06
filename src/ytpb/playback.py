@@ -291,7 +291,7 @@ class Playback:
         fetch_video_info: bool = True,
         **kwargs,
     ) -> "Playback":
-        with open(manifest_path, "r") as f:
+        with open(manifest_path, "r", encoding="utf-8") as f:
             list_of_streams = extract_representations(f.read())
             streams = Streams(list_of_streams)
 

@@ -50,7 +50,7 @@ def read_from_cache(key: str, cache_directory: Path) -> dict | None:
             latest_item_path.unlink()
             item = None
         else:
-            with open(latest_item_path) as f:
+            with open(latest_item_path, encoding="utf-8") as f:
                 item = json.load(f)
             logger.debug("Found unexpired cached item: %s", latest_item_path)
 
@@ -75,7 +75,7 @@ def write_to_cache(
         for path in old_item_paths:
             path.unlink()
     new_item_path = cache_directory / f"{expires_at}~{key}"
-    with open(new_item_path, "w") as f:
+    with open(new_item_path, "w", encoding="utf-8") as f:
         json.dump(item, f)
     logger.debug("New cache item has been created: %s", new_item_path)
 
