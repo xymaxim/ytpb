@@ -1,0 +1,54 @@
+From 3ef7e62563f251cfb7f7aaa338f8bf4d2035fad4 Mon Sep 17 00:00:00 2001
+From: Maxim Stolyarchuk <maxim.stolyarchuk@gmail.com>
+Date: Mon, 6 May 2024 09:46:57 +0300
+Subject: [PATCH 2/2] Revert "http: Improve handling of Content-Range with
+ Transfer-Encoding:chunked"
+
+This reverts commit c1228315c97acbe7a6220b4a5f282bd93edbeb42.
+---
+ libavformat/http.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
+
+diff --git a/libavformat/http.c b/libavformat/http.c
+index bdfed92e21..ec8c48f04f 100644
+--- a/libavformat/http.c
++++ b/libavformat/http.c
+@@ -138,7 +138,6 @@ typedef struct HTTPContext {
+     int64_t expires;
+     char *new_location;
+     AVDictionary *redirect_cache;
+-    uint64_t filesize_from_content_range;
+     int respect_retry_after;
+     unsigned int retry_after;
+     int reconnect_max_retries;
+@@ -863,7 +862,7 @@ static void parse_content_range(URLContext *h, const char *p)
+         p     += 6;
+         s->off = strtoull(p, NULL, 10);
+         if ((slash = strchr(p, '/')) && strlen(slash) > 0)
+-            s->filesize_from_content_range = strtoull(slash + 1, NULL, 10);
++            s->filesize = strtoull(slash + 1, NULL, 10);
+     }
+     if (s->seekable == -1 && (!s->is_akamai || s->filesize != 2147483647))
+         h->is_streamed = 0; /* we _can_ in fact seek */
+@@ -1379,7 +1378,6 @@ static int http_read_header(URLContext *h)
+     av_freep(&s->new_location);
+     s->expires = 0;
+     s->chunksize = UINT64_MAX;
+-    s->filesize_from_content_range = UINT64_MAX;
+ 
+     for (;;) {
+         int parsed_http_code = 0;
+@@ -1408,10 +1406,6 @@ static int http_read_header(URLContext *h)
+     if (http_err)
+         return http_err;
+ 
+-    // filesize from Content-Range can always be used, even if using chunked Transfer-Encoding
+-    if (s->filesize_from_content_range != UINT64_MAX)
+-        s->filesize = s->filesize_from_content_range;
+-
+     if (s->seekable == -1 && s->is_mediagateway && s->filesize == 2000000000)
+         h->is_streamed = 1; /* we can in fact _not_ seek */
+ 
+-- 
+2.45.0
+
