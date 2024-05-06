@@ -55,8 +55,7 @@ def ffprobe_show_entries(
     if streams_to_select:
         command_args += f" -select_streams {streams_to_select}"
     cp = run_ffprobe(input_path, command_args, capture_output=True, check=True)
-    output = cp.stdout.decode().rstrip("\n")
-    return output
+    return cp.stdout.decode().rstrip()
 
 
 def ffmpeg_stream_copy(input_path: Path, output_path: Path):
