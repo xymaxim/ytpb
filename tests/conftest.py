@@ -71,7 +71,9 @@ def create_cache_file(
     some_base_url = streams_in_list[0].base_url
     expired_at = int(some_base_url.split("/expire/")[1].split("/")[0])
 
-    with open(test_cache_directory / f"{expired_at}~{video_id}", "w") as f:
+    with open(
+        test_cache_directory / f"{expired_at}~{video_id}", "w", encoding="utf-8"
+    ) as f:
         test_cached_item = {
             "info": asdict(active_live_video_info),
             "streams": [asdict(stream) for stream in streams_in_list],
@@ -212,7 +214,7 @@ def video_base_url() -> str:
 
 @pytest.fixture()
 def youtube_dl_info() -> dict:
-    with open(TEST_DATA_PATH / "info-1695928670.json") as f:
+    with open(TEST_DATA_PATH / "info-1695928670.json", encoding="utf-8") as f:
         return json.load(f)
 
 

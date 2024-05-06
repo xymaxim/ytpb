@@ -304,7 +304,9 @@ def test_create_playback_from_expired_cache(
 
     frozen_time = datetime.fromisoformat("2123-09-28T17:00:00+00:00").timestamp()
     expired_at = int(frozen_time - 10)
-    with open(test_cache_directory / f"{expired_at}~{video_id}", "w") as f:
+    with open(
+        test_cache_directory / f"{expired_at}~{video_id}", "w", encoding="utf-8"
+    ) as f:
         test_cache = {
             "info": asdict(active_live_video_info),
             "streams": [asdict(stream) for stream in streams_in_list],

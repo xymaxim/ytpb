@@ -61,7 +61,7 @@ def test_refresh_mpd(
 ) -> None:
     # Given:
     manifest_path = tmp_path / "manifest.mpd"
-    with open(manifest_path, "w") as f:
+    with open(manifest_path, "w", encoding="utf-8") as f:
         f.write(dash_manifest)
 
     # When:
@@ -86,7 +86,7 @@ def test_refresh_mpd(
     assert result.exit_code == 0
     assert result.output == expected_out
 
-    with open(manifest_path) as f:
+    with open(manifest_path, encoding="utf-8") as f:
         refreshed_manifest = f.read()
 
     actual_diff = list(

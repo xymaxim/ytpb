@@ -18,7 +18,7 @@ def read_gap_case_fixture_data(path: Path) -> dict:
         duration_s: str
 
     data = {}
-    with open(path) as f:
+    with open(path, encoding="utf-8") as f:
         reader = csv.reader(f, delimiter=",")
         next(reader)
         for fields in reader:
