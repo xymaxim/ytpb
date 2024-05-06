@@ -75,4 +75,4 @@ line-length = 88
 
 [tool.pytest.ini_options]
 pm-patterns-base-dir = "tests/data/expected/"
-pm-pattern-file-fmt = "{fn}{callspec}"
+pm-pattern-file-fmt = "{fn}{callspec}{suffix}"

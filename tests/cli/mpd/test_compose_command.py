@@ -5,7 +5,6 @@ from unittest.mock import MagicMock, patch
 from urllib.parse import urljoin
 
 import pytest
-
 import toml
 from freezegun import freeze_time
 
@@ -18,6 +17,7 @@ from freezegun import freeze_time
         ("none", "itag eq 243 or itag eq 244"),
     ],
 )
+@pytest.mark.expect_suffix(suffix=os.name)
 def test_compose_mpd(
     audio_formats,
     video_formats,
@@ -53,6 +53,7 @@ def test_compose_mpd(
     assert result.output == expected_out
 
 
+@pytest.mark.expect_suffix(os.name)
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_compose_mpd_with_no_streams(
     ytpb_cli_invoke: Callable,
