@@ -154,7 +154,7 @@ def setup_logging(level: int) -> None:
         processors=[
             structlog.processors.add_log_level,
             structlog.processors.StackInfoRenderer(),
-            structlog.processors.TimeStamper(fmt="%s.%f", utc=True),
+            structlog.processors.TimeStamper(fmt="iso", utc=True),
             structlog.dev.ConsoleRenderer(
                 exception_formatter=structlog.dev.plain_traceback,
                 # For details about NO_COLOR, see https://no-color.org/
