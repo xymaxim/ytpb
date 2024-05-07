@@ -3,11 +3,12 @@ name: Windows tests preparation
 on:
   workflow_dispatch:
 
+env:
+  python-version: 3.11
+
 jobs:
   prepare:
     runs-on: windows-latest
-    with:
-      python-version: 3.11
 
     steps:
     - uses: actions/checkout@v4
@@ -17,10 +18,10 @@ jobs:
         ffmpeg-version: release
         architecture: ""
         github-token: ${{ github.server_url == 'https://github.com' && github.token || '' }}
-    - name: Set up Python ${{ python-version }}
+    - name: Set up Python ${{ env.python-version }}
       uses: actions/setup-python@v5
       with:
-        python-version: ${{ python-version }}
+        python-version: ${{ env.python-version }}
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
