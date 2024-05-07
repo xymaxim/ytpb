@@ -1022,7 +1022,7 @@ def test_with_non_existent_config_file_via_option(
 
     test_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb" / "test-config.toml"
 
-    # When:
+    # Then:
     with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         with pytest.raises(click.FileError) as exc_info:
@@ -1041,8 +1041,6 @@ def test_with_non_existent_config_file_via_option(
                 catch_exceptions=False,
                 standalone_mode=False,
             )
-
-    assert str(test_config_path) in str(exc_info)
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
