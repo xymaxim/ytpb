@@ -1,11 +1,12 @@
 Run playback for https://www.youtube.com/watch?v=kHwmzef842g
 (<<) Collecting info about the video...
-Stream 'Webcam ZÃ¼rich HB' is alive!
-This representation will be in the manifest:
-                          (Audio)                           
-    itag    | Format        | Codec         | Sampling      
+Stream 'Webcam Zürich HB' is alive!
+These 2 representations will be in the manifest:
+                          (Video)                           
+    itag    | Format        | Codec         | Quality       
 ------------|---------------|---------------|---------------
-    140     | mp4           | mp4a.40.2     | 44100 Hz      
+    243     | webm          | vp9           | 360p          
+    244     | webm          | vp9           | 480p          
 
 (<<) Locating start and end in the stream... done.
 Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
