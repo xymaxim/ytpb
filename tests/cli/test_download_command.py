@@ -1015,12 +1015,12 @@ def test_with_non_existent_config_file_via_option(
             }
         }
     }
-    default_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb/config.toml"
+    default_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb" / "config.toml"
     default_config_path.parent.mkdir(parents=True)
     with default_config_path.open("w", encoding="utf-8") as f:
         toml.dump(default_config, f)
 
-    test_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "test-config.toml"
+    test_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb" / "test-config.toml"
 
     # When:
     with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
