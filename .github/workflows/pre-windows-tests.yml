@@ -9,7 +9,8 @@ env:
 jobs:
   prepare:
     runs-on: windows-latest
-
+    permissions:
+      contents: write
     steps:
     - uses: actions/checkout@v4
     - name: Set up FFmpeg
@@ -34,7 +35,6 @@ jobs:
       with:
         branch: auto/pre-windows-tests
         delete-branch: true
-        token: ${{ secrets.CREATE_PULL_REQUEST_TOKEN }}
         commit-message: "test(windows): Create new test pattern files for Windows"
         labels: github
         title: "auto: Add new test pattern files for Windows"
