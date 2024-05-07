@@ -32,14 +32,12 @@ jobs:
     - name: Save test expectation files
       id: save
       run: |
-        python -m pytest tests --pm-save-patterns || true
-        git add --intent-to-add .
-        echo "EXPECTATION_PATHS=$(git diff --name-only)" > $GITHUB_OUTPUT
+        python -m pytest tests --pm-save-patterns
     - name: Upload created test expectation files
       uses: actions/upload-artifact@v4
       with:
         name: ${{ matrix.os }}-expectations
-        path: ${{ steps.save.outputs.EXPECTATION_PATHS }}
+        path: tests/data/expected
 
   push:
     runs-on: ubuntu-latest
