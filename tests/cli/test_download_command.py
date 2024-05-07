@@ -1,6 +1,7 @@
 import glob
 import os
 import pickle
+import platform
 import re
 import shutil
 from datetime import datetime, timezone
@@ -40,7 +41,7 @@ from ytpb.playback import RewindInterval, RewindMoment
         ("PT3S/2023-03-25T23:33:58+00", "233355+00.mp4"),
     ],
 )
-@pytest.mark.expect_suffix(os.name)
+@pytest.mark.expect_suffix(platform.system())
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_download_within_interval(
     interval: str,
@@ -347,7 +348,7 @@ def test_save_segments_to_temp_in_preview_mode(
     "audio_format,video_format",
     [("itag eq 140", "itag eq 244"), ("itag eq 140", "none"), ("none", "itag eq 244")],
 )
-@pytest.mark.expect_suffix(os.name)
+@pytest.mark.expect_suffix(platform.system())
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_download_audio_and_or_video(
     audio_format: str | None,
@@ -572,7 +573,7 @@ def test_keep_temp_option(
     assert os.path.exists(run_temp_directory / "7959120.i140.mp4")
 
 
-@pytest.mark.expect_suffix(os.name)
+@pytest.mark.expect_suffix(platform.system())
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_no_merge_option(
     ytpb_cli_invoke: Callable,
@@ -619,7 +620,7 @@ def test_no_merge_option(
     assert not os.path.exists(run_temp_directory)
 
 
-@pytest.mark.expect_suffix(os.name)
+@pytest.mark.expect_suffix(platform.system())
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_dry_run_option(
     ytpb_cli_invoke: Callable,
@@ -666,7 +667,7 @@ def test_dry_run_option(
     assert not os.path.exists(run_temp_directory)
 
 
-@pytest.mark.expect_suffix(os.name)
+@pytest.mark.expect_suffix(platform.system())
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_no_cut_option(
     ytpb_cli_invoke: Callable,

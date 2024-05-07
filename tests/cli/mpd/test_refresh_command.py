@@ -1,7 +1,7 @@
 # ruff: noqa: E501
 
 import copy
-import os
+import platform
 from dataclasses import asdict
 from difflib import unified_diff
 from pathlib import Path
@@ -46,7 +46,7 @@ def dash_manifest(audio_base_url: str, video_base_url: str) -> str:
 """
 
 
-@pytest.mark.expect_suffix(os.name)
+@pytest.mark.expect_suffix(platform.system())
 @freeze_time("2023-08-16T02:30:00+02:00", tz_offset=2)
 def test_refresh_mpd(
     ytpb_cli_invoke: Callable,

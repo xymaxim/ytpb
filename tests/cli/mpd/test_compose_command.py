@@ -1,4 +1,5 @@
 import os
+import platform
 from pathlib import Path
 from typing import Callable
 from unittest.mock import MagicMock, patch
@@ -17,7 +18,7 @@ from freezegun import freeze_time
         ("none", "itag eq 243 or itag eq 244"),
     ],
 )
-@pytest.mark.expect_suffix(suffix=os.name)
+@pytest.mark.expect_suffix(platform.system())
 def test_compose_mpd(
     audio_formats,
     video_formats,
@@ -53,7 +54,7 @@ def test_compose_mpd(
     assert result.output == expected_out
 
 
-@pytest.mark.expect_suffix(os.name)
+@pytest.mark.expect_suffix(platform.system())
 @freeze_time("2023-03-26T00:00:00+00:00")
 def test_compose_mpd_with_no_streams(
     ytpb_cli_invoke: Callable,
