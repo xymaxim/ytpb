@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        os: [macos-13, windows-latest]
+        os: [windows-latest]
     steps:
     - uses: actions/checkout@v4
     - name: Set up FFmpeg
