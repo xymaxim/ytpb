@@ -34,7 +34,7 @@ jobs:
       run: |
         python -m pytest tests --pm-save-patterns
     - name: Upload created test expectation files
-      uses: actions/upload-artifact@v4.1.7
+      uses: actions/upload-artifact@v4
       with:
         name: expectations-${{ matrix.os }}
         path: tests/data/expected
