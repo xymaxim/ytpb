@@ -1,0 +1,62 @@
+name: Create test expectations
+
+on:
+  workflow_dispatch:
+
+env:
+  python-version: 3.11
+
+jobs:
+  create:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, windows-latest]
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up FFmpeg
+      uses: FedericoCarboni/setup-ffmpeg@v3
+      with:
+        ffmpeg-version: release
+        architecture: ''
+        github-token: ${{ github.server_url == 'https://github.com' && github.token || '' }}
+    - name: Set up Python ${{ env.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ env.python-version }}
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        python -m pip install .[test]
+    - name: Save test expectation files
+      id: save
+      run: |
+        python -m pytest tests --pm-save-patterns || true
+        git add --intent-to-add .
+        echo EXPECTATION_PATHS="$(git diff --name-only)" > $GITHUB_OUTPUT
+    - name: Upload created test expectation files
+      uses: actions/upload-artifact@v4
+      with:
+        name: ${{ matrix.os }}-expectations
+        path: ${{ steps.save.outputs.EXPECTATION_PATHS }}
+
+    push:
+      runs-on: ubuntu-latest
+      permissions:
+        contents: write
+        pull-requests: write
+      steps:
+      - uses: actions/checkout@v4
+      - name: Fetch all created test expectation files
+        uses: actions/download-artifact@v4
+      - name: Create a pull request
+        uses: peter-evans/create-pull-request@v6
+        with:
+          branch: auto/pre-tests
+          delete-branch: true
+          commit-message: "test: Create test expectation files"
+          labels: github
+          title: "auto: Add new test expectation files"
+          body: |
+            Automatically created by the `create-expectations` GitHub Action.
