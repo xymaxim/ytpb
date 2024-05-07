@@ -34,7 +34,7 @@ jobs:
       run: |
         python -m pytest tests --pm-save-patterns || true
         git add --intent-to-add .
-        echo EXPECTATION_PATHS="$(git diff --name-only)" > $GITHUB_OUTPUT
+        echo "EXPECTATION_PATHS=$(git diff --name-only)" > $GITHUB_OUTPUT
     - name: Upload created test expectation files
       uses: actions/upload-artifact@v4
       with:
