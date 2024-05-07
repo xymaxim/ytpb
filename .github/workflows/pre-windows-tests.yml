@@ -28,7 +28,7 @@ jobs:
         python -m pip install .[test]
     - name: Save test pattern files
       run: |
-        python -m pytest tests --pm-save-patterns
+        python -m pytest tests --pm-save-patterns || true
     - name: Create pull request
       uses: peter-evans/create-pull-request@v6
       with:
