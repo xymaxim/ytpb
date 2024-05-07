@@ -41,22 +41,22 @@ jobs:
         name: ${{ matrix.os }}-expectations
         path: ${{ steps.save.outputs.EXPECTATION_PATHS }}
 
-    push:
-      runs-on: ubuntu-latest
-      permissions:
-        contents: write
-        pull-requests: write
-      steps:
-      - uses: actions/checkout@v4
-      - name: Fetch all created test expectation files
-        uses: actions/download-artifact@v4
-      - name: Create a pull request
-        uses: peter-evans/create-pull-request@v6
-        with:
-          branch: auto/pre-tests
-          delete-branch: true
-          commit-message: "test: Create test expectation files"
-          labels: github
-          title: "auto: Add new test expectation files"
-          body: |
-            Automatically created by the `create-expectations` GitHub Action.
+  push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+    - uses: actions/checkout@v4
+    - name: Fetch all created test expectation files
+      uses: actions/download-artifact@v4
+    - name: Create a pull request
+      uses: peter-evans/create-pull-request@v6
+      with:
+        branch: auto/pre-tests
+        delete-branch: true
+        commit-message: "test: Create test expectation files"
+        labels: github
+        title: "auto: Add new test expectation files"
+        body: |
+          Automatically created by the `create-expectations` GitHub Action.
