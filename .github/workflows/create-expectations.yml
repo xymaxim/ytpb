@@ -10,9 +10,9 @@ jobs:
   create:
     runs-on: ${{ matrix.os }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
-        os: [macos-latest, windows-latest]
+        os: [macos-13, windows-latest]
     steps:
     - uses: actions/checkout@v4
     - name: Set up FFmpeg
