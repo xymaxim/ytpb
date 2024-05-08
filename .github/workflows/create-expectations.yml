@@ -80,4 +80,4 @@ jobs:
         body: |
           Automatically created by the `create-expectations` GitHub workflow.
 
-          https://github.com/${{ GITHUB_REPOSITORY }}/actions/runs/${{ GITHUB_RUN_ID }}
+          https://github.com/${{ env.GITHUB_REPOSITORY }}/actions/runs/${{ env.GITHUB_RUN_ID }}
