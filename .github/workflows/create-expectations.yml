@@ -3,18 +3,11 @@ name: Create test expectations
 on:
   workflow_dispatch:
     inputs:
-      ubuntu:
-        description: ubuntu
-        default: false
-        type: boolean
-      macos:
-        description: macos
-        default: true
-        type: boolean
-      windows:
-        description: windows
-        default: true
-        type: boolean
+      runs-on:
+        description: Runs on
+        type: string
+        default: ["macos-13", "windows-latest"]
+        required: true
 
 env:
   python-version: 3.11
@@ -25,11 +18,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        runner: [ubuntu-latest, macos-13, windows-latest]
-    if: |
-      (runner.name == 'ubuntu-latest' && inputs.ubuntu) ||
-      (runner.name == 'macos-13' && inputs.macos) ||
-      (runner.name == 'windows-latest' && inputs.windows)
+        runner: ${{ fromJSON(inputs.runs-on) }}
     steps:
     - uses: actions/checkout@v4
     - name: Set up FFmpeg
