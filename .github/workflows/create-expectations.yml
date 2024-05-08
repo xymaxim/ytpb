@@ -1,10 +1,26 @@
 name: Create test expectations
 
-on:
-  workflow_dispatch:
-
 env:
   python-version: 3.11
+  ubuntu-runner: ubuntu-latest
+  macos-runner: macos-13
+  windows-runner: windows-latest
+
+on:
+  workflow_dispatch:
+    inputs:
+      ubuntu:
+        description: ${{ env.ubuntu-runner }}
+        default: false
+        type: boolean
+      macos:
+        description: ${{ env.macos-runner }}
+        default: true
+        type: boolean
+      windows:
+        description: ${{ env.windows-runner }}
+        default: true
+        type: boolean
 
 jobs:
   create:
@@ -12,7 +28,10 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        runner: [macos-13, windows-latest]
+        runner:
+          - ${{ inputs.ubuntu && env.ubuntu-runner || '' }}
+          - ${{ inputs.macos && env.macos-runner || '' }}
+          - ${{ inputs.windows && env.windows-runner || '' }}
     steps:
     - uses: actions/checkout@v4
     - name: Set up FFmpeg
@@ -64,4 +83,4 @@ jobs:
         body: |
           Automatically created by the `create-expectations` GitHub workflow.
 
-          https://github.com/'$GITHUB_REPOSITORY'/actions/runs/'$GITHUB_RUN_ID'
+          https://github.com/${{ GITHUB_REPOSITORY }}/actions/runs/${{ GITHUB_RUN_ID }}
