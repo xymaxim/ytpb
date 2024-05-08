@@ -133,7 +133,7 @@ def base_cli(
             report_handle.close()
             with FileInput(report_handle.name, inplace=True) as fi:
                 for line in fi:
-                    print(re.sub("/ip/([\w.:]+)/", "/ip/0.0.0.0/", line), end="")
+                    print(re.sub(r"/ip/([\w.:]+)/", "/ip/0.0.0.0/", line), end="")
 
     setup_logging(logging.DEBUG if debug else logging.WARNING)
 
