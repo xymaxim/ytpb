@@ -17,9 +17,6 @@ on:
         type: boolean
 
 env:
-  ubuntu-runner: ubuntu-latest
-  macos-runner: macos-13
-  windows-runner: windows-latest
   python-version: 3.11
 
 jobs:
@@ -29,9 +26,9 @@ jobs:
       fail-fast: true
       matrix:
         runner:
-          - ${{ inputs.ubuntu && env.ubuntu-runner || '' }}
-          - ${{ inputs.macos && env.macos-runner || '' }}
-          - ${{ inputs.windows && env.windows-runner || '' }}
+          - ${{ inputs.ubuntu && 'ubuntu-latest' || '' }}
+          - ${{ inputs.macos && 'macos-13' || '' }}
+          - ${{ inputs.windows && 'windows-latest' || '' }}
     steps:
     - uses: actions/checkout@v4
     - name: Set up FFmpeg
