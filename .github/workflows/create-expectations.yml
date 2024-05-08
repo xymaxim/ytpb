@@ -26,9 +26,9 @@ jobs:
       fail-fast: true
       matrix:
         runner:
-          - ${{ inputs.ubuntu && 'ubuntu-latest' }}
-          - ${{ inputs.macos && 'macos-13' }}
-          - ${{ inputs.windows && 'windows-latest' }}
+          - ${{ inputs.ubuntu && 'ubuntu-latest' || null }}
+          - ${{ inputs.macos && 'macos-13' || null }}
+          - ${{ inputs.windows && 'windows-latest' || null }}
     steps:
     - uses: actions/checkout@v4
     - name: Set up FFmpeg
