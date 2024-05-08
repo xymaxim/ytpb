@@ -22,6 +22,7 @@ jobs:
 
       - name: Compose build version label
         id: version
+        shell: bash
         run: |
           YTPB_VERSION="$(python -m hatch version)"
           PYTHON_VERSION="${{ steps.setup-python.outputs.python-version }}"
