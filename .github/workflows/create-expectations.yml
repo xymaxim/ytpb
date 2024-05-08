@@ -27,9 +27,9 @@ jobs:
       matrix:
         runner: [ubuntu-latest, macos-13, windows-latest]
     if: |
-      (matrix.runner == 'ubuntu-latest' && inputs.ubuntu) ||
-      (matrix.runner == 'macos-13' && inputs.macos) ||
-      (matrix.runner == 'windows-latest' && inputs.windows-latest)
+      (runner.name == 'ubuntu-latest' && inputs.ubuntu) ||
+      (runner.name == 'macos-13' && inputs.macos) ||
+      (runner.name == 'windows-latest' && inputs.windows)
     steps:
     - uses: actions/checkout@v4
     - name: Set up FFmpeg
