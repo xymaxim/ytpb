@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       runs-on:
-        description: Runs on
+        description: "Runs on"
         type: string
         default: ["macos-13", "windows-latest"]
         required: true
