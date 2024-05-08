@@ -1,0 +1,43 @@
+name: Build Windows executable
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up latest Python
+        uses: actions/setup-python@v5
+        id: setup-python
+        with:
+          python-version: "*"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install .
+          python -m pip install pyinstaller
+
+      - name: Compose build version label
+        id: version
+        run: |
+          YTPB_VERSION="$(python -m hatch version)"
+          PYTHON_VERSION="${{ steps.setup-python.outputs.python-version }}"
+          echo "VERSION_LABEL=${YTPB_VERSION}-${PYTHON_VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Build Windows executable binary
+        run: >
+          python -m pyinstaller --onefile
+          --name "ytpb-${{ steps.version.outputs.VERSION_LABEL }}.exe"
+          src/ytpb/__main__.py
+
+      - name: Simple and quick check
+        run: dist/ytpb-"${{ steps.version.outputs.VERSION_LABEL }}".exe --version
+
+      - name: Upload built binary as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ytpb-windows
+          path: dist/ytpb-"${{ steps.version.outputs.VERSION_LABEL }}".exe
