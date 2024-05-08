@@ -1,0 +1,4 @@
+Run playback for https://www.youtube.com/watch?v=kHwmzef842g
+(<<) Collecting info about the video...
+Stream 'Webcam Zürich HB' is alive!
+error: No streams found matching '--audio-formats' format spec: 'mime_type contains audio and [itag eq 0]'

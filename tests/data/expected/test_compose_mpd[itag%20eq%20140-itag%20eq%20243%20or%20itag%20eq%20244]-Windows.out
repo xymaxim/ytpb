@@ -1,0 +1,21 @@
+Run playback for https://www.youtube.com/watch?v=kHwmzef842g
+(<<) Collecting info about the video...
+Stream 'Webcam Zürich HB' is alive!
+These 3 representations will be in the manifest:
+                          (Audio)                           
+    itag    | Format        | Codec         | Sampling      
+------------|---------------|---------------|---------------
+    140     | mp4           | mp4a.40.2     | 44100 Hz      
+                          (Video)                           
+    itag    | Format        | Codec         | Quality       
+------------|---------------|---------------|---------------
+    243     | webm          | vp9           | 360p          
+    244     | webm          | vp9           | 480p          
+
+(<<) Locating start and end in the stream... done.
+Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
+  Actual end: 25 Mar 2023 23:33:58 +0000, seq. 7959121
+
+(<<) Composing MPEG-DASH manifest...
+Success! Saved to 'Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00.mpd'.
+~ Note that the manifest will expire in 6 hours.
