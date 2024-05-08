@@ -12,21 +12,19 @@ jobs:
         uses: actions/setup-python@v5
         id: setup-python
         with:
-          python-version: "*"
+          python-version: 3.12
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install .
           python -m pip install pyinstaller
+          python -m pip install .
 
       - name: Compose build version label
         id: version
         shell: bash
         run: |
-          YTPB_VERSION="$(python -m hatch version)"
-          PYTHON_VERSION="${{ steps.setup-python.outputs.python-version }}"
-          echo "VERSION_LABEL=${YTPB_VERSION}-${PYTHON_VERSION}" >> $GITHUB_OUTPUT
+          echo "VERSION_LABEL=$(ytpb --version)" >> $GITHUB_OUTPUT
 
       - name: Build Windows executable binary
         run: >
@@ -42,3 +40,4 @@ jobs:
         with:
           name: ytpb-windows
           path: dist/ytpb-"${{ steps.version.outputs.VERSION_LABEL }}".exe
+          retention-days: 3
