@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 name = "ytpb"
 description = "A playback for YouTube live streams"
 readme = "README.rst"
-version = "2024.5.3"
+dynamic = ["version"]
 authors = [ { name = "Maxim Stolyarchuk" } ]
 keywords = [ "youtube" ]
 classifiers = [
@@ -63,6 +63,16 @@ ytpb = "ytpb.__main__:main"
 
 [tool.hatch.metadata]
 allow-direct-references = true
+
+[tool.hatch.version]
+source = "vcs"
+
+[tool.hatch.version.raw-options]
+version_scheme = "calver-by-date"
+local_scheme = "dirty-tag"
+
+[tool.hatch.build.hooks.vcs]
+version-file = "src/ytpb/_version.py"
 
 [tool.hatch.build.targets.sdist]
 exclude = [

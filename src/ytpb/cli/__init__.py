@@ -15,6 +15,7 @@ import cloup
 import structlog
 import toml
 
+from ytpb._version import __version__
 from ytpb.cli.commands.capture import capture_group
 from ytpb.cli.commands.download import download_command
 from ytpb.cli.commands.mpd import mpd_group
@@ -95,7 +96,7 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
         is_eager=True,
     ),
 )
-@click.version_option(None, "-V", "--version", message="%(version)s")
+@click.version_option(__version__, "-V", "--version", message="%(version)s")
 @click.pass_context
 def base_cli(
     ctx: click.Context,
