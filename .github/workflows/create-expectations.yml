@@ -1,26 +1,26 @@
 name: Create test expectations
 
-env:
-  python-version: 3.11
-  ubuntu-runner: ubuntu-latest
-  macos-runner: macos-13
-  windows-runner: windows-latest
-
 on:
   workflow_dispatch:
     inputs:
       ubuntu:
-        description: ${{ env.ubuntu-runner }}
+        description: ubuntu
         default: false
         type: boolean
       macos:
-        description: ${{ env.macos-runner }}
+        description: macos
         default: true
         type: boolean
       windows:
-        description: ${{ env.windows-runner }}
+        description: windows
         default: true
         type: boolean
+
+env:
+  ubuntu-runner: ubuntu-latest
+  macos-runner: macos-13
+  windows-runner: windows-latest
+  python-version: 3.11
 
 jobs:
   create:
