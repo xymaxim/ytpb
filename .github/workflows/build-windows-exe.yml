@@ -28,7 +28,7 @@ jobs:
 
       - name: Build Windows executable binary
         run: >
-          python -m pyinstaller --onefile
+          python -m PyInstaller --onefile
           --name "ytpb-${{ steps.version.outputs.VERSION_LABEL }}.exe"
           src/ytpb/__main__.py
 
