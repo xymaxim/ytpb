@@ -3,10 +3,10 @@ name: Create test expectations
 on:
   workflow_dispatch:
     inputs:
-      runs-on:
+      runners:
         description: "Runs on"
         type: string
-        default: ["macos-13", "windows-latest"]
+        default: '["macos-13", "windows-latest"]'
         required: true
 
 env:
@@ -18,7 +18,7 @@ jobs:
     strategy:
       fail-fast: true
       matrix:
-        runner: ${{ fromJSON(inputs.runs-on) }}
+        runner: ${{ fromJSON(inputs.runners) }}
     steps:
     - uses: actions/checkout@v4
     - name: Set up FFmpeg
