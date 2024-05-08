@@ -1,7 +1,8 @@
 Run playback for https://www.youtube.com/watch?v=kHwmzef842g
 (<<) Collecting info about the video...
-Stream 'Webcam Zürich HB' is alive!
-This representation will be downloaded:
+Stream 'Webcam Z�rich HB' is alive!
+These representations will be downloaded:
+   - Audio: itag 140, mp4 (mp4a.40.2), 44100 Hz
    - Video: itag 244, webm (vp9), 854x480, 30 fps
 
 (<<) Locating start and end in the stream... done.
@@ -10,7 +11,8 @@ Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
 
 (<<) Preparing and saving the excerpt...
 1. Downloading segments 7959120-7959121:
-   - Video ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2 100% eta 0:00:00
+   - Audio ---------------------------- 2/2 100% eta 0:00:00
+   - Video ---------------------------- 2/2 100% eta 0:00:00
 2. Merging segments (no cut requested)... done.
 
-Success! Saved to 'Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00.webm'.
+Success! Saved to 'Webcam-Zurich-HB_kHwmzef842g_20230325T233354+00.mkv'.
