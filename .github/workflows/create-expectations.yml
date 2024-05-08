@@ -8,11 +8,11 @@ env:
 
 jobs:
   create:
-    runs-on: ${{ matrix.os }}
+    runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: true
       matrix:
-        os: [windows-latest]
+        runner: [macos-13, windows-latest]
     steps:
     - uses: actions/checkout@v4
     - name: Set up FFmpeg
@@ -36,7 +36,7 @@ jobs:
     - name: Upload created test expectation files
       uses: actions/upload-artifact@v4
       with:
-        name: expectations-${{ matrix.os }}
+        name: expectations-${{ matrix.runner }}
         path: tests/data/expected
 
   push:
@@ -62,6 +62,6 @@ jobs:
         labels: github
         title: "auto: Add new test expectation files"
         body: |
-          Automatically created by the `create-expectations` GitHub Action.
+          Automatically created by the `create-expectations` GitHub workflow.
 
-          https://github.com/"$GITHUB_REPOSITORY"/actions/runs/"$GITHUB_RUN_ID"
+          https://github.com/'$GITHUB_REPOSITORY'/actions/runs/'$GITHUB_RUN_ID'
