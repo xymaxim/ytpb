@@ -62,3 +62,5 @@ jobs:
         title: "auto: Add new test expectation files"
         body: |
           Automatically created by the `create-expectations` GitHub Action.
+
+          https://github.com/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID
