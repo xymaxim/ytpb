@@ -149,10 +149,7 @@ class Segment:
 
     def get_actual_duration(self) -> float:
         """Gets the actual segment duration in seconds."""
-        with av.open(str(self.local_path)) as container:
+        with av.open(self.local_path) as container:
             first_packet, *_, last_packet = list(container.demux())[:-1]
-            end_timestamp = last_packet.pts + last_packet.duration
-            duration = (end_timestamp - first_packet.pts) * float(
-                first_packet.time_base
-            )
-            return duration
+        end_pts = last_packet.pts + last_packet.duration
+        return float((end_pts - first_packet.pts) * first_packet.time_base)
