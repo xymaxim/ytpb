@@ -33,11 +33,11 @@ jobs:
           src/ytpb/__main__.py
 
       - name: Simple and quick check
-        run: dist/ytpb-"${{ steps.version.outputs.VERSION_LABEL }}".exe --version
+        run: dist/ytpb-${{ steps.version.outputs.VERSION_LABEL }}.exe --version
 
       - name: Upload built binary as artifact
         uses: actions/upload-artifact@v4
         with:
           name: ytpb-windows
-          path: dist/ytpb-"${{ steps.version.outputs.VERSION_LABEL }}".exe
+          path: dist/ytpb-*.exe
           retention-days: 3
