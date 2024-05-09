@@ -1,17 +1,19 @@
 from datetime import timezone
 from pathlib import Path
 
+import av
 import pytest
-
-from ytpb.utils.av import show_duration, show_number_of_streams
 
 
 def assert_number_of_streams(file_path: Path, expected: int):
-    assert show_number_of_streams(file_path) == expected
+    with av.open(file_path) as container:
+        assert len(container.streams) == expected
 
 
 def assert_approx_duration(file_path: Path, expected: float, abs: float = 2.2e-2):
-    actual = show_duration(file_path, {"video": 0})
+    with av.open(file_path) as container:
+        actual = container.duration / 1e6
+
     approx_expected = pytest.approx(expected, abs=abs)
     if actual != approx_expected:
         raise AssertionError(

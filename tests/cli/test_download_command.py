@@ -10,6 +10,7 @@ from typing import Callable
 from unittest.mock import MagicMock, patch
 from urllib.parse import urljoin
 
+import av
 import click
 import pytest
 import responses
@@ -21,7 +22,6 @@ from helpers import assert_approx_duration
 
 from ytpb.config import DEFAULT_CONFIG
 from ytpb.playback import RewindInterval, RewindMoment
-from ytpb.utils.av import show_metadata
 
 
 @pytest.mark.parametrize(
@@ -1530,9 +1530,10 @@ def test_metadata_tags_with_cutting(
         )
 
     # Then:
-    metadata_tags = show_metadata(
-        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
-    )
+    output_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
+    with av.open(output_path) as container:
+        metadata_tags = container.metadata
+
     assert metadata_tags["title"] == "Webcam Zürich HB"
     assert metadata_tags["author"] == "David Gubler"
     assert metadata_tags["comment"] == stream_url
@@ -1582,9 +1583,10 @@ def test_metadata_tags_without_cutting(
         )
 
     # Then:
-    metadata_tags = show_metadata(
-        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
-    )
+    output_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
+    with av.open(output_path) as container:
+        metadata_tags = container.metadata
+
     assert metadata_tags["title"] == "Webcam Zürich HB"
     assert metadata_tags["author"] == "David Gubler"
     assert metadata_tags["comment"] == stream_url
