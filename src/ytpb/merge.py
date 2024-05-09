@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any
 
 from ytpb import ffmpeg
+from ytpb.utils.av import show_codec_name
 
 __all__ = ("merge_segments", "mux_and_cut_boundary_segment")
 
@@ -65,9 +66,7 @@ def mux_and_cut_boundary_segment(
         )
 
     if video_segment_path and video_codec is None:
-        video_codec = ffmpeg.ffprobe_show_entries(
-            video_segment_path, "stream=codec_name", streams_to_select="v:0"
-        )
+        video_codec = show_codec_name(video_segment_path, {"video": 0})
 
     ffmpeg_input_options = []
     ffmpeg_codecs_options = []
@@ -245,9 +244,7 @@ def merge_segments(
 
         video_codec: str | None = None
         if video_segment_paths:
-            video_codec = ffmpeg.ffprobe_show_entries(
-                video_segment_paths[0], "stream=codec_name", streams_to_select="v:0"
-            )
+            video_codec = show_codec_name(video_segment_paths[0], {"video": 0})
 
         if num_of_segments == 1:
             segment_trimmed_path = Path(temp_directory, "a.a" + output_extension)

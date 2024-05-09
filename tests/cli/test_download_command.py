@@ -20,8 +20,8 @@ from freezegun import freeze_time
 from helpers import assert_approx_duration
 
 from ytpb.config import DEFAULT_CONFIG
-from ytpb.ffmpeg import ffprobe_show_entries
 from ytpb.playback import RewindInterval, RewindMoment
+from ytpb.utils.av import show_metadata
 
 
 @pytest.mark.parametrize(
@@ -1530,20 +1530,18 @@ def test_metadata_tags_with_cutting(
         )
 
     # Then:
-    format_tags = ffprobe_show_entries(
-        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4",
-        "format_tags",
-        "default",
+    metadata_tags = show_metadata(
+        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
     )
-    assert "TAG:title=Webcam Zürich HB" in format_tags
-    assert "TAG:author=David Gubler" in format_tags
-    assert f"TAG:comment={stream_url}" in format_tags
-    assert "TAG:input_start_time=1679787235.000000" in format_tags
-    assert "TAG:input_end_time=1679787237.000000" in format_tags
-    assert "TAG:actual_start_time=1679787235.000000" in format_tags
-    assert "TAG:actual_end_time=1679787237.000000" in format_tags
-    assert "TAG:start_sequence_number=7959120" in format_tags
-    assert "TAG:end_sequence_number=7959121" in format_tags
+    assert metadata_tags["title"] == "Webcam Zürich HB"
+    assert metadata_tags["author"] == "David Gubler"
+    assert metadata_tags["comment"] == stream_url
+    assert metadata_tags["input_start_time"] == "1679787235.000000"
+    assert metadata_tags["input_end_time"] == "1679787237.000000"
+    assert metadata_tags["actual_start_time"] == "1679787235.000000"
+    assert metadata_tags["actual_end_time"] == "1679787237.000000"
+    assert metadata_tags["start_sequence_number"] == "7959120"
+    assert metadata_tags["end_sequence_number"] == "7959121"
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
@@ -1584,20 +1582,18 @@ def test_metadata_tags_without_cutting(
         )
 
     # Then:
-    format_tags = ffprobe_show_entries(
-        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4",
-        "format_tags",
-        "default",
+    metadata_tags = show_metadata(
+        tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
     )
-    assert "TAG:title=Webcam Zürich HB" in format_tags
-    assert "TAG:author=David Gubler" in format_tags
-    assert f"TAG:comment={stream_url}" in format_tags
-    assert "TAG:input_start_time=1679787235.000000" in format_tags
-    assert "TAG:input_end_time=1679787237.000000" in format_tags
-    assert "TAG:actual_start_time=1679787234.491176" in format_tags
-    assert "TAG:actual_end_time=1679787238.486826" in format_tags
-    assert "TAG:start_sequence_number=7959120" in format_tags
-    assert "TAG:end_sequence_number=7959121" in format_tags
+    assert metadata_tags["title"] == "Webcam Zürich HB"
+    assert metadata_tags["author"] == "David Gubler"
+    assert metadata_tags["comment"] == stream_url
+    assert metadata_tags["input_start_time"] == "1679787235.000000"
+    assert metadata_tags["input_end_time"] == "1679787237.000000"
+    assert metadata_tags["actual_start_time"] == "1679787234.491176"
+    assert metadata_tags["actual_end_time"] == "1679787238.486826"
+    assert metadata_tags["start_sequence_number"] == "7959120"
+    assert metadata_tags["end_sequence_number"] == "7959121"
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
