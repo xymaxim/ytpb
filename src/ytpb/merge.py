@@ -15,7 +15,7 @@ from typing import Any
 
 import av
 
-from ytpb import ffmpeg
+from ytpb.utils import ffmpeg
 
 __all__ = ("merge_segments", "mux_and_cut_boundary_segment")
 

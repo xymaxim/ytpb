@@ -28,23 +28,3 @@ def run_ffmpeg(
         raise FFmpegRunError from e
 
     return cp
-
-
-def run_ffprobe(
-    input_path: Path, args: str | list[str], **subprocess_kwargs: Any
-) -> subprocess.CompletedProcess:
-    command = ["ffprobe", "-v", "0", "-hide_banner"]
-
-    if isinstance(args, str):
-        command.extend(shlex.split(args))
-    else:
-        command.extend(args)
-    command.append(input_path)
-
-    cp = subprocess.run(command, **subprocess_kwargs)
-    return cp
-
-
-def ffmpeg_stream_copy(input_path: Path, output_path: Path):
-    subprocess_kwargs = {"capture_output": True, "check": True}
-    run_ffmpeg(f"-i {input_path} -c copy {output_path}", **subprocess_kwargs)
