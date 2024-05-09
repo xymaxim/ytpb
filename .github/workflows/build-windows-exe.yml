@@ -8,10 +8,8 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-tags: true
-          fetch-depth: 1
-          ref: ${{ github.head_ref }}
+      - name: Fetch Git tags manually
+        run: git fetch --prune --unshallow --tags
       - name: Set up latest Python
         uses: actions/setup-python@v5
         id: setup-python
