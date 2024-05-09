@@ -8,8 +8,10 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Fetch Git tags manually
         run: git fetch --prune --unshallow --tags
+
       - name: Set up latest Python
         uses: actions/setup-python@v5
         id: setup-python
@@ -20,23 +22,20 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           python -m pip install hatch pyinstaller
-          git describe --tags
-          python -m pip install -vvv .
 
       - name: Compose build version label
         id: version
         shell: bash
-        run: |
-          echo "VERSION_LABEL=$(ytpb --version)" >> $GITHUB_OUTPUT
+        run: echo "VERSION=$(python -m hatch version)" >> $GITHUB_OUTPUT
 
       - name: Build Windows executable binary
         run: >
           python -m PyInstaller --onefile
-          --name "ytpb-${{ steps.version.outputs.VERSION_LABEL }}.exe"
+          --name "ytpb-${{ steps.version.outputs.VERSION }}.exe"
           src/ytpb/__main__.py
 
       - name: Simple and quick check
-        run: dist/ytpb-${{ steps.version.outputs.VERSION_LABEL }}.exe --version
+        run: dist/ytpb-${{ steps.version.outputs.VERSION }}.exe --version
 
       - name: Upload built binary as artifact
         uses: actions/upload-artifact@v4
