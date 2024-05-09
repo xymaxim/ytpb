@@ -17,7 +17,8 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pyinstaller
+          python -m pip install hatch pyinstaller
+          git describe --tags
           python -m pip install -vvv .
 
       - name: Compose build version label
