@@ -31,7 +31,7 @@ jobs:
 
       - name: Build Windows executable binary
         run: >
-          python -m PyInstaller --onefile
+          python -m PyInstaller --noconsole --onefile
           --name "ytpb-${{ steps.version.outputs.VERSION }}"
           src/ytpb/__main__.py
 
