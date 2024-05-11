@@ -404,8 +404,8 @@ def download_command(
 
     cut_kwargs: dict[str, float] = {}
     if not no_cut:
-        cut_at_start = rewind_interval.start.cut_at if preview_start else 0
-        cut_at_end = rewind_interval.end.cut_at if preview_end else 0
+        cut_at_start = 0 if preview_start else rewind_interval.start.cut_at
+        cut_at_end = 0 if preview_end else rewind_interval.end.cut_at
         cut_kwargs.update(
             {
                 "cut_at_start": cut_at_start,
