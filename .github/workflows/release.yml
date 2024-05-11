@@ -6,6 +6,9 @@ on:
       - "v[0-9]+.*"
       - "test"
 
+permissions:
+  contents: write
+
 jobs:
   build-windows:
     uses: ./.github/workflows/build-windows-exe.yml
