@@ -26,7 +26,7 @@ jobs:
           mkdir assets && cd assets
           curl -L -H "Accept: application/vnd.github+json" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            ${WINDOWS_BINARY_URL} | unzip -j -d .
+            ${WINDOWS_BINARY_URL} | unzip -j -d . -
           ls
 
       - name: Draft a GitHub release and upload assets
