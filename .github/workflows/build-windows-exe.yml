@@ -6,6 +6,8 @@ on:
 jobs:
   build:
     runs-on: windows-latest
+    outputs:
+      binary-url: ${{ steps.upload.outputs.artifact-url }}
     steps:
       - uses: actions/checkout@v4
 
@@ -40,6 +42,7 @@ jobs:
 
       - name: Upload built binary as artifact
         uses: actions/upload-artifact@v4
+        id: upload
         with:
           name: ytpb-windows
           path: dist/ytpb-*.exe
