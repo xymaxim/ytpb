@@ -4,8 +4,9 @@ on:
   workflow_dispatch:
   workflow_call:
     outputs:
-      description: "The artifact ID of the build binary"
-      artifact-id: ${{ jobs.build.outputs.artifact-id }}
+      artifact-id:
+        description: "The artifact ID of the build binary"
+        value: ${{ jobs.build.outputs.artifact-id }}
 
 jobs:
   build:
