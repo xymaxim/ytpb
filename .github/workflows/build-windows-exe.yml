@@ -3,12 +3,16 @@ name: Build Windows executable
 on:
   workflow_dispatch:
   workflow_call:
+    outputs:
+      description: The artifact ID of the build binary
+      artifact-id: ${{ jobs.build.outputs.artifact-id }}
 
 jobs:
   build:
     runs-on: windows-latest
     outputs:
-      binary-url: ${{ steps.upload.outputs.artifact-url }}
+      artifact-id: ${{ steps.upload.outputs.artifact-id }}
+
     steps:
       - uses: actions/checkout@v4
 

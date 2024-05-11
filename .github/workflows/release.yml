@@ -16,12 +16,12 @@ jobs:
     steps:
       - name: Check artifact URL
         env:
-          WINDOWS_BINARY_URL: ${{ needs.build-windows.outputs.binary-url }}
+          WINDOWS_BINARY_URL: "https://api.github.com/repos/xymaxim/ytpb/actions/artifacts/${{ needs.build-windows.outputs.artifact-id }}/zip"
         run: echo "$WINDOWS_BINARY_URL"
 
       - name: Download and extract artifacts
         env:
-          WINDOWS_BINARY_URL: ${{ needs.build-windows.outputs.binary-url }}
+          WINDOWS_BINARY_URL: "https://api.github.com/repos/xymaxim/ytpb/actions/artifacts/${{ needs.build-windows.outputs.artifact-id }}/zip"
         run: |
           mkdir assets && cd assets
           curl -L -H "Accept: application/vnd.github+json" \
