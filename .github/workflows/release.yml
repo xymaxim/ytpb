@@ -23,11 +23,10 @@ jobs:
         env:
           WINDOWS_BINARY_URL: "https://api.github.com/repos/xymaxim/ytpb/actions/artifacts/${{ needs.build-windows.outputs.artifact-id }}/zip"
         run: |
-          mkdir assets && cd assets
           curl -L -H "Accept: application/vnd.github+json" \
             -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            ${WINDOWS_BINARY_URL} | unzip -j -d . -
-          ls
+            -o artifact.zip ${WINDOWS_BINARY_URL}
+          unzip -j -d assets artifact.zip
 
       - name: Draft a GitHub release and upload assets
         uses: softprops/action-gh-release@v2
