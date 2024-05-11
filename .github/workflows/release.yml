@@ -14,13 +14,14 @@ jobs:
     runs-on: ubuntu-latest
     needs: build-windows
     steps:
-      - env:
-          WINDOWS_BINARY_URL: ${{ needs.build-windows.outputs.binary-url }}
-
       - name: Check artifact URL
+        env:
+          WINDOWS_BINARY_URL: ${{ needs.build-windows.outputs.binary-url }}
         run: echo "$WINDOWS_BINARY_URL"
 
       - name: Download and extract artifacts
+        env:
+          WINDOWS_BINARY_URL: ${{ needs.build-windows.outputs.binary-url }}
         run: |
           mkdir assets && cd assets
           curl -L -H "Accept: application/vnd.github+json" \
