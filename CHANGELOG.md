@@ -3,6 +3,19 @@
 Versions follow [Calendar Versioning](https://calver.org) with the `YYYY.M.D`
 scheme.
 
+## [Unreleased]
+
+- Add Windows support ([#11](https://github.com/xymaxim/ytpb/issues/11))
+- Fix not cutting issue introduced in v2024.5.3
+  ([b0e4f3d](https://github.com/xymaxim/ytpb/commit/b0e4f3d10c6aad7401716f49e681bb97c2ee6d03))
+- Replace all `ffprobe` calls to `av`'s function calls
+- Move `ytpb.ffmpeg` to `ytpb.utils.ffmpeg`
+- Add CI workflows to create test expectation files, build Windows binaries,
+  publish on PyPI, and draft a GitHub release
+- Start using dynamic versioning via `hatch-vcs`
+- Convert CHANGELOG from ReST to Markdown format
+- Apply patches from files in Containerfile to avoid merge conflicts
+
 ## [2024.5.3]
 
 - Add support for resumable downloads
@@ -82,6 +95,7 @@ scheme.
 - Change the first segment locating step: don\'t limit it to two jumps
   ([#8](https://github.com/xymaxim/ytpb/pull/8))
 
+[Unreleased]: https://github.com/xymaxim/ytpb/compare/v2024.5.3..HEAD
 [2024.5.3]: https://github.com/xymaxim/ytpb/compare/v2024.4.20..v2024.5.3
 [2024.4.20]: https://github.com/xymaxim/ytpb/compare/v2024.4.12..v2024.4.20
 [2024.4.12]: https://github.com/xymaxim/ytpb/compare/v2024.3.27..v2024.4.12
