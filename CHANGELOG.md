@@ -12,6 +12,7 @@ scheme.
 - Move `ytpb.ffmpeg` to `ytpb.utils.ffmpeg`
 - Add CI workflows to create test expectation files, build Windows binaries,
   publish on PyPI, and draft a GitHub release
+- Run CI tests on Linux, MacOS, and Windows
 - Start using dynamic versioning via `hatch-vcs`
 - Convert CHANGELOG from ReST to Markdown format
 - Apply patches from files in Containerfile to avoid merge conflicts
