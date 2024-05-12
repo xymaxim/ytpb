@@ -1494,6 +1494,43 @@ def test_dump_segment_urls_option(
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
+def test_dump_rewind_interval_option(
+    add_responses_callback_for_reference_base_url,
+    add_responses_callback_for_segment_urls,
+    ytpb_cli_invoke: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                "--dump-rewind-interval",
+                stream_url,
+            ],
+        )
+
+    assert result.exit_code == 0
+    assert result.output == "7959120-7959121\n"
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
 def test_metadata_tags_with_cutting(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,

@@ -134,6 +134,11 @@ def render_download_output_path_context(
         is_flag=True,
         help="Print segment URLs and exit.",
     ),
+    cloup.option(
+        "--dump-rewind-interval",
+        is_flag=True,
+        help="Print segments rewind interval and exit.",
+    ),
 )
 @cloup.option_group(
     "Output options",
@@ -194,6 +199,7 @@ def download_command(
     preview_end: bool,
     dump_base_urls: bool,
     dump_segment_urls: bool,
+    dump_rewind_interval: bool,
     output_path: Path,
     keep_segments: bool,
     segments_output_dir_option: Path,
@@ -209,7 +215,7 @@ def download_command(
     keep_temp: bool,
     stream_url: str,
 ) -> int:
-    if dump_base_urls or dump_segment_urls:
+    if dump_base_urls or dump_segment_urls or dump_rewind_interval:
         suppress_output()
 
     if no_merge:
@@ -363,6 +369,15 @@ def download_command(
             click.echo(build_dump_url(audio_stream.base_url), ctx.obj.original_stdout)
         if video_format:
             click.echo(build_dump_url(video_stream.base_url), ctx.obj.original_stdout)
+        sys.exit()
+
+    if dump_rewind_interval:
+        click.echo(
+            "{start}-{end}".format(
+                start=rewind_interval.start.sequence, end=rewind_interval.end.sequence
+            ),
+            ctx.obj.original_stdout,
+        )
         sys.exit()
 
     # if preview_mode and interval[1] != "..":
