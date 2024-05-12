@@ -62,7 +62,12 @@ Demos
 Installation
 ************
 
-Ytpb requires Python 3.11 or higher. The recommended way is to use `pipx
+Ytpb requires Python 3.11 or higher and has been `tested
+<https://github.com/xymaxim/ytpb/actions/workflows/ci.yml>`__ on Linux, macOS,
+and Windows. Also, it needs the latest version of `FFmpeg
+<https://ffmpeg.org/download.html>`__ to be installed.
+
+When you have all required dependencies, you can install Ytpb via `pipx
 <https://pypa.github.io/pipx/>`_::
 
   $ pipx install ytpb
@@ -70,6 +75,12 @@ Ytpb requires Python 3.11 or higher. The recommended way is to use `pipx
 To upgrade to the newer version, do::
 
   $ pipx upgrade ytpb
+
+For Windows binaries, check `releases
+<https://github.com/xymaxim/ytpb/releases>`__ on GitHub. Make sure to `add
+<https://www.wikihow.com/Install-FFmpeg-on-Windows>`__ the ``ffmpeg.exe`` file
+to your system path or place it in the folder next to the Ytpb binary. Now
+you're ready to start using Ytpb in Terminal (not via double-click).
 
 Further reading
 ***************
