@@ -1,8 +1,22 @@
 import datetime
 
+from ytpb._version import __version__
+
 project = "Ytpb"
-copyright = f"{datetime.date.today().year}, Maxim Stolyarchuk"
 author = "Maxim Stolyarchuk"
+copyright = f"{datetime.date.today().year}, Maxim Stolyarchuk"
+version = __version__
+release = version
+
+templates_path = ["_templates"]
+
+html_sidebars = {
+    "**": [
+        "sidebarintro.html",
+        "navigation.html",
+        "searchbox.html",
+    ]
+}
 
 extensions = [
     "sphinx.ext.autodoc",
