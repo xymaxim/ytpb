@@ -52,6 +52,7 @@ dev = [
 docs = [
     "sphinx==7.2.6",
     "sphinx-toolbox==3.5.0",
+    "myst-parser==3.0.1",
 ]
 
 [project.urls]

@@ -9,6 +9,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.napoleon",
     "sphinx_toolbox.collapse",
+    "myst_parser",
 ]
 
 autosectionlabel_prefix_document = True
