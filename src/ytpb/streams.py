@@ -102,14 +102,15 @@ class Streams(MutableSet):
             Check for attributes is strict. This means that the following code
             will fail with :class:`.QueryError` because audio streams don't have
             the ``height`` attribute::
-              audio_streams.query("height eq 1080")
+
+                audio_streams.query("height eq 1080")
 
         Examples:
             Query streams of a specific media format using aliases::
 
-              playback.streams.query(
-                  "@webm", aliases={"webm": "format eq webm"}
-              )
+                playback.streams.query(
+                    "@webm", aliases={"webm": "format eq webm"}
+                )
 
         References:
             https://ytpb.readthedocs.io/en/latest/reference.html#format-spec
