@@ -38,14 +38,18 @@ Compose and play
 If you want to play an excerpt without downloading it, you can compose a static
 MPEG-DASH manifest (MPD) file: ::
 
-  $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT30S <STREAM> && ls
+  $ ytpb mpd compose -i 2024-01-02T10:20:00+00/PT1H <STREAM> && ls
   $ Stream-Title_20240102T102000+00.mpd
 
 By default, a manifest will contain a 128k AAC audio track and 720p (or better)
 30 fps VP9 video channels.
 
-Next, you can play a composed manifest in a player that supports MPEG-DASH (for
-example, with `mpv <https://mpv.io/>`__):
+Next, you can play a composed manifest in a player that supports MPEG-DASH. For
+example, with `VLC <https://www.videolan.org/vlc/>`__::
+
+  $ vlc Stream-Title_20240102T102000+00.mpd
+
+Or with `mpv <https://mpv.io/>`__:
 
   *Note:* Requires a custom mpv build. See `#4
   <https://github.com/xymaxim/ytpb/issues/4>`__ for details.

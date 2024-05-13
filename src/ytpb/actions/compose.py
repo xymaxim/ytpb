@@ -126,8 +126,8 @@ def compose_static_mpd(
         }
     )
 
-    for element in period_element.findall(".//AdaptationSet", namespaces=NS):
-        element.insert(0, copy.deepcopy(segment_template_element))
+    for element in period_element.findall(".//Representation", namespaces=NS):
+        element.insert(1, copy.deepcopy(segment_template_element))
 
     output = etree.tostring(
         etree.ElementTree(mpd_element),
@@ -172,8 +172,8 @@ def compose_dynamic_mpd(
         E("SegmentTimeline", E("S", d=str(segment_duration_ms), r="-1"))
     )
 
-    for element in period_element.findall(".//AdaptationSet", namespaces=NS):
-        element.insert(0, copy.deepcopy(segment_template_element))
+    for element in period_element.findall(".//Representation", namespaces=NS):
+        element.insert(1, copy.deepcopy(segment_template_element))
 
     output = etree.tostring(
         etree.ElementTree(mpd_element),
