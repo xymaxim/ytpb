@@ -177,7 +177,7 @@ def render_download_output_path_context(
     help="Path to a MPEG-DASH manifest.",
 )
 @click.option(
-    "-X",
+    "-x",
     "--dry-run",
     is_flag=True,
     help="Run without downloading.",

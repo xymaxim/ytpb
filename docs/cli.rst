@@ -640,7 +640,7 @@ latency) seconds.
 Running without downloading
 ===========================
 
-There is a dry run mode (``-X / --dry-run``) to run without downloading. It
+There is a dry run mode (``-x / --dry-run``) to run without downloading. It
 could be useful if you are not interested in having an output excerpt file: for
 example, you want to locate the rewind interval or debug just the first steps
 (by combining a dry run mode with the ``--debug`` global option).
