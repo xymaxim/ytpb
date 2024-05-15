@@ -94,17 +94,17 @@ Further reading
 After installing, check out the `documentation`_. The `Why Ytpb?`_ page explains
 why the project exists. For main usage scenarios, see `Quick start`_. The
 `Command line application`_ page goes deeper into the usage. `Reference`_
-provides some general aspects and terms. `Cookbook`_ contains some useful
-examples. See `Changelog`_ for the history of releases. Have any issues,
-suggestions, or want to contribute code? `Contributing`_ tells how to
+provides some general aspects and terms. See `Questions`_ for answers to the
+most anticipated questions. `Cookbook`_ contains some useful examples.  Have any
+issues, suggestions, or want to contribute code? `Contributing`_ tells how to
 participate in the project.
 
 .. _Why Ytpb?: https://ytpb.readthedocs.io/en/latest/why.html
 .. _Quick start: https://ytpb.readthedocs.io/en/latest/quick.html
 .. _Command line application: https://ytpb.readthedocs.io/en/latest/cli.html
 .. _Reference: https://ytpb.readthedocs.io/en/latest/reference.html
+.. _Questions: https://ytpb.readthedocs.io/en/latest/questions.html
 .. _Cookbook: https://ytpb.readthedocs.io/en/latest/cookbook.html
-.. _Changelog: https://ytpb.readthedocs.io/en/latest/changelog.html
 
 Similar projects
 ****************

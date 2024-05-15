@@ -11,6 +11,7 @@
    cli
    package/index
    reference
+   Questions <questions>
 
 .. toctree::
    :maxdepth: 1
