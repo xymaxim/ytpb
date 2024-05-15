@@ -624,22 +624,6 @@ See `config.toml.example`_ for the available fields and their descriptions.
 Advanced usage
 **************
 
-Merging without cutting
-=======================
-
-The boundary segments are cutted to exact times during the merging step to
-make an excerpt. It may take some time to re-encode boundary segments. If you
-don't need exact precision, it could be practical to omit cutting via the
-``--no-cut`` option. In this case the accuracy will be slightly reduced, which
-will depend on the constant segment duration (or type of `live-streaming latency
-<https://support.google.com/youtube/answer/7444635?hl=en>`_): in the worst case,
-the error will be 1 (for ultra-low latency), 2 (low latency), or 5 (normal
-latency) seconds.
-
-::
-
-   $ ytpb download ... --no-cut <STREAM>
-
 Running without downloading
 ===========================
 
