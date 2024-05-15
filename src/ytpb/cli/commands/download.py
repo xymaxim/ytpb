@@ -170,13 +170,6 @@ def render_download_output_path_context(
     ),
 )
 @click.option(
-    "-m",
-    "--from-manifest",
-    metavar="PATH",
-    type=click.Path(path_type=Path),
-    help="Path to a MPEG-DASH manifest.",
-)
-@click.option(
     "-x",
     "--dry-run",
     is_flag=True,
@@ -208,7 +201,6 @@ def download_command(
     cut: bool,
     no_metadata: bool,
     no_merge: bool,
-    from_manifest: Path,
     dry_run: bool,
     yt_dlp: bool,
     ignore_resume: bool,

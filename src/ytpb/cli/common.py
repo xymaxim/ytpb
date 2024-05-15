@@ -42,33 +42,23 @@ def create_playback(ctx: click.Context) -> Playback:
         fetcher = YtpbInfoFetcher(stream_url)
 
     try:
-        if from_manifest := ctx.params.get("from_manifest"):
-            try:
-                click.echo("Run playback from manifest file")
-                playback = Playback.from_manifest(from_manifest, fetcher=fetcher)
-            except BaseUrlExpiredError:
-                click.echo("Oh no, the manifest has been expired, exit.", err=True)
-                sys.exit(1)
-        else:
-            click.echo(f"Run playback for {stream_url}")
-            click.echo("(<<) Collecting info about the video...")
+        click.echo(f"Run playback for {stream_url}")
+        click.echo("(<<) Collecting info about the video...")
 
-            force_update_cache = ctx.params.get("force_update_cache", False)
-            need_read_cache = not (
-                ctx.params.get("no_cache", True) or force_update_cache
-            )
-            if need_read_cache:
-                try:
-                    playback = Playback.from_cache(stream_url, fetcher=fetcher)
-                except CachedItemNotFoundError:
-                    logger.debug("Could not find unexpired cached item for the video")
-                    playback = Playback.from_url(
-                        stream_url, fetcher=fetcher, write_to_cache=True
-                    )
-            else:
+        force_update_cache = ctx.params.get("force_update_cache", False)
+        need_read_cache = not (ctx.params.get("no_cache", True) or force_update_cache)
+        if need_read_cache:
+            try:
+                playback = Playback.from_cache(stream_url, fetcher=fetcher)
+            except CachedItemNotFoundError:
+                logger.debug("Could not find unexpired cached item for the video")
                 playback = Playback.from_url(
-                    stream_url, fetcher=fetcher, write_to_cache=force_update_cache
+                    stream_url, fetcher=fetcher, write_to_cache=True
                 )
+        else:
+            playback = Playback.from_url(
+                stream_url, fetcher=fetcher, write_to_cache=force_update_cache
+            )
     except BroadcastStatusError as e:
         match e.status:
             case BroadcastStatus.NONE:
