@@ -5,7 +5,7 @@ This section describes using the Ytpb command line application: from an overview
 and usage of commands to configuring and advanced use cases.
 
 .. contents:: Contents
-   :depth: 2
+   :depth: 3
    :backlinks: top
    :local:
 
@@ -570,12 +570,15 @@ deleted. Do you want to keep them? There are two options here.
   Success! Saved to 'Stream-Title_abcdefgh123_20240102T102030+00.mkv'.
   ~ Segments are kept in 'Stream-Title_abcdefgh123_20240102T102030+00'.
 
-The download destination can be changed via ``--segments-output-dir``::
+The download destination can be changed via ``-s / --segments-output-dir``::
 
   $ ytpb download ... -S --segments-output-dir segments <STREAM>
   ...
   Success! Saved to 'Stream-Title_abcdefgh123_20240102T102030+00.mkv'.
   ~ Segments are kept in 'segments'.
+
+Of course, the later option can be used without ``-S``, for example, to download
+segments (will be deleted after merging) to another drive.
 
 *Second*, download only segment files without merging them::
 
