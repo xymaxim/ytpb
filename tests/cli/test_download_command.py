@@ -1524,7 +1524,59 @@ def test_dump_rewind_interval_option(
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
-def test_metadata_tags_with_cutting(
+def test_metadata_tags_without_cutting_and_iso_dates(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
+
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                "2023-03-25T23:33:55+00/2023-03-25T23:33:57+00",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                stream_url,
+            ],
+            catch_exceptions=False,
+            standalone_mode=False,
+        )
+
+    # Then:
+    output_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
+    with av.open(output_path) as container:
+        metadata_tags = container.metadata
+
+    assert metadata_tags["title"] == "Webcam Zürich HB"
+    assert metadata_tags["author"] == "David Gubler"
+    assert metadata_tags["comment"] == stream_url
+    assert metadata_tags["input_start_date"] == "2023-03-25T23:33:55.000000Z"
+    assert metadata_tags["input_end_date"] == "2023-03-25T23:33:57.000000Z"
+    assert metadata_tags["actual_start_date"] == "2023-03-25T23:33:54.491176Z"
+    assert metadata_tags["actual_end_date"] == "2023-03-25T23:33:58.486826Z"
+    assert metadata_tags["start_sequence_number"] == "7959120"
+    assert metadata_tags["end_sequence_number"] == "7959121"
+
+
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_metadata_tags_with_cutting_and_iso_dates(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -1568,62 +1620,10 @@ def test_metadata_tags_with_cutting(
     assert metadata_tags["title"] == "Webcam Zürich HB"
     assert metadata_tags["author"] == "David Gubler"
     assert metadata_tags["comment"] == stream_url
-    assert metadata_tags["input_start_time"] == "1679787235.000000"
-    assert metadata_tags["input_end_time"] == "1679787237.000000"
-    assert metadata_tags["actual_start_time"] == "1679787235.000000"
-    assert metadata_tags["actual_end_time"] == "1679787237.000000"
-    assert metadata_tags["start_sequence_number"] == "7959120"
-    assert metadata_tags["end_sequence_number"] == "7959121"
-
-
-@freeze_time("2023-03-26T00:00:00+00:00")
-def test_metadata_tags_without_cutting(
-    ytpb_cli_invoke: Callable,
-    add_responses_callback_for_reference_base_url: Callable,
-    add_responses_callback_for_segment_urls: Callable,
-    fake_info_fetcher: MagicMock,
-    stream_url: str,
-    audio_base_url: str,
-    tmp_path: Path,
-) -> None:
-    # Given:
-    add_responses_callback_for_reference_base_url()
-    add_responses_callback_for_segment_urls(
-        urljoin(audio_base_url, r"sq/\w+"),
-    )
-
-    # When:
-    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
-        mock_fetcher.return_value = fake_info_fetcher
-        result = ytpb_cli_invoke(
-            [
-                "--no-config",
-                "download",
-                "--no-cache",
-                "--interval",
-                "2023-03-25T23:33:55+00/2023-03-25T23:33:57+00",
-                "-af",
-                "itag eq 140",
-                "-vf",
-                "none",
-                stream_url,
-            ],
-            catch_exceptions=False,
-            standalone_mode=False,
-        )
-
-    # Then:
-    output_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
-    with av.open(output_path) as container:
-        metadata_tags = container.metadata
-
-    assert metadata_tags["title"] == "Webcam Zürich HB"
-    assert metadata_tags["author"] == "David Gubler"
-    assert metadata_tags["comment"] == stream_url
-    assert metadata_tags["input_start_time"] == "1679787235.000000"
-    assert metadata_tags["input_end_time"] == "1679787237.000000"
-    assert metadata_tags["actual_start_time"] == "1679787234.491176"
-    assert metadata_tags["actual_end_time"] == "1679787238.486826"
+    assert metadata_tags["input_start_date"] == "2023-03-25T23:33:55.000000Z"
+    assert metadata_tags["input_end_date"] == "2023-03-25T23:33:57.000000Z"
+    assert metadata_tags["actual_start_date"] == "2023-03-25T23:33:55.000000Z"
+    assert metadata_tags["actual_end_date"] == "2023-03-25T23:33:57.000000Z"
     assert metadata_tags["start_sequence_number"] == "7959120"
     assert metadata_tags["end_sequence_number"] == "7959121"
 

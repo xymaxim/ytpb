@@ -144,6 +144,9 @@ DEFAULT_CONFIG = AddressableDict(
                     "lowercase": False,
                 },
             },
+            "metadata": {
+                "dates": "iso",
+            },
         },
     }
 )

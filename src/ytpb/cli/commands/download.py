@@ -1,7 +1,7 @@
 import pickle
 import shutil
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import partial
 from pathlib import Path
 
@@ -600,22 +600,40 @@ def download_command(
 
             metadata_tags: dict[str, str] = {}
             if not no_metadata:
-                convert_timestamp_to_string = lambda timestamp: f"{timestamp:.6f}"
+
+                def _convert_date_to_isostring(date: datetime) -> str:
+                    iso_date = date.astimezone(timezone.utc)
+                    return iso_date.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+                metadata_date_converter: Callback[[datetime], str]
+                match ctx.obj.config.traverse("output.metadata.dates"):
+                    case "unix":
+                        metadata_date_converter = lambda d: f"{d.timestamp():.6f}"
+                    case "iso":
+                        metadata_date_converter = _convert_date_to_isostring
+                    case _ as value:
+                        click.echo()
+                        logger.warning(
+                            f"Unknown 'output.metadata.dates = {value}' config value, "
+                            "fallback to 'iso'"
+                        )
+                        metadata_date_converter = _convert_date_to_isostring
+
                 metadata_tags = {
                     "title": playback.info.title,
                     "author": playback.info.author,
                     "comment": playback.video_url,
-                    "actual_start_time": convert_timestamp_to_string(
-                        actual_date_interval.start.timestamp()
+                    "actual_start_date": metadata_date_converter(
+                        actual_date_interval.start
                     ),
-                    "actual_end_time": convert_timestamp_to_string(
-                        actual_date_interval.end.timestamp()
+                    "actual_end_date": metadata_date_converter(
+                        actual_date_interval.end
                     ),
-                    "input_start_time": convert_timestamp_to_string(
-                        requested_date_interval.start.timestamp()
+                    "input_start_date": metadata_date_converter(
+                        requested_date_interval.start
                     ),
-                    "input_end_time": convert_timestamp_to_string(
-                        requested_date_interval.end.timestamp()
+                    "input_end_date": metadata_date_converter(
+                        requested_date_interval.end
                     ),
                     "start_sequence_number": rewind_interval.start.sequence,
                     "end_sequence_number": rewind_interval.end.sequence,
