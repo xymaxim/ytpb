@@ -154,6 +154,7 @@ def render_download_output_path_context(
         "-S", "--keep-segments", is_flag=True, help="Keep downloaded segments."
     ),
     cloup.option(
+        "-s",
         "--segments-output-dir",
         "segments_output_dir_option",
         type=click.Path(path_type=Path),
