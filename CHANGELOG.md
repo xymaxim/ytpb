@@ -6,6 +6,7 @@ scheme.
 ## [Unreleased]
 
 - Make cutting non-default behavior and add the `-c / --cut` option
+  ([88f5578](88f5578af675e5d011b6266f9ca315bb8e47ecac))
 - Remove the `--from-playback` option from `ytpb download`
 - Rename `-X / --dry-run` to `-x / --dry-run`
 - Rename `--segments-output-dir` to `-s / --segments-output-dir`
