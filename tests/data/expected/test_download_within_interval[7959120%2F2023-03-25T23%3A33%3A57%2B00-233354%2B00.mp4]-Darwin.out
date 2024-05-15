@@ -6,7 +6,7 @@ This representation will be downloaded:
 
 (<<) Locating start and end in the stream... done.
 Actual start: 25 Mar 2023 23:33:54 +0000, seq. 7959120
-  Actual end: 25 Mar 2023 23:33:57 +0000, seq. 7959121
+  Actual end: 25 Mar 2023 23:33:58 +0000 (+00:01), seq. 7959121
 
 (<<) Preparing and saving the excerpt...
 1. Downloading segments 7959120-7959121:
