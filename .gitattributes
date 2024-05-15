@@ -1,3 +1,5 @@
 tests/data/** linguist-generated
 *.ipynb linguist-documentation
 tests/data/expected/** binary
+
+config.toml.example linguist-language=TOML
