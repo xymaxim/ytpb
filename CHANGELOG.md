@@ -5,7 +5,10 @@ scheme.
 
 ## [Unreleased]
 
-- Make cutting non-default behavior and add the ``-c / --cut`` option
+- Make cutting non-default behavior and add the `-c / --cut` option
+- Remove the `--from-playback` option from `ytpb download`
+- Rename `-X / --dry-run` to `-x / --dry-run`
+- Rename `--segments-output-dir` to `-s / --segments-output-dir`
 - Change the format of composed MPEG-DASH MPDs from compact to full
   ([#6](https://github.com/xymaxim/ytpb/issues/6))
 
