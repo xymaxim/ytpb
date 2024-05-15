@@ -28,6 +28,12 @@ excerpt. To run downloading in the :ref:`preview mode <Preview mode>`, use the
 
   $ ytpb download -i 2024-01-02T10:20:00+00/PT30S -ps <STREAM>
 
+Note that the duration of an output excerpt :ref:`may be a bit longer <Why is
+the duration longer>` because the merging of media segments is done without
+cutting. You can use the ``-c / --cut`` option to frame-accurately cut an
+excerpt, but this will require additional disk space almost equal to the size of
+an excerpt.
+
 Check also out how to `download
 <https://ytpb.readthedocs.io/en/latest/cookbook.html#download-segments-with-curl>`__
 media segments with an external downloader.

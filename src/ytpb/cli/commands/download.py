@@ -159,8 +159,10 @@ def render_download_output_path_context(
         type=click.Path(path_type=Path),
         help="Location where to download segments to.",
     ),
+    cloup.option(
+        "-c", "--cut", is_flag=True, help="Accurately cut an excerpt at boundaries."
+    ),
     cloup.option("--no-metadata", is_flag=True, help="Do not write metadata tags."),
-    cloup.option("--no-cut", is_flag=True, help="Do not perform excerpt cutting."),
     cloup.option(
         "--no-merge",
         is_flag=True,
@@ -203,8 +205,8 @@ def download_command(
     output_path: Path,
     keep_segments: bool,
     segments_output_dir_option: Path,
+    cut: bool,
     no_metadata: bool,
-    no_cut: bool,
     no_merge: bool,
     from_manifest: Path,
     dry_run: bool,
@@ -418,7 +420,7 @@ def download_command(
     )
 
     cut_kwargs: dict[str, float] = {}
-    if not no_cut:
+    if cut:
         cut_at_start = 0 if preview_start else rewind_interval.start.cut_at
         cut_at_end = 0 if preview_end else rewind_interval.end.cut_at
         cut_kwargs.update(
@@ -598,8 +600,8 @@ def download_command(
                     for sequence in rewind_interval.sequences
                 ]
 
-            if no_cut:
-                click.echo("2. Merging segments (no cut requested)... ", nl=False)
+            if cut:
+                click.echo("2. Merging segments (cut requested)... ", nl=False)
             else:
                 click.echo("2. Merging segments (may take a while)... ", nl=False)
 

@@ -378,7 +378,6 @@ def test_download_audio_and_or_video(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "--no-cut",
                 "--interval",
                 "7959120/7959121",
                 "-af",
@@ -667,50 +666,50 @@ def test_dry_run_option(
     assert not os.path.exists(run_temp_directory)
 
 
-@pytest.mark.expect_suffix(platform.system())
-@freeze_time("2023-03-26T00:00:00+00:00")
-def test_no_cut_option(
-    ytpb_cli_invoke: Callable,
-    add_responses_callback_for_reference_base_url: Callable,
-    add_responses_callback_for_segment_urls: Callable,
-    fake_info_fetcher: MagicMock,
-    stream_url: str,
-    audio_base_url: str,
-    tmp_path: Path,
-    run_temp_directory: Path,
-    expected_out,
-) -> None:
-    # Given:
-    add_responses_callback_for_reference_base_url()
-    add_responses_callback_for_segment_urls(
-        urljoin(audio_base_url, r"sq/\w+"),
-    )
+# @pytest.mark.expect_suffix(platform.system())
+# @freeze_time("2023-03-26T00:00:00+00:00")
+# def test_no_cut_option(
+#     ytpb_cli_invoke: Callable,
+#     add_responses_callback_for_reference_base_url: Callable,
+#     add_responses_callback_for_segment_urls: Callable,
+#     fake_info_fetcher: MagicMock,
+#     stream_url: str,
+#     audio_base_url: str,
+#     tmp_path: Path,
+#     run_temp_directory: Path,
+#     expected_out,
+# ) -> None:
+#     # Given:
+#     add_responses_callback_for_reference_base_url()
+#     add_responses_callback_for_segment_urls(
+#         urljoin(audio_base_url, r"sq/\w+"),
+#     )
 
-    # When:
-    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
-        mock_fetcher.return_value = fake_info_fetcher
-        result = ytpb_cli_invoke(
-            [
-                "--no-config",
-                "download",
-                "--no-cache",
-                "--interval",
-                "2023-03-25T23:33:55+00/2023-03-25T23:33:58+00",
-                "-af",
-                "itag eq 140",
-                "-vf",
-                "none",
-                "--no-cut",
-                stream_url,
-            ],
-        )
+#     # When:
+#     with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+#         mock_fetcher.return_value = fake_info_fetcher
+#         result = ytpb_cli_invoke(
+#             [
+#                 "--no-config",
+#                 "download",
+#                 "--no-cache",
+#                 "--interval",
+#                 "2023-03-25T23:33:55+00/2023-03-25T23:33:58+00",
+#                 "-af",
+#                 "itag eq 140",
+#                 "-vf",
+#                 "none",
+#                 "--no-cut",
+#                 stream_url,
+#             ],
+#         )
 
-    # Then:
-    assert result.exit_code == 0
-    assert result.output == expected_out
-    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
-    assert os.path.exists(expected_path)
-    assert_approx_duration(expected_path, 4.0)
+#     # Then:
+#     assert result.exit_code == 0
+#     assert result.output == expected_out
+#     expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
+#     assert os.path.exists(expected_path)
+#     assert_approx_duration(expected_path, 4.0)
 
 
 @freeze_time("2023-09-28T17:00:00+00:00")
@@ -738,7 +737,6 @@ def test_from_cache(
             [
                 "--no-config",
                 "download",
-                "--no-cut",
                 "--interval",
                 "7959120/7959121",
                 "-af",
@@ -778,7 +776,6 @@ def test_from_empty_cache(
             [
                 "--no-config",
                 "download",
-                "--no-cut",
                 "--interval",
                 "7959120/7959121",
                 "-af",
@@ -822,7 +819,6 @@ def test_ambiguous_format_specs(
             [
                 "--no-config",
                 "download",
-                "--no-cut",
                 "--no-cache",
                 "--interval",
                 "7959120/7959121",
@@ -862,7 +858,6 @@ def test_yt_dlp_option(
                 "--no-config",
                 "download",
                 "--yt-dlp",
-                "--no-cut",
                 "--no-cache",
                 "--interval",
                 "7959120/7959121",
@@ -1167,7 +1162,6 @@ def test_download_via_stream_id(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "--no-cut",
                 "--interval",
                 "7959120/7959121",
                 "-af",
@@ -1321,7 +1315,6 @@ def test_empty_representations(
                 "--no-config",
                 "download",
                 "--dry-run",
-                "--no-cut",
                 "--no-cache",
                 "--interval",
                 "7959120/7959121",
@@ -1554,6 +1547,7 @@ def test_metadata_tags_with_cutting(
                 "--no-config",
                 "download",
                 "--no-cache",
+                "--cut",
                 "--interval",
                 "2023-03-25T23:33:55+00/2023-03-25T23:33:57+00",
                 "-af",
@@ -1608,7 +1602,6 @@ def test_metadata_tags_without_cutting(
                 "--no-cache",
                 "--interval",
                 "2023-03-25T23:33:55+00/2023-03-25T23:33:57+00",
-                "--no-cut",
                 "-af",
                 "itag eq 140",
                 "-vf",
@@ -1691,7 +1684,6 @@ def test_resume_downloading(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "--no-cut",
                 "--interval",
                 "7959120/2023-03-25T23:33:59+00",
                 "-af",
@@ -1740,7 +1732,6 @@ def test_keep_segments(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "--no-cut",
                 "--keep-segments",
                 "--interval",
                 "7959120/7959121",
@@ -1786,7 +1777,6 @@ def test_remove_default_segments_output_directory(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "--no-cut",
                 "--interval",
                 "7959120/7959121",
                 "-af",
@@ -1838,7 +1828,6 @@ def test_remove_created_segments_output_directory(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "--no-cut",
                 "--interval",
                 "7959120/7959121",
                 "-af",
@@ -1889,7 +1878,6 @@ def test_remove_only_rewound_segments(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "--no-cut",
                 "--interval",
                 "7959120/7959121",
                 "-af",
@@ -1936,7 +1924,6 @@ def test_do_not_remove_existing_directory(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "--no-cut",
                 "--interval",
                 "7959120/7959121",
                 "-af",
@@ -1982,7 +1969,6 @@ def test_ignore_resume_option(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "--no-cut",
                 "--ignore-resume",
                 "--interval",
                 "7959120/7959121",
@@ -2055,7 +2041,6 @@ def test_ignore_resume_option_after_unfinished_run(
                 "--no-config",
                 "download",
                 "--no-cache",
-                "--no-cut",
                 "--ignore-resume",
                 "--segments-output-dir",
                 "segments",
