@@ -5,6 +5,7 @@ from typing import Callable
 from unittest.mock import MagicMock, patch
 from urllib.parse import urljoin
 
+import platformdirs
 import pytest
 import toml
 from freezegun import freeze_time
@@ -147,7 +148,7 @@ def test_with_default_config(
             }
         }
     }
-    config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb/config.toml"
+    config_path = platformdirs.user_config_path() / "ytpb/config.toml"
     config_path.parent.mkdir(parents=True)
     with config_path.open("w", encoding="utf-8") as f:
         toml.dump(config, f)

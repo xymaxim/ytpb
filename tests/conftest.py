@@ -7,6 +7,7 @@ from pathlib import Path
 from typing import Callable
 from unittest.mock import Mock, patch
 
+import platformdirs
 import pytest
 import responses
 from pytest_socket import disable_socket
@@ -39,11 +40,15 @@ def mocked_responses() -> responses.RequestsMock:
 
 
 @pytest.fixture(autouse=True)
-def set_enviromental_variables(
+def monkeypatch_directories(
     monkeypatch: pytest.MonkeyPatch, tmp_path: Path, run_temp_directory: Path
 ):
-    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "config"))
-    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "cache"))
+    monkeypatch.setattr(
+        "platformdirs.user_config_path", Mock(return_value=tmp_path / "config")
+    )
+    monkeypatch.setattr(
+        "platformdirs.user_cache_path", Mock(return_value=tmp_path / "cache")
+    )
     monkeypatch.setattr(
         "ytpb.playback.Playback.get_temp_directory",
         Mock(return_value=run_temp_directory),
@@ -52,7 +57,7 @@ def set_enviromental_variables(
 
 @pytest.fixture()
 def cache_directory() -> Path:
-    cache_directory_path = Path(os.environ["XDG_CACHE_HOME"])
+    cache_directory_path = platformdirs.user_cache_path()
     cache_directory_path.mkdir(parents=True)
     return cache_directory_path
 
@@ -65,7 +70,7 @@ def create_cache_file(
     streams_in_list: list[AudioOrVideoStream],
     tmp_path: Path,
 ) -> None:
-    test_cache_directory = Path(os.environ["XDG_CACHE_HOME"]) / "ytpb"
+    test_cache_directory = platformdirs.user_cache_path() / "ytpb"
     test_cache_directory.mkdir(parents=True)
 
     some_base_url = streams_in_list[0].base_url

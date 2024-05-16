@@ -12,10 +12,13 @@ from urllib.parse import urljoin
 
 import av
 import click
+
+import platformdirs
 import pytest
 import responses
 import toml
 
+# from platformdirs import platformdirs.user_config_path
 from conftest import TEST_DATA_PATH
 from freezegun import freeze_time
 from helpers import assert_approx_duration
@@ -904,7 +907,7 @@ def test_with_default_config_file(
             }
         }
     }
-    config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb/config.toml"
+    config_path = platformdirs.user_config_path() / "ytpb/config.toml"
     config_path.parent.mkdir(parents=True)
     with config_path.open("w", encoding="utf-8") as f:
         toml.dump(config, f)
@@ -955,7 +958,7 @@ def test_with_config_via_option(
             }
         }
     }
-    default_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb/config.toml"
+    default_config_path = platformdirs.user_config_path() / "ytpb/config.toml"
     default_config_path.parent.mkdir(parents=True)
     with default_config_path.open("w", encoding="utf-8") as f:
         toml.dump(default_config, f)
@@ -967,7 +970,7 @@ def test_with_config_via_option(
             }
         }
     }
-    test_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "test-config.toml"
+    test_config_path = platformdirs.user_config_path() / "test-config.toml"
     with test_config_path.open("w", encoding="utf-8") as f:
         toml.dump(test_config, f)
 
@@ -1010,12 +1013,12 @@ def test_with_non_existent_config_file_via_option(
             }
         }
     }
-    default_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb" / "config.toml"
+    default_config_path = platformdirs.user_config_path() / "ytpb" / "config.toml"
     default_config_path.parent.mkdir(parents=True)
     with default_config_path.open("w", encoding="utf-8") as f:
         toml.dump(default_config, f)
 
-    test_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb" / "test-config.toml"
+    test_config_path = platformdirs.user_config_path() / "ytpb" / "test-config.toml"
 
     # Then:
     with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
@@ -1063,7 +1066,7 @@ def test_no_config_option(
             }
         }
     }
-    default_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb/config.toml"
+    default_config_path = platformdirs.user_config_path() / "ytpb/config.toml"
     default_config_path.parent.mkdir(parents=True)
     with default_config_path.open("w", encoding="utf-8") as f:
         toml.dump(default_config, f)
@@ -1110,7 +1113,7 @@ def test_conflicting_config_and_no_config_options(
             }
         }
     }
-    default_config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb/config.toml"
+    default_config_path = platformdirs.user_config_path() / "ytpb/config.toml"
     default_config_path.parent.mkdir(parents=True)
     with default_config_path.open("w", encoding="utf-8") as f:
         toml.dump(default_config, f)
@@ -1223,7 +1226,7 @@ def test_custom_aliases(
             }
         }
     }
-    config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb/config.toml"
+    config_path = platformdirs.user_config_path() / "ytpb/config.toml"
     config_path.parent.mkdir(parents=True)
     with config_path.open("w", encoding="utf-8") as f:
         toml.dump(custom_config, f)
@@ -1651,7 +1654,7 @@ def test_metadata_tags_without_cutting_and_unix_timestamps(
             }
         }
     }
-    config_path = Path(os.getenv("XDG_CONFIG_HOME")) / "ytpb/config.toml"
+    config_path = platformdirs.user_config_path() / "ytpb/config.toml"
     config_path.parent.mkdir(parents=True)
     with config_path.open("w", encoding="utf-8") as f:
         toml.dump(custom_config, f)
@@ -1661,7 +1664,6 @@ def test_metadata_tags_without_cutting_and_unix_timestamps(
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
-                "--debug",
                 "download",
                 "--no-cache",
                 "--interval",
@@ -1676,7 +1678,6 @@ def test_metadata_tags_without_cutting_and_unix_timestamps(
 
     # Then:
     assert result.exit_code == 0
-    print(result.output)
     output_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
     with av.open(output_path) as container:
         metadata_tags = container.metadata
