@@ -32,7 +32,7 @@ class DeepChainMap(ChainMap):
     """A ChainMap that works on nested dictionaries."""
 
     def __getitem__(self, key: Hashable) -> Any:
-        if not isinstance(value := super().get(key), Mapping):
+        if not isinstance(value := super().__getitem__(key), Mapping):
             return value
 
         values: list[dict] = []
