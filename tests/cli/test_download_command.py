@@ -1661,6 +1661,7 @@ def test_metadata_tags_without_cutting_and_unix_timestamps(
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
+                "--debug",
                 "download",
                 "--no-cache",
                 "--interval",
@@ -1671,11 +1672,11 @@ def test_metadata_tags_without_cutting_and_unix_timestamps(
                 "none",
                 stream_url,
             ],
-            catch_exceptions=False,
-            standalone_mode=False,
         )
 
     # Then:
+    assert result.exit_code == 0
+    print(result.output)
     output_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
     with av.open(output_path) as container:
         metadata_tags = container.metadata
