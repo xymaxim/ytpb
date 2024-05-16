@@ -10,8 +10,8 @@ from itertools import product
 from pathlib import Path
 from typing import Any, Callable
 
+import platformdirs
 import structlog
-from platformdirs import user_config_path
 
 
 class AddressableMixin:
@@ -197,7 +197,7 @@ def setup_logging(level: int) -> None:
 
 
 def get_default_config_path() -> Path:
-    return user_config_path("ytpb") / "config.toml"
+    return platformdirs.user_config_path() / "ytpb/config.toml"
 
 
 def load_config_from_file(path: Path) -> dict:
