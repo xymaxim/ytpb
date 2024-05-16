@@ -4,6 +4,7 @@ import os
 import re
 import tomllib
 from collections import ChainMap
+from collections.abc import Hashable, Mapping
 from functools import reduce
 from itertools import product
 from pathlib import Path
@@ -27,8 +28,28 @@ class AddressableDict(dict, AddressableMixin):
     """A dictionary that allows to use an address to access a nested value."""
 
 
-class AddressableChainMap(ChainMap, AddressableMixin):
-    """ChainMap that allows to use an address to access a nested value."""
+class DeepChainMap(ChainMap):
+    """A ChainMap that works on nested dictionaries."""
+
+    def __getitem__(self, key: Hashable) -> Any:
+        if not isinstance(value := super().get(key), Mapping):
+            return value
+
+        values: list[dict] = []
+        for mapping in self.maps:
+            try:
+                values.append(mapping[key])
+            except KeyError:
+                pass
+
+        if values:
+            return self.__class__(*values)
+
+        return self.__missing__(key)
+
+
+class AddressableChainMap(DeepChainMap, AddressableMixin):
+    """A ChainMap that allows to use an address to access a nested value."""
 
 
 USER_AGENT = "Mozilla/5.0 (Android 14; Mobile; rv:68.0) Gecko/68.0 Firefox/120.0"
