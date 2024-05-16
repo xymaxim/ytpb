@@ -669,50 +669,50 @@ def test_dry_run_option(
     assert not os.path.exists(run_temp_directory)
 
 
-# @pytest.mark.expect_suffix(platform.system())
-# @freeze_time("2023-03-26T00:00:00+00:00")
-# def test_no_cut_option(
-#     ytpb_cli_invoke: Callable,
-#     add_responses_callback_for_reference_base_url: Callable,
-#     add_responses_callback_for_segment_urls: Callable,
-#     fake_info_fetcher: MagicMock,
-#     stream_url: str,
-#     audio_base_url: str,
-#     tmp_path: Path,
-#     run_temp_directory: Path,
-#     expected_out,
-# ) -> None:
-#     # Given:
-#     add_responses_callback_for_reference_base_url()
-#     add_responses_callback_for_segment_urls(
-#         urljoin(audio_base_url, r"sq/\w+"),
-#     )
+@pytest.mark.expect_suffix(platform.system())
+@freeze_time("2023-03-26T00:00:00+00:00")
+def test_cut_option(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    audio_base_url: str,
+    tmp_path: Path,
+    run_temp_directory: Path,
+    expected_out,
+) -> None:
+    # Given:
+    add_responses_callback_for_reference_base_url()
+    add_responses_callback_for_segment_urls(
+        urljoin(audio_base_url, r"sq/\w+"),
+    )
 
-#     # When:
-#     with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
-#         mock_fetcher.return_value = fake_info_fetcher
-#         result = ytpb_cli_invoke(
-#             [
-#                 "--no-config",
-#                 "download",
-#                 "--no-cache",
-#                 "--interval",
-#                 "2023-03-25T23:33:55+00/2023-03-25T23:33:58+00",
-#                 "-af",
-#                 "itag eq 140",
-#                 "-vf",
-#                 "none",
-#                 "--no-cut",
-#                 stream_url,
-#             ],
-#         )
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                "2023-03-25T23:33:55+00/2023-03-25T23:33:58+00",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                "--cut",
+                stream_url,
+            ],
+        )
 
-#     # Then:
-#     assert result.exit_code == 0
-#     assert result.output == expected_out
-#     expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
-#     assert os.path.exists(expected_path)
-#     assert_approx_duration(expected_path, 4.0)
+    # Then:
+    assert result.exit_code == 0
+    assert result.output == expected_out
+    expected_path = tmp_path / "Webcam-Zurich-HB_kHwmzef842g_20230325T233355+00.mp4"
+    assert os.path.exists(expected_path)
+    assert_approx_duration(expected_path, 3.0, abs=4.2e-2)
 
 
 @freeze_time("2023-09-28T17:00:00+00:00")
