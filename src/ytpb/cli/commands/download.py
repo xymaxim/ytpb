@@ -14,6 +14,7 @@ from ytpb import actions
 from ytpb.cli.common import (
     create_playback,
     echo_notice,
+    find_earliest_sequence,
     get_parameter_by_name,
     print_summary_info,
     query_streams_or_exit,
@@ -273,6 +274,10 @@ def download_command(
     head_sequence = request_reference_sequence(reference_base_url, playback.session)
 
     requested_start, requested_end = resolve_relativity_in_interval(*interval)
+
+    if requested_start == "earliest":
+        head_date = datetime.now(timezone.utc)
+        requested_start = find_earliest_sequence(playback, head_sequence, head_date)
 
     if isinstance(requested_start, SegmentSequence):
         raise_for_too_far_sequence(

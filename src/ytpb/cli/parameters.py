@@ -6,9 +6,8 @@ import click
 import structlog
 from timedelta_isoformat import timedelta as isotimedelta
 
-from ytpb import types
 from ytpb.conditional import FORMAT_SPEC_RE
-from ytpb.types import SegmentSequence
+from ytpb.types import AbsolutePointInStream, SegmentSequence
 from ytpb.utils.date import ensure_date_aware
 
 logger = structlog.get_logger(__name__)
@@ -21,7 +20,7 @@ class PointInStreamParamType(click.ParamType):
         else:
             self.allowed_literals = []
 
-    def convert(self, value: str, param, ctx) -> types.AbsolutePointInStream | str:
+    def convert(self, value: str, param, ctx) -> AbsolutePointInStream | str:
         match value:
             # Allowed literals
             case literal if value in self.allowed_literals:
@@ -115,7 +114,7 @@ class RewindIntervalParamType(click.ParamType):
             case x if x.startswith("@"):
                 timestamp = float(x.lstrip("@"))
                 output = datetime.fromtimestamp(timestamp, timezone.utc)
-            case "now" | ".." as x:
+            case "earliest" | "now" | ".." as x:
                 output = x
             case _:
                 raise click.BadParameter(f"Incorrectly formatted part: {part}")
@@ -148,6 +147,12 @@ class RewindIntervalParamType(click.ParamType):
             # Two '..' keywords
             case ["..", ".."]:
                 raise click.BadParameter("Two '..' are ambiguous.")
+            # Anything and 'earliest'
+            case [_, "earliest" as x]:
+                raise click.BadParameter(
+                    f"Keyword '{x}' is only allowed for the start part."
+                )
+            # 'Now' and anything
             case ["now" as x, _]:
                 raise click.BadParameter(
                     f"Keyword '{x}' is only allowed for the end part."
@@ -158,8 +163,8 @@ class RewindIntervalParamType(click.ParamType):
                     "Keyword '..' is not compatible with duration."
                 )
             # Anything compatible and 'now' or '..'
-            case [int() | datetime() | timedelta(), "now" | ".."] | [
-                "..",
+            case [int() | datetime() | timedelta() | "earliest", "now" | ".."] | [
+                ".." | "earliest",
                 int() | datetime() | timedelta(),
             ]:
                 start = parsed_start
@@ -182,7 +187,8 @@ class RewindIntervalParamType(click.ParamType):
                 start = parsed_start
                 end = parsed_end
 
-        if type(start) == type(end) and start >= end:
+        both_same_type = type(start) == type(end)
+        if both_same_type and not isinstance(start, str) and start >= end:
             raise click.BadParameter(
                 f"Start is ahead or equal to end: {start} >= {end}"
             )

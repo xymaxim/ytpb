@@ -1,7 +1,7 @@
 import email
 import os
 import sys
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from pathlib import Path
 
 import click
@@ -18,7 +18,7 @@ from ytpb.errors import (
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
 from ytpb.playback import Playback, RewindInterval
-from ytpb.types import DateInterval, SetOfStreams
+from ytpb.types import DateInterval, SegmentSequence, SetOfStreams
 from ytpb.utils.date import format_timedelta, round_date
 from ytpb.utils.url import extract_parameter_from_url, normalize_video_url
 
@@ -176,6 +176,38 @@ def query_streams_or_exit(
         sys.exit(1)
 
     return queried_streams
+
+
+def find_earliest_sequence(
+    playback: Playback, head_sequence: SegmentSequence, head_date: datetime
+) -> SegmentSequence:
+    """Finds the earliest available segment sequence number.
+
+    Note that the function returns not the most earliest available sequence
+    number, but the safe one, which is close to the 7-days availability limit.
+    """
+    safe_offset = timedelta(days=1)
+
+    some_stream = next(iter(playback.streams))
+    segment_duration = float(extract_parameter_from_url("dur", some_stream.base_url))
+
+    safe_jump_timedelta = EARLIEST_DATE_TIMEDELTA - safe_offset
+    first_jump = int(safe_jump_timedelta.total_seconds() // segment_duration)
+    first_sequence = head_sequence - first_jump
+    if first_sequence <= 0:
+        return 0
+
+    first_segment = playback.get_segment(first_sequence, some_stream)
+    first_date = first_segment.ingestion_start_date
+
+    second_jump_timedelta = first_date - (head_date - EARLIEST_DATE_TIMEDELTA)
+    second_jump = int(second_jump_timedelta.total_seconds() // segment_duration)
+
+    result = first_sequence - second_jump
+    if result <= 0:
+        return 0
+
+    return result
 
 
 def raise_for_too_far_sequence(

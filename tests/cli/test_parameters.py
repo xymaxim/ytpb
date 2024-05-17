@@ -97,6 +97,8 @@ def test_format_spec_with_function():
                 datetime(2024, 1, 2, 10, 20, 30, 123000, tzinfo=timezone.utc),
             ),
         ),
+        ("earliest/100", ("earliest", 100)),
+        ("earliest/..", ("earliest", "..")),
     ],
 )
 def test_rewind_interval(value: str, expected):
@@ -149,6 +151,8 @@ def test_rewind_interval_with_time_of_today(value: str, expected):
     [
         ("20240102T102070+00/PT30M", "20240102T102070+00"),
         ("20240102T102030+00/PT30", "PT30"),
+        ("100/earliest", "'earliest'"),
+        ("now/100", "'now'"),
     ],
 )
 def test_invalid_rewind_interval(value: str, invalid_part: str):
@@ -166,6 +170,7 @@ def test_invalid_rewind_interval(value: str, invalid_part: str):
         ("../PT1H", "Keyword '..'"),
         ("2024Y/PT1H", "Replacement components"),
         ("2024Y/..", "Replacement components"),
+        ("earliest/2024Y", "Replacement components"),
     ],
 )
 def test_non_compatible_interval_parts(interval: str, error: str):

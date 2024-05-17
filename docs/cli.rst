@@ -197,17 +197,6 @@ The date and time interval can also be specified with Unix timestamps as: ::
 
    $ ytpb download -i @1704190800/@1704190830 ...
 
-*'Now' keyword*
-^^^^^^^^^^^^^^^
-
-* ``-i/--interval <start>/now``
-
-To refer to the current moment, the end part accepts the ``now`` keyword: ::
-
-  $ ytpb download -i 20240102T1020+00/now ...
-
-(To be exact, it refers to the last available media segment.)
-
 B. Using duration
 -----------------
 
@@ -232,9 +221,58 @@ interval: ::
   # Specified by a duration and an end
   $ ytpb download -i PT30S/2024-01-02T10:20:30+00 ...
 
+C. Using sequence numbers
+-------------------------
+
+* ``-i/--interval <sequence-number>/<sequence-number>``
+
+Besides dates, you can specify the sequence number (positive, starting from 0)
+of an MPEG-DASH `media segment
+<https://dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#media-segment/>`_
+to refer to a specific point in a live stream. Usually, sequence numbers are
+used when a segment has already been previously determined.
+
+For example, an interval from the beginning to segment 100: ::
+
+  $ ytpb download -i 0/100 ...
+
+Sequence numbers can also be combined with other types: ::
+
+  $ ytpb download -i 0/2024-01-02T10:20:30+00 ...
+  $ ytpb download -i 0/PT30S ...
+  $ ytpb download -i 0/now ...
+
+D. Using keywords
+-----------------
+
+*'Earliest' keyword*
+^^^^^^^^^^^^^^^^^^^^
+
+* ``-i/--interval earliest/<end>``
+
+To refer to the earliest available moment, the start part accepts the ``earliest``
+keyword::
+
+  $ ytpb download -i earliest/PT30S ...
+
+It could refer to the beginning of a stream (e.g., the very first media segment)
+or the earliest available segment if a stream lasts longer than the time
+available to rewind.
+
+*'Now' keyword*
+^^^^^^^^^^^^^^^
+
+* ``-i/--interval <start>/now``
+
+To refer to the current moment, the end part accepts the ``now`` keyword: ::
+
+  $ ytpb download -i 20240102T1020+00/now ...
+
+To be exact, it refers to the last available media segment.
+
 .. _Preview mode:
 
-C. Preview mode
+E. Preview mode
 ---------------
 
 * ``--interval <start>/<end> --preview-start``
@@ -262,48 +300,29 @@ uncut end segment (to reduce merging time). The minimal preview duration value
 can be changed via the ``general.preview_duration`` field in the ``config.toml``
 file.
 
-D. Using sequence numbers
--------------------------
-
-* ``-i/--interval <sequence-number>/<sequence-number>``
-
-Besides dates, you can specify the sequence number (positive, starting from 0)
-of an MPEG-DASH `media segment
-<https://dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#media-segment/>`_
-to refer to a specific point in a live stream. Usually, sequence numbers are
-used when a segment has already been previously determined.
-
-For example, an interval from the beginning to segment 100: ::
-
-  $ ytpb download -i 0/100 ...
-
-Sequence numbers can also be combined with other types: ::
-
-  $ ytpb download -i 0/2024-01-02T10:20:30+00 ...
-  $ ytpb download -i 0/PT30S ...
-  $ ytpb download -i 0/now ...
-
 Compatibility table
 -------------------
 
 .. table:: **Table:** Interval parts compatibility
 
-   +---------------------------+---------------+------+----------+----------------------+-----------------+-------------+
-   |                           | Date and time | Time | Duration | Replacing components | Sequence number | 'Now', '..' |
-   |                           | / Timestamp   |      |          |                      |                 |             |
-   +===========================+===============+======+==========+======================+=================+=============+
-   | Date and time / Timestamp |       Y       |  Y   |    Y     |          Y           |        Y        |      Y      |
-   +---------------------------+---------------+------+----------+----------------------+-----------------+-------------+
-   | Time                      |       Y       |  Y   |    Y     |         *N*          |        Y        |      Y      |
-   +---------------------------+---------------+------+----------+----------------------+-----------------+-------------+
-   | Duration                  |       Y       |  Y   |   *N*    |         *N*          |        Y        |     *N*     |
-   +---------------------------+---------------+------+----------+----------------------+-----------------+-------------+
-   | Replacing components      |       Y       | *N*  |   *N*    |         *N*          |       *N*       |     *N*     |
-   +---------------------------+---------------+------+----------+----------------------+-----------------+-------------+
-   | Sequence number           |       Y       |  Y   |    Y     |         *N*          |        Y        |      Y      |
-   +---------------------------+---------------+------+----------+----------------------+-----------------+-------------+
-   | 'Now', '..'               |       Y       |  Y   |   *N*    |         *N*          |        Y        |     *N*     |
-   +---------------------------+---------------+------+----------+----------------------+-----------------+-------------+
+   +---------------------------+---------------+------+----------+----------------------+-----------------+------------+-------------+
+   |                           | Date and time | Time | Duration | Replacing components | Sequence number | 'Earliest' | 'Now', '..' |
+   |                           | / Timestamp   |      |          |                      |                 |            |             |
+   +===========================+===============+======+==========+======================+=================+============+=============+
+   | Date and time / Timestamp |       Y       |  Y   |    Y     |          Y           |        Y        |      Y     |      Y      |
+   +---------------------------+---------------+------+----------+----------------------+-----------------+------------+-------------+
+   | Time                      |       Y       |  Y   |    Y     |         *N*          |        Y        |      Y     |      Y      |
+   +---------------------------+---------------+------+----------+----------------------+-----------------+------------+-------------+
+   | Duration                  |       Y       |  Y   |   *N*    |         *N*          |        Y        |      Y     |     *N*     |
+   +---------------------------+---------------+------+----------+----------------------+-----------------+------------+-------------+
+   | Replacing components      |       Y       | *N*  |   *N*    |         *N*          |       *N*       |     *N*    |     *N*     |
+   +---------------------------+---------------+------+----------+----------------------+-----------------+------------+-------------+
+   | Sequence number           |       Y       |  Y   |    Y     |         *N*          |        Y        |      Y     |      Y      |
+   +---------------------------+---------------+------+----------+----------------------+-----------------+------------+-------------+
+   | 'Earliest'                |       Y       |  Y   |    Y     |         *N*          |        Y        |     *N*    |      Y      |
+   +---------------------------+---------------+------+----------+----------------------+-----------------+------------+-------------+
+   | 'Now', '..'               |       Y       |  Y   |   *N*    |         *N*          |        Y        |      Y     |     *N*     |
+   +---------------------------+---------------+------+----------+----------------------+-----------------+------------+-------------+
 
 Specifying formats
 ==================
