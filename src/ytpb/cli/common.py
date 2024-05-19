@@ -1,7 +1,7 @@
 import email
 import os
 import sys
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import click
@@ -10,10 +10,11 @@ import structlog
 
 from ytpb.errors import (
     BadCommandArgument,
-    BaseUrlExpiredError,
     BroadcastStatusError,
     CachedItemNotFoundError,
+    MaxRetryError,
     QueryError,
+    SegmentDownloadError,
 )
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
@@ -23,7 +24,6 @@ from ytpb.utils.date import format_timedelta, round_date
 from ytpb.utils.url import extract_parameter_from_url, normalize_video_url
 
 logger = structlog.getLogger(__name__)
-
 
 CONSOLE_TEXT_WIDTH = 80
 EARLIEST_DATE_TIMEDELTA = timedelta(days=6, hours=23)
@@ -184,28 +184,52 @@ def find_earliest_sequence(
     """Finds the earliest available segment sequence number.
 
     Note that the function returns not the most earliest available sequence
-    number, but the safe one, which is close to the 7-days availability limit.
+    number, but the safe one, which is close to the 7-days availability limit
+    (or potentially to the lower limit if a stream is stored less, for example,
+    5 days, if such a thing occurs).
     """
-    safe_offset = timedelta(days=1)
-
     some_stream = next(iter(playback.streams))
     segment_duration = float(extract_parameter_from_url("dur", some_stream.base_url))
 
-    safe_jump_timedelta = EARLIEST_DATE_TIMEDELTA - safe_offset
-    first_jump = int(safe_jump_timedelta.total_seconds() // segment_duration)
-    first_sequence = head_sequence - first_jump
-    if first_sequence <= 0:
+    target_date = head_date - EARLIEST_DATE_TIMEDELTA
+    logger.info("Start finding the earliest segment", limit=target_date)
+
+    jump_to_left = int(EARLIEST_DATE_TIMEDELTA.total_seconds() // segment_duration)
+    left_sequence = head_sequence - jump_to_left
+    right_sequence = head_sequence - jump_to_left // 2
+    if left_sequence < 0:
+        logger.debug("Found beginning segment to be the earliest")
         return 0
 
-    first_segment = playback.get_segment(first_sequence, some_stream)
-    first_date = first_segment.ingestion_start_date
+    search_domain = range(left_sequence, right_sequence + 1)
+    logger.debug("Set search domain", left=left_sequence, right=right_sequence)
 
-    second_jump_timedelta = first_date - (head_date - EARLIEST_DATE_TIMEDELTA)
-    second_jump = int(second_jump_timedelta.total_seconds() // segment_duration)
+    def _check_ahead_target(sequence: SegmentSequence, target_date: datetime) -> bool:
+        try:
+            segment = playback.get_segment(sequence, some_stream)
+        except (SegmentDownloadError, MaxRetryError):
+            timedelta_to_target = None
+            result = False
+        else:
+            timedelta_to_target = segment.ingestion_start_date - target_date
+            if timedelta_to_target > timedelta(0):
+                result = True
+            else:
+                result = False
+        logger.debug("Bisect step", sequence=sequence, timedelta=timedelta_to_target)
+        return result
 
-    result = first_sequence - second_jump
-    if result <= 0:
-        return 0
+    low, high = 0, len(search_domain)
+    while low < high:
+        middle = (low + high) // 2
+        candidate_sequence = search_domain[middle]
+        if _check_ahead_target(candidate_sequence, target_date):
+            high = middle
+        else:
+            low = middle + 1
+
+    result = search_domain[low]
+    logger.debug("Found the earliest segment", sequence=result)
 
     return result
 
