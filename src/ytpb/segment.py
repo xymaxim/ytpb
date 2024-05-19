@@ -25,11 +25,11 @@ class SegmentMetadata:
     sequence_number: SegmentSequence
     ingestion_walltime: Timestamp
     ingestion_uncertainty: float
-    stream_duration: float
-    max_dvr_duration: float
     target_duration: float
     first_frame_time: Timestamp
     first_frame_uncertainty: float
+    stream_duration: float = None
+    max_dvr_duration: float = None
     streamable: str | None = None
     encoding_alias: str | None = None
 
@@ -103,7 +103,12 @@ class Segment:
         Returns:
             A parsed segment metadata.
         """
-        optional_fields = ("Streamable", "Encoding-Alias")
+        optional_fields = (
+            "Encoding-Alias",
+            "Streamable",
+            "Stream-Duration-Us",
+            "Max-Dvr-Duration-Us",
+        )
 
         def _search_for_metadata_field(
             name: str, content: bytes, optional: bool = False
