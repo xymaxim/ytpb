@@ -19,7 +19,7 @@ DASHES = [
 ]
 
 
-class TitleAllowedCharacters(enum.StrEnum):
+class AllowedCharacters(enum.StrEnum):
     UNICODE = enum.auto()
     ASCII = enum.auto()
     POSIX = enum.auto()
@@ -49,9 +49,9 @@ def posixify_filename(value: str, separator: str = "-"):
     return output
 
 
-def adjust_title_for_filename(
-    title: str,
-    characters: TitleAllowedCharacters = TitleAllowedCharacters.UNICODE,
+def adjust_string_for_filename(
+    s: str,
+    characters: AllowedCharacters = AllowedCharacters.UNICODE,
     max_length: int | None = None,
     separator: str | None = None,
 ) -> str:
@@ -61,19 +61,19 @@ def adjust_title_for_filename(
     if separator:
         # For visual appeal, replace dashes and surrounding spaces with
         # dashes. Compare, e.g.: 'A_B_-_C_D' and 'A_B-C_D' (we prefer this one).
-        title = re.sub(dashes_pattern, r"\1", title)
+        s = re.sub(dashes_pattern, r"\1", s)
 
-    if characters == TitleAllowedCharacters.POSIX:
-        output = posixify_filename(title, separator or fallback_separator)
+    if characters == AllowedCharacters.POSIX:
+        output = posixify_filename(s, separator or fallback_separator)
     else:
-        output = sanitize_filename(title)
+        output = sanitize_filename(s)
 
-        actual_separator: str
+        actual_separator: str | None
 
         match characters:
-            case TitleAllowedCharacters.UNICODE:
+            case AllowedCharacters.UNICODE:
                 actual_separator = separator
-            case TitleAllowedCharacters.ASCII:
+            case AllowedCharacters.ASCII:
                 actual_separator = separator and unidecode.unidecode(
                     separator, "replace", fallback_separator
                 )
@@ -90,7 +90,7 @@ def adjust_title_for_filename(
         output = textwrap.shorten(output, max_length, placeholder="")
         output = re.sub(dashes_pattern + "$", "", output)
 
-    if separator and characters != TitleAllowedCharacters.POSIX:
+    if separator and characters != AllowedCharacters.POSIX:
         # For the POSIX case, the output is already with spaces replaced after
         # the posixify_filename() function.
         output = re.sub(r"\s", actual_separator, output)

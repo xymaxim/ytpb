@@ -37,8 +37,8 @@ def expand_template(
 def adjust_string(
     value: str, chars: str = "posix", length: int = 30, separator: str = "-"
 ) -> str:
-    characters = path.TitleAllowedCharacters[chars.upper()]
-    return path.adjust_title_for_filename(value, characters, length, separator)
+    characters = path.AllowedCharacters[chars.upper()]
+    return path.adjust_string_for_filename(value, characters, length, separator)
 
 
 def convert_to_timestamp(value: datetime) -> int:

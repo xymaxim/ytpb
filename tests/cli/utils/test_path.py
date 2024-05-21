@@ -1,6 +1,6 @@
 import pytest
 
-from ytpb.cli.utils.path import adjust_title_for_filename, TitleAllowedCharacters
+from ytpb.cli.utils.path import adjust_string_for_filename, AllowedCharacters
 
 
 @pytest.mark.parametrize(
@@ -21,7 +21,9 @@ from ytpb.cli.utils.path import adjust_title_for_filename, TitleAllowedCharacter
     ],
 )
 def test_adjust_title_for_filename_as_is(title, expected):
-    assert expected == adjust_title_for_filename(title, separator=None, max_length=None)
+    assert expected == adjust_string_for_filename(
+        title, separator=None, max_length=None
+    )
 
 
 @pytest.mark.parametrize(
@@ -42,7 +44,7 @@ def test_adjust_title_for_filename_as_is(title, expected):
     ],
 )
 def test_adjust_title_for_filename_with_separator(title, expected):
-    assert expected == adjust_title_for_filename(title, separator="-", max_length=None)
+    assert expected == adjust_string_for_filename(title, separator="-", max_length=None)
 
 
 @pytest.mark.parametrize(
@@ -63,8 +65,8 @@ def test_adjust_title_for_filename_with_separator(title, expected):
     ],
 )
 def test_adjust_title_for_filename_with_ascii_and_no_separator(title, expected):
-    assert expected == adjust_title_for_filename(
-        title, separator=None, max_length=None, characters=TitleAllowedCharacters.ASCII
+    assert expected == adjust_string_for_filename(
+        title, separator=None, max_length=None, characters=AllowedCharacters.ASCII
     )
 
 
@@ -86,8 +88,8 @@ def test_adjust_title_for_filename_with_ascii_and_no_separator(title, expected):
     ],
 )
 def test_adjust_title_for_filename_with_ascii_and_separator(title, expected):
-    assert expected == adjust_title_for_filename(
-        title, separator="-", max_length=None, characters=TitleAllowedCharacters.ASCII
+    assert expected == adjust_string_for_filename(
+        title, separator="-", max_length=None, characters=AllowedCharacters.ASCII
     )
 
 
@@ -127,11 +129,11 @@ def test_adjust_title_for_filename_with_ascii_and_separator(title, expected):
     ],
 )
 def test_corner_cases_of_adjust_title_for_filename(title, expected, separator):
-    assert expected == adjust_title_for_filename(
-        title, separator=separator, characters=TitleAllowedCharacters.ASCII
+    assert expected == adjust_string_for_filename(
+        title, separator=separator, characters=AllowedCharacters.ASCII
     )
-    assert expected == adjust_title_for_filename(
-        title, separator=separator, characters=TitleAllowedCharacters.POSIX
+    assert expected == adjust_string_for_filename(
+        title, separator=separator, characters=AllowedCharacters.POSIX
     )
 
 
@@ -139,18 +141,18 @@ def test_adjust_title_for_filename_with_posix():
     title = "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN | TBS NEWS DIG"
 
     expected = "LIVE-Xin-Su-Yi-Qian-noYang-Zi-Shinjuku-Tokyo-JAPAN-TBS-NEWS-DIG"
-    assert expected == adjust_title_for_filename(
-        title, separator=None, max_length=None, characters=TitleAllowedCharacters.POSIX
+    assert expected == adjust_string_for_filename(
+        title, separator=None, max_length=None, characters=AllowedCharacters.POSIX
     )
 
     expected = "LIVE_Xin_Su_Yi_Qian_noYang_Zi_Shinjuku_Tokyo_JAPAN_TBS_NEWS_DIG"
-    assert expected == adjust_title_for_filename(
-        title, separator="_", max_length=None, characters=TitleAllowedCharacters.POSIX
+    assert expected == adjust_string_for_filename(
+        title, separator="_", max_length=None, characters=AllowedCharacters.POSIX
     )
 
     expected = "LIVE-Xin-Su-Yi-Qian-noYang-Zi-Shinjuku-Tokyo-JAPAN-TBS-NEWS-DIG"
-    assert expected == adjust_title_for_filename(
-        title, separator="*", max_length=None, characters=TitleAllowedCharacters.POSIX
+    assert expected == adjust_string_for_filename(
+        title, separator="*", max_length=None, characters=AllowedCharacters.POSIX
     )
 
 
@@ -180,7 +182,7 @@ def test_adjust_title_for_filename_with_posix():
     ],
 )
 def test_adjust_title_for_filename_with_max_length(title, expected, max_length):
-    assert expected == adjust_title_for_filename(
+    assert expected == adjust_string_for_filename(
         title, separator=None, max_length=max_length
     )
 
@@ -207,9 +209,9 @@ def test_adjust_title_for_filename_with_max_length(title, expected, max_length):
 def test_adjust_title_for_filename_with_max_length_and_separator(
     title, expected, max_length
 ):
-    assert expected == adjust_title_for_filename(
+    assert expected == adjust_string_for_filename(
         title,
         separator="-",
         max_length=max_length,
-        characters=TitleAllowedCharacters.ASCII,
+        characters=AllowedCharacters.ASCII,
     )
