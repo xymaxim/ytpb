@@ -45,12 +45,12 @@ def convert_to_timestamp(value: datetime) -> int:
     return int(value.timestamp())
 
 
-def format_iso_date(value: datetime, styles="basic,complete,hh") -> str:
+def format_iso_date(value: datetime, styles: str = "basic,complete,hh") -> str:
     style_parameters = date.build_style_parameters_from_spec(styles)
     return date.format_iso_datetime(value, style_parameters)  # type: ignore
 
 
-def format_duration(value: timedelta, style="iso") -> str:
+def format_duration(value: timedelta, style: str = "iso") -> str:
     pattern = date.DurationFormatPattern[style.upper()]
     return date.format_duration(value, pattern)
 
