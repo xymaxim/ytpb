@@ -10,13 +10,49 @@ from typing import Any, Literal
 
 
 @dataclass
-class ISO8601DateStyleParameters:
+class ISODateStyleParameters:
     format: Literal["basic", "extended"] = "basic"
     precision: Literal["reduced", "complete"] = "complete"
     offset_format: Literal["hh", "hhmm"] = "hh"
     fractional_component: Literal["sec"] | None = None
     fraction_delimiter: Literal[".", ","] = "."
     use_z_for_utc: bool = False
+
+
+class DurationFormatPattern(enum.Enum):
+    NUMERIC = "%H:%M%:%S"
+    ISO8601 = "PT[%-HH][%-MM][%-SS]"
+    IN_SENTENCE = "[%-H h ][%-M m ][%-S s]"
+
+
+class ISODateFormatter(string.Formatter):
+    """A variant of `string.Formatter` that format dates in ISO 8601
+    format.
+
+    This extends the format specification for `datetime` objects with
+    the following, ISO-8601 related, styles: 'basic', 'extended', 'reduced',
+    'complete', 'hh', 'hhmm', and 'z'.
+    """
+
+    def convert_field(self, value: Any, conversion: str | None) -> Any:
+        if isinstance(value, datetime):
+            if conversion == "t":
+                return int(value.timestamp())
+        return value
+
+    def format_field(self, value: Any, format_spec: str) -> Any:
+        known_styles = ("basic", "extended", "reduced", "complete", "hh", "hhmm", "z")
+        if isinstance(value, datetime):
+            match format_spec:
+                case spec if set(spec.split(",")).issubset(known_styles):
+                    style_parameters = build_style_parameters_from_spec(spec)
+                    output = format_iso_datetime(value, style_parameters)  # type: ignore
+                case "":
+                    output = format_iso_datetime(value)
+        else:
+            output = super().format_field(value, format_spec)
+
+        return output
 
 
 def ensure_date_aware(date: datetime) -> datetime:
@@ -30,7 +66,7 @@ def ensure_date_aware(date: datetime) -> datetime:
 
 def format_iso_datetime(
     date: datetime,
-    style: ISO8601DateStyleParameters | None = None,
+    style: ISODateStyleParameters | None = None,
 ) -> str:
     """Format `datetime` objects after ISO 8601. Supports complete and reduced
     date and time representations in basic and extended formats.
@@ -40,7 +76,7 @@ def format_iso_datetime(
     """
 
     if style is None:
-        style = ISO8601DateStyleParameters()
+        style = ISODateStyleParameters()
 
     plain_offset = date.strftime("%z")
     if plain_offset == "":
@@ -95,12 +131,6 @@ def format_iso_datetime(
         output = f"{date_string}{offset}"
 
     return output
-
-
-class DurationFormatPattern(enum.Enum):
-    NUMERIC = "%H:%M%:%S"
-    ISO8601 = "PT[%-HH][%-MM][%-SS]"
-    IN_SENTENCE = "[%-H h ][%-M m ][%-S s]"
 
 
 def format_duration(duration: timedelta, pattern: DurationFormatPattern) -> str:
@@ -188,7 +218,7 @@ def express_timedelta_in_words(delta: timedelta) -> str:
 
 def build_style_parameters_from_spec(
     style_spec: str,
-) -> ISO8601DateStyleParameters | None:
+) -> ISODateStyleParameters | None:
     if not style_spec:
         return None
 
@@ -202,7 +232,7 @@ def build_style_parameters_from_spec(
     conflicting_styles_map: dict[str, str] = {}
     parameters_to_check = ["format", "precision", "offset_format"]
     for field_name in parameters_to_check:
-        field = ISO8601DateStyleParameters.__dataclass_fields__[field_name]
+        field = ISODateStyleParameters.__dataclass_fields__[field_name]
         conflicting_styles_map[field_name] = field.type.__args__
 
     for input_style in input_styles:
@@ -221,34 +251,4 @@ def build_style_parameters_from_spec(
     if unknown_styles := input_styles ^ set(style_parameters.values()):
         warnings.warn(f"Ignoring unknown style(s): {', '.join(sorted(unknown_styles))}")
 
-    return ISO8601DateStyleParameters(**style_parameters)
-
-
-class ISO8601DateFormatter(string.Formatter):
-    """A variant of `string.Formatter` that format dates in ISO 8601
-    format.
-
-    This extends the format specification for `datetime` objects with
-    the following, ISO-8601 related, styles: 'basic', 'extended', 'reduced',
-    'complete', 'hh', 'hhmm', and 'z'.
-    """
-
-    def convert_field(self, value: Any, conversion: str | None) -> Any:
-        if isinstance(value, datetime):
-            if conversion == "t":
-                return int(value.timestamp())
-        return value
-
-    def format_field(self, value: Any, format_spec: str) -> Any:
-        known_styles = ("basic", "extended", "reduced", "complete", "hh", "hhmm", "z")
-        if isinstance(value, datetime):
-            match format_spec:
-                case spec if set(spec.split(",")).issubset(known_styles):
-                    style_parameters = build_style_parameters_from_spec(spec)
-                    output = format_iso_datetime(value, style_parameters)  # type: ignore
-                case "":
-                    output = format_iso_datetime(value)
-        else:
-            output = super().format_field(value, format_spec)
-
-        return output
+    return ISODateStyleParameters(**style_parameters)

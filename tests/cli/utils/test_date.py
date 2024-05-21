@@ -9,7 +9,7 @@ from ytpb.cli.utils.date import (
     format_duration,
     format_iso_datetime,
     format_timedelta,
-    ISO8601DateStyleParameters,
+    ISODateStyleParameters,
 )
 
 
@@ -26,7 +26,7 @@ class TestFormatDatetime:
     def test_extended_format_and_complete_precision(self, date, expected):
         assert expected == format_iso_datetime(
             datetime.fromisoformat(date),
-            ISO8601DateStyleParameters(format="extended", precision="complete"),
+            ISODateStyleParameters(format="extended", precision="complete"),
         )
 
     @pytest.mark.parametrize(
@@ -42,7 +42,7 @@ class TestFormatDatetime:
     def test_extended_format_and_reduced_precision(self, date, expected):
         assert expected == format_iso_datetime(
             datetime.fromisoformat(date),
-            ISO8601DateStyleParameters(format="extended", precision="reduced"),
+            ISODateStyleParameters(format="extended", precision="reduced"),
         )
 
     @pytest.mark.parametrize(
@@ -57,7 +57,7 @@ class TestFormatDatetime:
     def test_basic_format_and_complete_precision(self, date, expected):
         assert expected == format_iso_datetime(
             datetime.fromisoformat(date),
-            ISO8601DateStyleParameters(format="basic", precision="complete"),
+            ISODateStyleParameters(format="basic", precision="complete"),
         )
 
     @pytest.mark.parametrize(
@@ -72,7 +72,7 @@ class TestFormatDatetime:
     def test_basic_format_and_reduced_precision(self, date, expected):
         assert expected == format_iso_datetime(
             datetime.fromisoformat(date),
-            ISO8601DateStyleParameters(format="basic", precision="reduced"),
+            ISODateStyleParameters(format="basic", precision="reduced"),
         )
 
     @pytest.mark.parametrize(
@@ -87,7 +87,7 @@ class TestFormatDatetime:
     def test_utc_offset_formats(self, basic_or_extended, offset_format, expected):
         assert expected == format_iso_datetime(
             datetime.fromisoformat("2023-08-09T10:20:30+01:00"),
-            ISO8601DateStyleParameters(
+            ISODateStyleParameters(
                 format=basic_or_extended, offset_format=offset_format
             ),
         )
@@ -95,15 +95,15 @@ class TestFormatDatetime:
     def test_use_z_for_utc(self):
         assert "20230809T102030Z" == format_iso_datetime(
             datetime.fromisoformat("2023-08-09T10:20:30+00:00"),
-            ISO8601DateStyleParameters(use_z_for_utc=True),
+            ISODateStyleParameters(use_z_for_utc=True),
         )
         assert "20230809T102030+01" == format_iso_datetime(
             datetime.fromisoformat("2023-08-09T10:20:30+01:00"),
-            ISO8601DateStyleParameters(use_z_for_utc=True),
+            ISODateStyleParameters(use_z_for_utc=True),
         )
         assert "20230809T102030+00" == format_iso_datetime(
             datetime.fromisoformat("2023-08-09T10:20:30+00:00"),
-            ISO8601DateStyleParameters(use_z_for_utc=False),
+            ISODateStyleParameters(use_z_for_utc=False),
         )
 
     def test_raise_with_naive_datetime(self):
@@ -115,17 +115,17 @@ class TestFormatDatetime:
     def test_raise_with_invalid_argument(self):
         with pytest.raises(ValueError):
             format_iso_datetime(
-                datetime.now(timezone.utc), ISO8601DateStyleParameters(format="invalid")
+                datetime.now(timezone.utc), ISODateStyleParameters(format="invalid")
             )
         with pytest.raises(ValueError):
             format_iso_datetime(
                 datetime.now(timezone.utc),
-                ISO8601DateStyleParameters(precision="invalid"),
+                ISODateStyleParameters(precision="invalid"),
             )
         with pytest.raises(ValueError):
             format_iso_datetime(
                 datetime.now(timezone.utc),
-                ISO8601DateStyleParameters(offset_format="invalid"),
+                ISODateStyleParameters(offset_format="invalid"),
             )
 
 
@@ -196,14 +196,14 @@ def test_format_timedelta_with_ms_precision(duration, expected):
 
 class TestBuildStyleParametersFromSpec:
     def test_parse_single_date_style(self):
-        expected = ISO8601DateStyleParameters(
+        expected = ISODateStyleParameters(
             format="extended",
         )
         assert expected == build_style_parameters_from_spec("extended")
 
     @pytest.mark.parametrize("spec", ["extended,complete", "extended, complete"])
     def test_parse_date_styles(self, spec):
-        expected = ISO8601DateStyleParameters(
+        expected = ISODateStyleParameters(
             format="extended",
             precision="complete",
         )
