@@ -39,6 +39,11 @@ from ytpb.cli.templating import (
     MinimalOutputPathContext,
     TEMPLATE_STRING_RE,
 )
+from ytpb.cli.utils.path import (
+    remove_directories_between,
+    sanitize_filename,
+    try_get_relative_path,
+)
 from ytpb.download import compose_default_segment_filename
 from ytpb.errors import SequenceLocatingError
 from ytpb.merge import merge_segments
@@ -49,11 +54,6 @@ from ytpb.types import (
     SegmentSequence,
 )
 from ytpb.utils.other import resolve_relativity_in_interval
-from ytpb.utils.path import (
-    remove_directories_between,
-    sanitize_filename,
-    try_get_relative_path,
-)
 from ytpb.utils.remote import request_reference_sequence
 from ytpb.utils.url import build_segment_url, extract_parameter_from_url
 

@@ -5,7 +5,7 @@ from typing import TypedDict, TypeVar
 
 import jinja2
 
-from ytpb.utils import date, path
+from ytpb.cli.utils import date, path
 
 T = TypeVar("T", str, Path)
 

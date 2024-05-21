@@ -8,6 +8,8 @@ import click
 import cloup
 import structlog
 
+from ytpb.cli.utils.date import format_timedelta, round_date
+
 from ytpb.errors import (
     BadCommandArgument,
     BroadcastStatusError,
@@ -20,7 +22,6 @@ from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
 from ytpb.playback import Playback, RewindInterval
 from ytpb.types import DateInterval, SegmentSequence, SetOfStreams
-from ytpb.utils.date import format_timedelta, round_date
 from ytpb.utils.url import extract_parameter_from_url, normalize_video_url
 
 logger = structlog.getLogger(__name__)

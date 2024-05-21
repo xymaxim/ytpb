@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
-from ytpb.utils.date import (
+from ytpb.cli.utils.date import (
     build_style_parameters_from_spec,
     DurationFormatPattern,
     express_timedelta_in_words,

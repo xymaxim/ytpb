@@ -6,9 +6,10 @@ import click
 import structlog
 from timedelta_isoformat import timedelta as isotimedelta
 
+from ytpb.cli.utils.date import ensure_date_aware
+
 from ytpb.conditional import FORMAT_SPEC_RE
 from ytpb.types import AbsolutePointInStream, SegmentSequence
-from ytpb.utils.date import ensure_date_aware
 
 logger = structlog.get_logger(__name__)
 

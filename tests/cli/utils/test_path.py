@@ -1,6 +1,6 @@
 import pytest
 
-from ytpb.utils.path import adjust_title_for_filename, TitleAllowedCharacters
+from ytpb.cli.utils.path import adjust_title_for_filename, TitleAllowedCharacters
 
 
 @pytest.mark.parametrize(
