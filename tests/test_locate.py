@@ -158,12 +158,17 @@ class TestGapCase2(BaseGapCase):
         )
         assert (7947334, True) == (sequence, falls_in_gap)
 
-    @pytest.mark.xfail
+    @pytest.mark.xfail(
+        reason=(
+            "Overestimated due to large actual duration of segment 7947335 "
+            "(the difference > TIME_DIFF_TOLERANCE; see issue #5)"
+        )
+    )
     def test_S4(self):
         sequence, _, falls_in_gap, _ = self.ssl.find_sequence_by_time(
             1679763626.506922, end=True
         )
-        assert (7947335, True) == (sequence, falls_in_gap)
+        assert (7947335, False) == (sequence, falls_in_gap)
 
 
 class TestGapCase3(BaseGapCase):
