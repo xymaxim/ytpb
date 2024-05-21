@@ -4,6 +4,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from functools import partial
 from pathlib import Path
+from typing import Any, Callable
 
 import click
 import cloup
@@ -32,11 +33,16 @@ from ytpb.cli.options import (
     yt_dlp_option,
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewindInterval
+from ytpb.cli.templating import (
+    expand_template,
+    IntervalOutputPathContext,
+    MinimalOutputPathContext,
+    TEMPLATE_STRING_RE,
+)
 from ytpb.download import compose_default_segment_filename
 from ytpb.errors import SequenceLocatingError
 from ytpb.merge import merge_segments
 from ytpb.types import (
-    AddressableMappingProtocol,
     AudioOrVideoStream,
     DateInterval,
     RelativeSegmentSequence,
@@ -44,13 +50,8 @@ from ytpb.types import (
 )
 from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.path import (
-    expand_template_output_path,
-    IntervalOutputPathContext,
-    MinimalOutputPathContext,
-    OUTPUT_PATH_PLACEHOLDER_RE,
     remove_directories_between,
-    render_interval_output_path_context,
-    render_minimal_output_path_context,
+    sanitize_filename,
     try_get_relative_path,
 )
 from ytpb.utils.remote import request_reference_sequence
@@ -80,16 +81,6 @@ def compose_resume_filename(
     itag_part = "".join([stream.itag for stream in streams if stream])
 
     return f"{video_id}-{interval_part}-{itag_part}.resume"
-
-
-def render_download_output_path_context(
-    context: DownloadOutputPathContext,
-    config_settings: AddressableMappingProtocol,
-) -> DownloadOutputPathContext:
-    output = context
-    output.update(render_minimal_output_path_context(context, config_settings))
-    output.update(render_interval_output_path_context(context, config_settings))
-    return output
 
 
 @cloup.command("download", short_help="Download excerpts.", help="Download an excerpt.")
@@ -445,26 +436,25 @@ def download_command(
                 "options.download.output_path"
             )
             if str(output_path) == default_output_path:
-                output_path = "<title>_<id>_preview"
+                output_path = Path("{{ title|adjust }}_{{ id }}_preview")
 
-        if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output_path)):
+        if TEMPLATE_STRING_RE.search(str(output_path)):
             input_timezone = requested_date_interval.start.tzinfo
             template_context: DownloadOutputPathContext = {
                 "id": playback.video_id,
-                "title": playback.info.title,
+                "title": sanitize_filename(playback.info.title),
                 "input_start_date": requested_date_interval.start,
                 "input_end_date": requested_date_interval.end,
-                "actual_start_date": actual_date_interval.start.astimezone(
-                    input_timezone
+                "actual_start_date": (
+                    actual_date_interval.start.astimezone(input_timezone)
                 ),
                 "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
                 "duration": requested_end_date - requested_start_date,
             }
-            final_output_path = expand_template_output_path(
+            final_output_path = expand_template(
                 output_path,
+                ctx.obj.jinja_environment,
                 template_context,
-                render_download_output_path_context,
-                ctx.obj.config,
             )
         else:
             final_output_path = output_path
@@ -603,14 +593,14 @@ def download_command(
             else:
                 click.echo("2. Merging segments (may take a while)... ", nl=False)
 
-            metadata_tags: dict[str, str] = {}
+            metadata_tags: dict[str, Any] = {}
             if not no_metadata:
 
                 def _convert_date_to_isostring(date: datetime) -> str:
                     iso_date = date.astimezone(timezone.utc)
                     return iso_date.strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
-                metadata_date_converter: Callback[[datetime], str]
+                metadata_date_converter: Callable[[datetime], str]
                 match ctx.obj.config.traverse("output.metadata.dates"):
                     case "unix":
                         metadata_date_converter = lambda d: f"{d.timestamp():.6f}"

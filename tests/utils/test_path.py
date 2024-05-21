@@ -1,10 +1,6 @@
 import pytest
 
-from ytpb.utils.path import (
-    adjust_title_for_filename,
-    format_title_for_filename,
-    TitleAllowedCharacters,
-)
+from ytpb.utils.path import adjust_title_for_filename, TitleAllowedCharacters
 
 
 @pytest.mark.parametrize(
@@ -216,38 +212,4 @@ def test_adjust_title_for_filename_with_max_length_and_separator(
         separator="-",
         max_length=max_length,
         characters=TitleAllowedCharacters.ASCII,
-    )
-
-
-def test_format_title_for_filename_with_original_style():
-    title = "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN | TBS NEWS DIG"
-    assert title == format_title_for_filename(title, style="original")
-    assert title == format_title_for_filename(
-        title, style="original", separator="-", lowercase=True
-    )
-
-
-@pytest.mark.parametrize(
-    "title,expected,characters",
-    [
-        (
-            "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN | TBS NEWS DIG",
-            "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN | TBS NEWS DIG",
-            TitleAllowedCharacters.UNICODE,
-        ),
-        (
-            "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN | TBS NEWS DIG",
-            "[(LIVE)] Xin Su Yi Qian noYang Zi Shinjuku, Tokyo JAPAN | TBS NEWS DIG",
-            TitleAllowedCharacters.ASCII,
-        ),
-        (
-            "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN | TBS NEWS DIG",
-            "LIVE-Xin-Su-Yi-Qian-noYang-Zi-Shinjuku-Tokyo-JAPAN-TBS-NEWS-DIG",
-            TitleAllowedCharacters.POSIX,
-        ),
-    ],
-)
-def test_format_title_for_filename_with_characters(title, expected, characters):
-    assert expected == format_title_for_filename(
-        title, style="custom", characters=characters
     )

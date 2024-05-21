@@ -439,7 +439,7 @@ def test_download_to_custom_absolute_path(
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
-def test_download_to_custom_relative_path(
+def test_download_to_user_relative_path(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -479,19 +479,8 @@ def test_download_to_custom_relative_path(
     assert os.path.exists(tmp_path / "test" / "merged.mp4")
 
 
-@pytest.mark.parametrize(
-    "output_path,expected",
-    [
-        (
-            "<title>_<input_start_date>_<duration>",
-            "Webcam-Zurich-HB_20230325T233354+00_PT4S.mp4",
-        ),
-    ],
-)
 @freeze_time("2023-03-26T00:00:00+00:00")
-def test_download_to_template_output_path(
-    output_path: str,
-    expected: str,
+def test_download_to_user_template_output_path(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -521,14 +510,14 @@ def test_download_to_template_output_path(
                 "-vf",
                 "none",
                 "-o",
-                output_path,
+                "{{ id }}",
                 stream_url,
             ],
         )
 
     # Then:
     assert result.exit_code == 0
-    assert expected == str(next(tmp_path.glob("*.mp4")).name)
+    assert "kHwmzef842g.mp4" == str(next(tmp_path.glob("*.mp4")).name)
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")

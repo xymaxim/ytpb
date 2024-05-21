@@ -12,6 +12,7 @@ from typing import Any, cast, TextIO
 
 import click
 import cloup
+import jinja2
 import structlog
 import toml
 
@@ -19,9 +20,9 @@ from ytpb._version import __version__
 from ytpb.cli.commands.capture import capture_group
 from ytpb.cli.commands.download import download_command
 from ytpb.cli.commands.mpd import mpd_group
-
 from ytpb.cli.common import suppress_output
 from ytpb.cli.options import config_options, logging_options
+from ytpb.cli.templating import FILTERS as TEMPLATE_FILTERS
 from ytpb.config import (
     ALL_ALIASES,
     DEFAULT_CONFIG,
@@ -150,9 +151,11 @@ def base_cli(
         if config_path:
             raise click.UsageError("Conflicting --config and --no-config options given")
 
+    ctx.obj.jinja_environment = jinja2.Environment()
+    ctx.obj.jinja_environment.filters.update(TEMPLATE_FILTERS)
+
 
 cli = deepcopy(base_cli)
-
 cli.help = "A playback for YouTube live streams"
 cli.section(
     "Top-level commands",

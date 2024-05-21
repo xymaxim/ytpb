@@ -175,7 +175,7 @@ def test_with_default_config(
     assert result.exit_code == 0
 
 
-def test_compose_to_custom_output_path(
+def test_compose_to_user_output_path(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -210,7 +210,7 @@ def test_compose_to_custom_output_path(
     assert os.path.exists("manifest.xml")
 
 
-def test_compose_to_custom_template_output_path(
+def test_compose_to_user_template_output_path(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -237,7 +237,7 @@ def test_compose_to_custom_template_output_path(
                 "-vf",
                 "itag eq 243",
                 "-o",
-                "<id>.xml",
+                "{{ id }}.xml",
                 stream_url,
             ],
             catch_exceptions=False,

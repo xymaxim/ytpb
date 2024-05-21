@@ -17,20 +17,21 @@
 [options.download]
 audio_format = "itag eq 140"
 video_format = "best(@mp4 and <=1080p and @30fps)"
-output_path = "<title>_<id>_<input_start_date>"
+output_path = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}"
+output_path = "@default"
 
 [options.capture.frame]
 video_format = "best(@mp4 and @30fps)"
-output_path = "<title>_<id>_<moment_date>.jpg"
+output_path = "{{ title|adjust }}_{{ id }}_{{ moment_date|isodate }}.jpg"
 
 [options.capture.timelapse]
 video_format = "best(@mp4 and @30fps)"
-output_path = "<title>_<id>/<input_start_date>/<every>/<title>_<id>_<input_start_date>_<every>_%04d.jpg"
+output_path = "{{ title|adjust }}_{{ id }}/{{ input_start_date|isodate }}/{{ every }}/{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}_{{ every }}_%04d.jpg"
 
 [options.mpd.compose]
 audio_formats = "itag eq 140"
 video_formats = "@webm and [@720p or @1080p] and @30fps"
-output_path = "<title>_<id>_<input_start_date>.mpd"
+output_path = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}.mpd"
 
 # General settings.
 [general]
@@ -46,31 +47,3 @@ user_agent = "Mozilla/5.0 (Android 14; Mobile; rv:68.0) Gecko/68.0 Firefox/120.0
 [general.aliases]
 custom-alias = "[@720p or @1080p] and @webm"
 another-alias = "@custom-alias and @30fps"
-
-# Output settings.
-[output]
-
-# Output date formatting settings. See
-# https://ytpb.readthedocs.io/en/latest/cli.html#formatting-dates.
-[output.date]
-# Set of styles that refer to ISO 8601-related formatting. Available styles that
-# can be combined: 'basic' or 'extended', 'complete' or 'reduced', 'hh' or
-# 'hhmm', 'z'.
-styles = "basic,complete,hh"
-
-# Output title formatting settings. See
-# https://ytpb.readthedocs.io/en/latest/cli.html#formatting-titles.
-[output.title]
-# Output title style: 'original', 'custom'.
-style = "custom"
-
-# Output title formatting settings for the 'custom' style.
-[output.title.custom]
-# Allowed character set: 'unicode', 'ascii', 'posix'.
-characters = "posix"
-# Maximum length (note that title is truncated at word boundaries).
-max_length = 30
-# Use lowercase or not.
-lowercase = false
-# Separator between words.
-separator = "-"

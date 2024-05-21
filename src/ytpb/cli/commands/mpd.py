@@ -12,10 +12,7 @@ from rich.table import Table
 
 from ytpb import types
 from ytpb.actions.compose import compose_static_mpd, refresh_mpd
-from ytpb.cli.commands.download import (
-    DownloadOutputPathContext,
-    render_download_output_path_context,
-)
+from ytpb.cli.commands.download import DownloadOutputPathContext
 from ytpb.cli.common import (
     CONSOLE_TEXT_WIDTH,
     create_playback,
@@ -33,6 +30,7 @@ from ytpb.cli.options import (
     yt_dlp_option,
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
+from ytpb.cli.templating import expand_template, TEMPLATE_STRING_RE
 from ytpb.errors import BroadcastStatusError
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
@@ -42,7 +40,7 @@ from ytpb.streams import Streams
 from ytpb.types import DateInterval, SegmentSequence
 from ytpb.utils.date import express_timedelta_in_words
 from ytpb.utils.other import resolve_relativity_in_interval
-from ytpb.utils.path import expand_template_output_path, OUTPUT_PATH_PLACEHOLDER_RE
+from ytpb.utils.path import sanitize_filename
 from ytpb.utils.remote import request_reference_sequence
 from ytpb.utils.url import build_video_url_from_base_url, extract_parameter_from_url
 
@@ -50,7 +48,6 @@ logger = structlog.get_logger(__name__)
 
 
 MpdOutputPathContext = DownloadOutputPathContext
-render_mpd_output_path_context = render_download_output_path_context
 
 
 def print_audio_table(console, streams, **table_kwargs):
@@ -229,22 +226,21 @@ def compose_command(
 
     # Absolute output path of a manifest with extension.
     final_output_path: Path
-    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output_path)):
+    if TEMPLATE_STRING_RE.search(str(output_path)):
         input_timezone = requested_date_interval.start.tzinfo
         template_context: MpdOutputPathContext = {
             "id": playback.video_id,
-            "title": playback.info.title,
+            "title": sanitize_filename(playback.info.title),
             "input_start_date": requested_date_interval.start,
             "input_end_date": requested_date_interval.end,
             "actual_start_date": actual_date_interval.start.astimezone(input_timezone),
             "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
             "duration": requested_end_date - requested_start_date,
         }
-        final_output_path = expand_template_output_path(
+        final_output_path = expand_template(
             output_path,
+            ctx.obj.jinja_environment,
             template_context,
-            render_mpd_output_path_context,
-            ctx.obj.config,
         )
     else:
         final_output_path = output_path

@@ -113,7 +113,7 @@ BUILT_IN_ALIASES = {
 
 ALL_ALIASES = {**BUILT_IN_ALIASES}
 
-DEFAULT_OUTPUT_PATH = "<title>_<id>_<input_start_date>"
+DEFAULT_OUTPUT_PATH = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}"
 
 DEFAULT_CONFIG = AddressableDict(
     {
@@ -129,13 +129,13 @@ DEFAULT_CONFIG = AddressableDict(
             "capture": {
                 "frame": {
                     "video_format": "best(format eq mp4 and frame_rate eq 30)",
-                    "output_path": "<title>_<id>_<moment_date>.jpg",
+                    "output_path": "{{ title|adjust }}_{{ id }}_{{ moment_date|isodate }}.jpg",
                 },
                 "timelapse": {
                     "video_format": "best(format eq mp4 and frame_rate eq 30)",
                     "output_path": (
-                        "<title>_<id>/<input_start_date>/<every>/"
-                        "<title>_<id>_<input_start_date>_<every>_%04d.jpg"
+                        "{{ title|adjust }}_{{ id }}/{{ input_start_date|isodate }}/{{ every }}/"
+                        "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}_{{ every }}_%04d.jpg"
                     ),
                 },
             },

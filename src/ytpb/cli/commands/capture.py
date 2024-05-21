@@ -21,7 +21,6 @@ from rich.progress import (
 from timedelta_isoformat import timedelta as isotimedelta
 
 from ytpb.actions.capture import capture_frames, extract_frame_as_image
-from ytpb.cli.commands.download import render_download_output_path_context
 from ytpb.cli.common import (
     create_playback,
     echo_notice,
@@ -45,25 +44,19 @@ from ytpb.cli.parameters import (
     InputRewindInterval,
     PointInStreamParamType,
 )
+from ytpb.cli.templating import (
+    expand_template,
+    IntervalOutputPathContext,
+    MinimalOutputPathContext,
+    TEMPLATE_STRING_RE,
+)
 from ytpb.errors import QueryError, SegmentDownloadError, SequenceLocatingError
 from ytpb.locate import SegmentLocator
 from ytpb.segment import Segment
-from ytpb.types import (
-    AbsolutePointInStream,
-    AddressableMappingProtocol,
-    DateInterval,
-    SegmentSequence,
-)
-from ytpb.utils.date import DurationFormatPattern, format_duration, ISO8601DateFormatter
+from ytpb.types import AbsolutePointInStream, DateInterval, SegmentSequence
+from ytpb.utils.date import DurationFormatPattern, format_duration
 from ytpb.utils.other import resolve_relativity_in_interval
-from ytpb.utils.path import (
-    expand_template_output_path,
-    IntervalOutputPathContext,
-    MinimalOutputPathContext,
-    OUTPUT_PATH_PLACEHOLDER_RE,
-    OutputPathContextRenderer,
-    render_minimal_output_path_context,
-)
+from ytpb.utils.path import sanitize_filename
 from ytpb.utils.remote import request_reference_sequence
 
 logger = structlog.get_logger(__name__)
@@ -75,39 +68,6 @@ class CaptureOutputPathContext(MinimalOutputPathContext):
 
 class TimelapseOutputPathContext(MinimalOutputPathContext, IntervalOutputPathContext):
     every: timedelta
-
-
-def render_capture_output_path_context(
-    context: CaptureOutputPathContext,
-    config_settings: AddressableMappingProtocol,
-) -> CaptureOutputPathContext:
-    output = context
-    for variable in CaptureOutputPathContext.__annotations__.keys():
-        match variable:
-            case "moment_date" as x:
-                date_formatter = ISO8601DateFormatter()
-                output[x] = OutputPathContextRenderer.render_date(
-                    context[x], date_formatter, config_settings
-                )
-
-    output.update(render_minimal_output_path_context(context, config_settings))
-
-    return output
-
-
-def render_timelapse_output_path_context(
-    context: TimelapseOutputPathContext,
-    config_settings: AddressableMappingProtocol,
-) -> TimelapseOutputPathContext:
-    output = context
-    for variable in TimelapseOutputPathContext.__annotations__.keys():
-        match variable:
-            case "every" as x:
-                output[x] = isotimedelta.isoformat(context[x]).replace("P", "E")
-
-    output.update(render_download_output_path_context(context, config_settings))
-
-    return output
 
 
 def convert_every_option_to_timedelta(
@@ -270,17 +230,16 @@ def frame_command(
 
     # Absolute output path of an image with extension.
     final_output_path: Path
-    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output_path)):
+    if TEMPLATE_STRING_RE.search(str(output_path)):
         template_context: CaptureOutputPathContext = {
             "id": playback.video_id,
-            "title": playback.info.title,
+            "title": sanitize_filename(playback.info.title),
             "moment_date": requested_moment_date,
         }
-        final_output_path = expand_template_output_path(
+        final_output_path = expand_template(
             output_path,
+            ctx.obj.jinja_environment,
             template_context,
-            render_capture_output_path_context,
-            ctx.obj.config,
         )
     else:
         final_output_path = output_path
@@ -456,23 +415,22 @@ def timelapse_command(
 
     # Absolute output path of images with a numeric pattern.
     final_output_path: Path
-    if OUTPUT_PATH_PLACEHOLDER_RE.search(str(output_path)):
+    if TEMPLATE_STRING_RE.search(str(output_path)):
         input_timezone = requested_date_interval.start.tzinfo
         template_context: TimelapseOutputPathContext = {
             "id": playback.video_id,
-            "title": playback.info.title,
+            "title": sanitize_filename(playback.info.title),
             "input_start_date": requested_date_interval.start,
             "input_end_date": requested_date_interval.end,
             "actual_start_date": actual_date_interval.start.astimezone(input_timezone),
             "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
             "duration": requested_end_date - requested_start_date,
-            "every": every,
+            "every": isotimedelta.isoformat(every).replace("P", "E"),
         }
-        final_output_path = expand_template_output_path(
+        final_output_path = expand_template(
             output_path,
+            ctx.obj.jinja_environment,
             template_context,
-            render_timelapse_output_path_context,
-            ctx.obj.config,
         )
     else:
         final_output_path = output_path

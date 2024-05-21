@@ -9,12 +9,12 @@ from PIL import Image
 
 from ytpb.cli import parameters
 from ytpb.cli.common import EARLIEST_DATE_TIMEDELTA
-from ytpb.utils.path import OUTPUT_PATH_PLACEHOLDER_RE
+from ytpb.cli.templating import TEMPLATE_STRING_RE
 
 
 def validate_output_path(template_context_class) -> Callable[..., Path]:
     def wrapper(ctx: click.Context, param: click.Option, value: Path) -> Path:
-        if matched := set(OUTPUT_PATH_PLACEHOLDER_RE.findall(str(value))):
+        if matched := set(TEMPLATE_STRING_RE.findall(str(value))):
             known_template_vars = template_context_class.__annotations__.keys()
             if not matched.issubset(known_template_vars):
                 unknown_vars = matched - set(known_template_vars)

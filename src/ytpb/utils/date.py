@@ -233,12 +233,21 @@ class ISO8601DateFormatter(string.Formatter):
     'complete', 'hh', 'hhmm', and 'z'.
     """
 
-    def format_field(self, value: Any, format_spec: str) -> str:
+    def convert_field(self, value: Any, conversion: str | None) -> Any:
         if isinstance(value, datetime):
-            if not format_spec:
-                return format_iso_datetime(value)
-            style_parameters = build_style_parameters_from_spec(format_spec)
-            output = format_iso_datetime(value, style_parameters)  # type: ignore
+            if conversion == "t":
+                return int(value.timestamp())
+        return value
+
+    def format_field(self, value: Any, format_spec: str) -> Any:
+        known_styles = ("basic", "extended", "reduced", "complete", "hh", "hhmm", "z")
+        if isinstance(value, datetime):
+            match format_spec:
+                case spec if set(spec.split(",")).issubset(known_styles):
+                    style_parameters = build_style_parameters_from_spec(spec)
+                    output = format_iso_datetime(value, style_parameters)  # type: ignore
+                case "":
+                    output = format_iso_datetime(value)
         else:
             output = super().format_field(value, format_spec)
 
