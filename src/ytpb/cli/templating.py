@@ -51,7 +51,6 @@ def format_iso_date(value: datetime, styles="basic,complete,hh") -> str:
 
 
 def format_duration(value: timedelta, style="iso") -> str:
-    style = style if style != "iso" else "iso8601"
     pattern = date.DurationFormatPattern[style.upper()]
     return date.format_duration(value, pattern)
 

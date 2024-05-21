@@ -20,9 +20,9 @@ class ISODateStyleParameters:
 
 
 class DurationFormatPattern(enum.Enum):
-    NUMERIC = "%H:%M%:%S"
-    ISO8601 = "PT[%-HH][%-MM][%-SS]"
-    IN_SENTENCE = "[%-H h ][%-M m ][%-S s]"
+    ISO = "PT[%-HH][%-MM][%-SS]"
+    NUMERIC = "%H:%M:%S"
+    SENTENCE = "[%-H h ][%-M m ][%-S s]"
 
 
 class ISODateFormatter(string.Formatter):

@@ -129,19 +129,72 @@ class TestFormatDatetime:
             )
 
 
-@pytest.mark.parametrize(
-    "delta,expected",
-    [
-        (timedelta(hours=1), "PT1H"),
-        (timedelta(hours=1, minutes=2), "PT1H2M"),
-        (timedelta(hours=1, minutes=2, seconds=3), "PT1H2M3S"),
-        (timedelta(hours=0, minutes=2, seconds=3), "PT2M3S"),
-        (timedelta(hours=0, minutes=0, seconds=3), "PT3S"),
-        (timedelta(hours=1, minutes=0, seconds=3), "PT1H3S"),
-    ],
-)
-def test_format_duration(delta, expected: str):
-    assert expected == format_duration(delta, DurationFormatPattern.ISO8601)
+class TestFormatDuration:
+    @pytest.mark.parametrize(
+        "duration,expected",
+        [
+            (timedelta(hours=1), "PT1H"),
+            (timedelta(hours=1, minutes=2), "PT1H2M"),
+            (
+                timedelta(hours=1, minutes=2, seconds=30),
+                "PT1H2M30S",
+            ),
+            (timedelta(hours=0, minutes=2, seconds=30), "PT2M30S"),
+            (
+                timedelta(hours=0, minutes=0, seconds=30),
+                "PT30S",
+            ),
+            (timedelta(hours=0, minutes=0, seconds=30.123), "PT30S"),
+            (timedelta(hours=1, minutes=0, seconds=30), "PT1H30S"),
+            (timedelta(seconds=123), "PT2M3S"),
+        ],
+    )
+    def test_iso_pattern(self, duration: timedelta, expected: str):
+        assert expected == format_duration(duration, DurationFormatPattern.ISO)
+
+    @pytest.mark.parametrize(
+        "duration,expected",
+        [
+            (timedelta(hours=1), "01:00:00"),
+            (timedelta(hours=1, minutes=2), "01:02:00"),
+            (
+                timedelta(hours=1, minutes=2, seconds=30),
+                "01:02:30",
+            ),
+            (timedelta(hours=0, minutes=2, seconds=30), "00:02:30"),
+            (
+                timedelta(hours=0, minutes=0, seconds=30),
+                "00:00:30",
+            ),
+            (timedelta(hours=0, minutes=0, seconds=30.123), "00:00:30"),
+            (timedelta(hours=1, minutes=0, seconds=30), "01:00:30"),
+            (timedelta(seconds=123), "00:02:03"),
+        ],
+    )
+    def test_numeric_pattern(self, duration: timedelta, expected: str):
+        assert expected == format_duration(duration, DurationFormatPattern.NUMERIC)
+
+    @pytest.mark.parametrize(
+        "duration,expected",
+        [
+            (timedelta(hours=1), "1 h"),
+            (timedelta(hours=1, minutes=2), "1 h 2 m"),
+            (
+                timedelta(hours=1, minutes=2, seconds=30),
+                "1 h 2 m 30 s",
+            ),
+            (timedelta(hours=0, minutes=2, seconds=30), "2 m 30 s"),
+            (
+                timedelta(hours=0, minutes=0, seconds=30),
+                "30 s",
+            ),
+            (timedelta(hours=0, minutes=0, seconds=30.123), "30 s"),
+            (timedelta(hours=1, minutes=0, seconds=30), "1 h 30 s"),
+            (timedelta(seconds=123), "2 m 3 s"),
+        ],
+    )
+    def test_sentence_pattern(self, duration: timedelta, expected: str):
+        assert expected == format_duration(duration, DurationFormatPattern.SENTENCE)
 
 
 @pytest.mark.parametrize(

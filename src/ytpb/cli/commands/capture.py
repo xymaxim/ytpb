@@ -87,7 +87,7 @@ def print_timelapse_summary_info(
 ) -> None:
     click.echo(
         "Every {} a time-lapse frame will be captured:".format(
-            format_duration(every, DurationFormatPattern.IN_SENTENCE)
+            format_duration(every, DurationFormatPattern.SENTENCE)
         )
     )
 
