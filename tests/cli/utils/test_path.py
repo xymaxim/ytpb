@@ -16,7 +16,7 @@ from ytpb.cli.utils.path import adjust_string_for_filename, AllowedCharacters
         ),
         (
             "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG",  # noqa: E501
-            "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG",  # noqa: E501
+            "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 - TBS NEWS DIG",  # noqa: E501
         ),
     ],
 )
@@ -39,7 +39,7 @@ def test_adjust_title_for_filename_as_is(title, expected):
         ),
         (
             "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG",  # noqa: E501
-            "【LIVE】新宿駅前の様子-Shinjuku,-Tokyo-JAPAN【ライブカメラ】-|-TBS-NEWS-DIG",  # noqa: E501
+            "【LIVE】新宿駅前の様子-Shinjuku,-Tokyo-JAPAN【ライブカメラ】---TBS-NEWS-DIG",  # noqa: E501
         ),
     ],
 )
@@ -60,7 +60,7 @@ def test_adjust_title_for_filename_with_separator(title, expected):
         ),
         (
             "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG",  # noqa: E501
-            "[(LIVE)] Xin Su Yi Qian noYang Zi Shinjuku, Tokyo JAPAN[(raibukamera)] | TBS NEWS DIG",  # noqa: E501
+            "[(LIVE)] Xin Su Yi Qian noYang Zi Shinjuku, Tokyo JAPAN[(raibukamera)] - TBS NEWS DIG",  # noqa: E501
         ),
     ],
 )
@@ -83,7 +83,7 @@ def test_adjust_title_for_filename_with_ascii_and_no_separator(title, expected):
         ),
         (
             "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG",  # noqa: E501
-            "[(LIVE)]-Xin-Su-Yi-Qian-noYang-Zi-Shinjuku,-Tokyo-JAPAN[(raibukamera)]-|-TBS-NEWS-DIG",  # noqa: E501
+            "[(LIVE)]-Xin-Su-Yi-Qian-noYang-Zi-Shinjuku,-Tokyo-JAPAN[(raibukamera)]---TBS-NEWS-DIG",  # noqa: E501
         ),
     ],
 )

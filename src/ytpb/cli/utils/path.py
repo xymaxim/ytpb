@@ -27,9 +27,7 @@ class AllowedCharacters(enum.StrEnum):
 
 def sanitize_filename(value: str) -> str:
     normalized = unicodedata.normalize("NFKC", value)
-    output = pathvalidate.sanitize_filename(
-        normalized, replacement_text="-", platform="POSIX"
-    )
+    output = pathvalidate.sanitize_filename(normalized, replacement_text="-")
     return output
 
 
