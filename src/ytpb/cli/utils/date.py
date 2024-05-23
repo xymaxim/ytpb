@@ -20,6 +20,7 @@ class ISODateStyleParameters:
 
 
 class DurationFormatPattern(enum.Enum):
+    HMS = "[%-Hh][%-Mm][%-Ss]"
     ISO = "PT[%-HH][%-MM][%-SS]"
     NUMERIC = "%H:%M:%S"
     SENTENCE = "[%-H h ][%-M m ][%-S s]"
@@ -68,11 +69,10 @@ def format_iso_datetime(
     date: datetime,
     style: ISODateStyleParameters | None = None,
 ) -> str:
-    """Format `datetime` objects after ISO 8601. Supports complete and reduced
-    date and time representations in basic and extended formats.
+    """Format `datetime` objects after ISO 8601.
 
-    Complete:
-    - [year]["-"][month]["-"][day]["T"][hour][min][sec]
+    Supports complete and reduced date and time representations in basic and
+    extended formats.
     """
 
     if style is None:

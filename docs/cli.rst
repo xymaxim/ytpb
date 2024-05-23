@@ -395,146 +395,56 @@ The default option values are as follows:
 
 .. code:: TOML
 
-	  [options.download]
-	  audio_format = "@140"
-	  video_format = "best(@mp4 and <=1080p and @30fps)"
+   [options.download]
+   audio_format = "@140"
+   video_format = "best(@mp4 and <=1080p and @30fps)"
 
-          [options.capture.frame]
-	  video_format = "best(@mp4 and @30fps)"
+   [options.capture.frame]
+   video_format = "best(@mp4 and @30fps)"
 
-          [options.capture.timelapse]
-	  video_format = "best(@mp4 and @30fps)"
+   [options.capture.timelapse]
+   video_format = "best(@mp4 and @30fps)"
 
-	  [options.mpd.compose]
-	  audio_formats = "@140"
-	  video_formats = "@webm and [@720p or @1080p] and @30fps"
+   [options.mpd.compose]
+   audio_formats = "@140"
+   video_formats = "@webm and [@720p or @1080p] and @30fps"
 
 Specifying output name
 ======================
 
-There are two options to change the output naming: (a) specify a full output
-path, (b) provide a template output path (both without extension). The extension
-will be automatically determined during the merging step.
+By default, merged files are saved in the current working directory with
+names composed of the adjusted title, video ID and formatted input start
+date::
 
-Specify values directly via the ``-o / --output`` option::
+  $ ytpb download -i PT30S/20240102T102030+00 abcdefgh123 && ls
+  Stream-title_abcdefgh123_20240102T102000+00.mkv
 
-  $ ytpb download -o '<title>_<input_start_date>' ... && ls
-  $ Stream-Title_20240102T102000+00.mp4
+There are several ways to change the output naming: (a) provide a full output
+path or (b) provide a template output path (c) change the default corresponding
+configuration value. All are without extension: the extension will be
+automatically determined during the merging step.
 
-Or set default option values in the ``config.toml`` file::
+(A) Provide a full value directly via the ``-o / --output`` option::
 
-  [options.download]
-  output = <title>_<input_start_date>
+      $ ytpb download -o output/path ... && ls output/*
+      output/path.mkv
 
-See :ref:`reference:Output name context` for the available template variables.
+(B) Provide a template value via the ``-o / --output`` option::
 
-Formatting titles
------------------
+      $ ytpb download -o '{{ title|adjust }}_{{ input_start_date|isodate }}' ... && ls
+      Stream-title_20240102T102000+00.mkv
 
-Titles can be formatted to adapt them for the output name: set maximum length,
-normalize characters, change case, etc.
+    See :ref:`Templating` for templating and available variables.
 
-See the corresponding ``[output.title]`` section in ``config.toml``.
+(C) Change the default option value in the ``config.toml`` file:
 
-*Available styles*
-^^^^^^^^^^^^^^^^^^
+    .. code:: TOML
 
-Two styles are available: ``original`` and ``custom``.
+       [options.download]
+       output = "{{ title|adjust }}_{{ input_start_date|isodate }}"
 
-.. collapse:: Click here for details on available styles...
-
-   Let's consider the following titles as original:
-
-   1. FRANCE 24 – EN DIRECT – Info et actualités internationales en continu 24h/24
-   2. 【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG
-
-   .. raw:: html
-
-            <h6><code>original</code></h6>
-
-   An original title with unallowed symbols replaced. Allows Unicode characters.
-
-   .. code:: TOML
-
-             [output.title]
-             style = "original"
-
-   1. ``FRANCE 24 – EN DIRECT – Info et actualités internationales en continu 24h-24``
-   2. ``【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG``
-
-   .. raw:: html
-
-      <h6><code>custom</code></h6>
-
-   Format an original title with settings from the ``[output.title.custom]``
-   section: reduce length, convert to ASCII-only characters, make
-   POSIX-compatible, make lowercase.
-
-   *Shortening titles*. For example, to shorten the title length (by truncating at
-   word boundaries) and keep Unicode characters, the following settings:
-
-   .. code:: TOML
-
-             [output.title]
-             style = "custom"
-
-             [output.title.custom]
-             max_length = 30
-             characters = "unicode"
-
-   will produce:
-
-   1. ``FRANCE 24 — EN DIRECT — Info et actualités``
-   2. ``【LIVE】新宿駅前の様子 Shinjuku, Tokyo``
-
-   *Converting to ASCII-only*. To convert all characters to ASCII-only, the following:
-
-   .. code:: TOML
-
-             [output.title.custom]
-             characters = "ascii"
-
-   will produce:
-
-   1. ``FRANCE 24 -- EN DIRECT -- Info et actualites internationales en continu 24h-24``
-   2. ``[(LIVE)] Xin Su Yi Qian noYang Zi Shinjuku, Tokyo JAPAN[(raibukamera)] | TBS NEWS DIG``
-
-   *Making POSIX-compliant*. To make the output filename POSIX-compliant and
-   lowercase it, the following:
-
-   .. code:: TOML
-
-             [output.title.custom]
-             max_length = 50
-             separator = "-"
-             characters = "posix"
-             lowercase = true
-
-   will produce:
-
-   1. ``france-24--en-direct--info-et-actualites-internationales-en-continu-24h-24``
-   2. ``live-xin-su-yi-qian-noyang-zi-shinjuku-tokyo-japan-raibukamera-tbs-news-dig``
-
-Formatting dates
-----------------
-
-The date formatting can be changed via the ``output.date.styles`` field in the
-``config.toml`` file. The default set of styles (``"basic,reduced,hh"``)
-corresponds to the basic representation with the reduced precision. Some other
-examples:
-
-.. code:: TOML
-
-	  [output.date]
-	  # 2024-01-02T10:20:00+00:00
-	  styles = "extended,complete,hhmm"
-
-	  # 20240102T102000+00
-	  styles = "basic,complete,hh"
-
-	  # 20240102T1020Z
-          # 20240102T1220+02
-	  styles = "basic,reduced,z"
+       [options.capture.frame]
+       ...
 
 Writing metadata tags
 =====================

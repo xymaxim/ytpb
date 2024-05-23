@@ -1,3 +1,5 @@
+.. py:currentmodule:: ytpb
+
 Reference
 #########
 
@@ -183,41 +185,214 @@ Here is an example of how to define (and reuse) aliases:
 	  preferred-videos = "@<=1080p and @30fps"
           video-for-mpd = "best(@preferred-videos and @webm)"
 
-Locating moment in a stream
-***************************
+.. _Templating:
 
-A moment in a stream is associated with a date it occurred (captured). We rely
-on the ingestion dates of media segments for dates. (A MPEG-DASH stream consists
-of a chain of sequential media segments with a fixed duration.) Thus, to locate a
-moment with an input date, a segment containing a desired moment first needs to
-be located. After, if cut is requested (as it does by default), an offset to be
-cut to perfectly (as possible) match a moment can be determined. Plus, a moment
-can be inside a gap caused by a frame loss. All of these may make the difference
-between input and actual dates.
+Templating and context variables
+********************************
 
-Output name context
-*******************
+.. contents::
+   :depth: 1
+   :backlinks: none
+   :local:
 
-An output name can be specified as a template by referring to the context
-variables as ``<variable>``. The available template variables are:
+.. currentmodule:: ytpb.cli.templating
 
-.. table::
+Output paths can be provided as templates. Our choice of templates settled on
+`Jinja <https://jinja.palletsprojects.com/>`__. It's versatile, expressive and
+allow users to produce very flexible outputs.
 
-   +-----------------------+---------------------+--------------------+-----------------------------+
-   | Variable              | Description         | Example            | Corresponding configuration |
-   |                       |                     |                    | section                     |
-   +=======================+=====================+====================+=============================+
-   | ``id``                | YouTube video ID    | abcdefgh123        | —                           |
-   +-----------------------+---------------------+--------------------+-----------------------------+
-   | ``title``             | Title               | Stream Title       | ``[output.title]``          |
-   +-----------------------+---------------------+--------------------+-----------------------------+
-   | ``input_start_date``  | Input start date    | 20240102T102030+00 | ``[output.date.style]``     |
-   +-----------------------+---------------------+--------------------+-----------------------------+
-   | ``input_end_date``    | Input end date      | ~                  | ~                           |
-   +-----------------------+---------------------+--------------------+-----------------------------+
-   | ``actual_start_date`` | Actual start date   | ~                  | ~                           |
-   +-----------------------+---------------------+--------------------+-----------------------------+
-   | ``actual_end_date``   | Actual end date     | ~                  | ~                           |
-   +-----------------------+---------------------+--------------------+-----------------------------+
-   | ``duration``          | Actual duration     | PT1M30S            | —                           |
-   +-----------------------+---------------------+--------------------+-----------------------------+
+Quick intro
+===========
+
+Jinja has its own detailed `reference
+<https://jinja.palletsprojects.com/en/latest/templates/>`__ for template
+designers. For our needs we only need the basic features: to output variables,
+format values, and run some simple expressions.
+
+Using variables
+---------------
+
+The simplest form to display template variables (`link
+<https://jinja.palletsprojects.com/en/latest/templates/#variables>`__) is to
+place them in between the expression delimiters ``{{ }}``.
+
+.. code:: jinja
+
+   {{ variable }}
+   "A variable's value"
+
+Each command has its own context: a set of variables, such as YouTube video ID,
+title, start and end dates, etc. See :ref:`Context variables` for the list of
+all available variables.
+
+Processing with filters
+-----------------------
+
+In most cases, you will need to format values of variables. With filters (`link
+<https://jinja.palletsprojects.com/en/latest/templates/#filters>`__) you can
+process them and change their string representation.
+
+For example, let's strip some emoji from a title and make it titlecase:
+
+.. code:: jinja
+
+   {{ '🔴 Stream title '|replace('🔴 ', '')|title }}
+   "Stream Title"
+
+As you can see, filters can be combined and called without brackets (if there
+are no required arguments or no need to redefine default values).
+
+Jinja comes with a lot of useful `built-in filters
+<https://jinja.palletsprojects.com/en/latest/templates/#list-of-builtin-filters>`__. We
+also provide our :ref:`custom filters<Custom filters>`.
+
+Running expressions
+-------------------
+
+Expressions (`link
+<https://jinja.palletsprojects.com/en/latest/templates/#expressions>`__) let you
+work with templates very similar to regular Python. Actually, you're already
+familiar with expressions: literals are their simplest form and the pipe (``|``)
+symbol is an operator to apply a filter.
+
+For example, let's keep only some part of a title with Python methods and make
+it titlecase again with a filter:
+
+.. code:: jinja
+
+   {{ 'Stream title | Bla bla'.split(' | ')[0]|title }}
+   "Stream Title"
+
+.. _Custom filters:
+
+Custom filters
+==============
+
+In addition to Jinja `built-in filters
+<https://jinja.palletsprojects.com/en/3.0.x/templates/#builtin-filters>`__, here
+is the list of our custom available filters, which can be applied on variables
+of the listed types:
+
+- `str`: :func:`.adjust`
+- `datetime.datetime`: :func:`.isodate`, :func:`.utc`, :func:`.timestamp`
+- `datetime.timedelta`: :func:`.duration`
+
+.. centered:: \* \* \*
+
+.. autofunction:: adjust
+.. autofunction:: isodate
+.. autofunction:: utc
+.. autofunction:: timestamp
+.. autofunction:: duration
+
+.. _Context variables:
+
+Context variables
+=================
+
+Here are the available variables that you can use in your templates. The
+variables are defined by contexts of the (sub-)commands:
+
+  :ref:`download <download-context>`, :ref:`capture frame <capture-frame-context>`,
+  :ref:`capture timelapse <capture-timelapse-context>`, :ref:`mpd compose <mpd-compose-context>`
+
+Base contexts
+-------------
+
+.. autoclass:: ytpb.cli.templating.MinimalOutputPathContext
+.. autoclass:: ytpb.cli.templating.IntervalOutputPathContext
+
+Command contexts
+----------------
+
+.. _download-context:
+
+``ytpb download``
+^^^^^^^^^^^^^^^^^
+
+.. autoclass:: ytpb.cli.commands.download.DownloadOutputPathContext
+
+.. _capture-frame-context:
+
+``ytpb capture frame``
+^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: ytpb.cli.commands.capture.CaptureOutputPathContext
+
+.. _capture-timelapse-context:
+
+``ytpb capture timelapse``
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: ytpb.cli.commands.capture.TimelapseOutputPathContext
+
+.. _mpd-compose-context:
+
+``ytpb mpd compose``
+^^^^^^^^^^^^^^^^^^^^
+
+.. autoclass:: ytpb.cli.commands.mpd.MpdOutputPathContext
+
+Practical examples
+==================
+
+Let's practice with some showcase examples.
+
+#. `Custom format dates`
+
+   While a custom :func:`ytpb.cli.templating.isodate` filter is available, dates
+   can be formatted with `strftime()
+   <https://docs.python.org/3/library/datetime.html#datetime.date.strftime>`__.
+
+   Let's take a date, convert to UTC and then custom format it:
+
+   .. code:: jinja
+
+      {{ (input_start_date|utc).format('%Y%m%d_%H%M%S') }}
+      "20240102_102030"
+
+#. `Set and reuse variables`
+
+   Sometimes it would be useful to set new variables. You can define a variable
+   with the ``{% set ... %}`` statement, and use new variables later:
+
+   .. code:: jinja
+
+      {% set a_title = title|adjust %}
+      {% set destination = '{}/{}'.format(a_title, input_start_date.format('%Y/%m')) %}
+      {{ destination ~ '/' ~ a_title ~ '_' ~ input_start_date|isoformat }}
+      "Stream-title/2024/01/Stream-title_20240102T102030+00"
+
+#. `Conditionally print variables`
+
+   What if you `want
+   <https://www.reddit.com/r/youtubedl/comments/1cydndz/conditional_output_template_with_batch_download>`__
+   to include some information based on a condition? Let's try to print the 'HD'
+   suffix only for HD quality representations in this example.
+
+   Set a new variable based on the condition by accessing an attribute of
+   a representation object:
+
+   .. code:: jinja
+
+      {% set hd_suffix = 'HD' if representation.height >= 1080 else None %}
+
+   Output string can be composed in different ways:
+
+   .. code:: jinja
+
+      {# Using multiple expressions and string concatenation #}
+      {{ title|adjust }}_{{ representation.quality }}{{ '_' ~ hd_suffix if hd_label }}
+
+      {# Using string list elements joined by the delimiter #}
+      {{ [title|adjust, representation.quality, hd_suffix]|select('string')|join('_') }}
+
+   And rendered outputs will be:
+
+   .. code:: jinja
+
+      {# Some representation #}
+      "Stream-title_720p"
+
+      {# Another representation #}
+      "Stream-title_1080p60_HD"

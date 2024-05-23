@@ -2,6 +2,7 @@ import datetime
 
 from ytpb._version import __version__
 
+
 project = "Ytpb"
 author = "Maxim Stolyarchuk"
 copyright = f"{datetime.date.today().year}, Maxim Stolyarchuk"
@@ -35,6 +36,9 @@ autodoc_default_options = {
     "show-inheritance": True,
     "autoclass_content": "both",
 }
+
+autodoc_preserve_defaults = True
+autodoc_inherit_docstrings = True
 
 napoleon_google_docstring = True
 napoleon_include_init_with_doc = True

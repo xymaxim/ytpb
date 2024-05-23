@@ -63,10 +63,12 @@ logger = structlog.get_logger(__name__)
 
 
 class CaptureOutputPathContext(MinimalOutputPathContext):
+    #: Date the frame was captured.
     moment_date: datetime
 
 
 class TimelapseOutputPathContext(MinimalOutputPathContext, IntervalOutputPathContext):
+    #: Interval at wich frames are captured.
     every: timedelta
 
 

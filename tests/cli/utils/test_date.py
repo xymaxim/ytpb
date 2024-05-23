@@ -196,6 +196,28 @@ class TestFormatDuration:
     def test_sentence_pattern(self, duration: timedelta, expected: str):
         assert expected == format_duration(duration, DurationFormatPattern.SENTENCE)
 
+    @pytest.mark.parametrize(
+        "duration,expected",
+        [
+            (timedelta(hours=1), "1h"),
+            (timedelta(hours=1, minutes=2), "1h2m"),
+            (
+                timedelta(hours=1, minutes=2, seconds=30),
+                "1h2m30s",
+            ),
+            (timedelta(hours=0, minutes=2, seconds=30), "2m30s"),
+            (
+                timedelta(hours=0, minutes=0, seconds=30),
+                "30s",
+            ),
+            (timedelta(hours=0, minutes=0, seconds=30.123), "30s"),
+            (timedelta(hours=1, minutes=0, seconds=30), "1h30s"),
+            (timedelta(seconds=123), "2m3s"),
+        ],
+    )
+    def test_hms_pattern(self, duration: timedelta, expected: str):
+        assert expected == format_duration(duration, DurationFormatPattern.HMS)
+
 
 @pytest.mark.parametrize(
     "delta,expected",
