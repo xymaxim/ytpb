@@ -313,6 +313,8 @@ Base contexts
 -------------
 
 .. autoclass:: ytpb.cli.templating.MinimalOutputPathContext
+.. autoclass:: ytpb.cli.templating.AudioStreamOutputPathContext
+.. autoclass:: ytpb.cli.templating.VideoStreamOutputPathContext
 .. autoclass:: ytpb.cli.templating.IntervalOutputPathContext
 
 Command contexts
@@ -344,7 +346,7 @@ Command contexts
 ``ytpb mpd compose``
 ^^^^^^^^^^^^^^^^^^^^
 
-.. autoclass:: ytpb.cli.commands.mpd.MpdOutputPathContext
+.. autoclass:: ytpb.cli.commands.mpd.MPDOutputPathContext
 
 Practical examples
 ==================
