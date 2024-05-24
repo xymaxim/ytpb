@@ -214,12 +214,25 @@ Using variables
 
 The simplest form to display template variables (`link
 <https://jinja.palletsprojects.com/en/latest/templates/#variables>`__) is to
-place them in between the expression delimiters ``{{ }}``.
+place them in between the ``{{ }}`` expression delimiters:
 
 .. code:: jinja
 
    {{ variable }}
    "A variable's value"
+
+Mutliple variables can be formatted together by using: (a) several
+expressions, (b) the standard :func:`str.format()` method or the related filter
+(`link
+<https://jinja.palletsprojects.com/en/3.1.x/templates/#jinja-filters.format>`__),
+or (c) the ``~`` (tilde) operator.
+
+.. code:: jinja
+
+   {{ A }} and {{ B }}
+   {{ '{} and {}'.format(A, B) }}
+   {{ A ~ 'and' ~ B  }}
+   "Alpha and Beta"
 
 Each command has its own context: a set of variables, such as YouTube video ID,
 title, start and end dates, etc. See :ref:`Context variables` for the list of
@@ -228,9 +241,9 @@ all available variables.
 Processing with filters
 -----------------------
 
-In most cases, you will need to format values of variables. With filters (`link
-<https://jinja.palletsprojects.com/en/latest/templates/#filters>`__) you can
-process them and change their string representation.
+In most cases, you will need to format values of variables. With *filters*
+(`link <https://jinja.palletsprojects.com/en/latest/templates/#filters>`__) you
+can process them and change their string representation.
 
 For example, let's strip some emoji from a title and make it titlecase:
 
@@ -249,7 +262,7 @@ also provide our :ref:`custom filters<Custom filters>`.
 Running expressions
 -------------------
 
-Expressions (`link
+*Expressions* (`link
 <https://jinja.palletsprojects.com/en/latest/templates/#expressions>`__) let you
 work with templates very similar to regular Python. Actually, you're already
 familiar with expressions: literals are their simplest form and the pipe (``|``)
@@ -341,14 +354,16 @@ Let's practice with some showcase examples.
 #. `Custom format dates`
 
    While a custom :func:`ytpb.cli.templating.isodate` filter is available, dates
-   can be formatted with `strftime()
-   <https://docs.python.org/3/library/datetime.html#datetime.date.strftime>`__.
+   can be formatted with the standard `strftime()
+   <https://docs.python.org/3/library/datetime.html#datetime.date.strftime>`__
+   function.
 
-   Let's take a date, convert to UTC and then custom format it:
+   Let's take a date, convert to UTC with the :func:`utc` filter and then custom
+   format it:
 
    .. code:: jinja
 
-      {{ (input_start_date|utc).format('%Y%m%d_%H%M%S') }}
+      {{ (input_start_date|utc).strftime('%Y%m%d_%H%M%S') }}
       "20240102_102030"
 
 #. `Set and reuse variables`
@@ -370,29 +385,53 @@ Let's practice with some showcase examples.
    to include some information based on a condition? Let's try to print the 'HD'
    suffix only for HD quality representations in this example.
 
-   Set a new variable based on the condition by accessing an attribute of
-   a representation object:
+   Set a new variable based on the result of the ``if-else`` inline expression
+   (`link
+   <https://jinja.palletsprojects.com/en/3.0.x/templates/#if-expression>`__) by
+   accessing an attribute of a video stream
+   (:class:`~ytpb.representations.VideoRepresentationInfo`) object:
 
    .. code:: jinja
 
-      {% set hd_suffix = 'HD' if representation.height >= 1080 else None %}
+      {% set hd_suffix = 'HD' if video_stream.height >= 720 else None %}
 
-   Output string can be composed in different ways:
+   Output string can be composed in several ways:
 
    .. code:: jinja
 
       {# Using multiple expressions and string concatenation #}
-      {{ title|adjust }}_{{ representation.quality }}{{ '_' ~ hd_suffix if hd_label }}
+      {{ title|adjust }}_{{ video_stream.quality }}{{ '_' ~ hd_suffix if hd_suffix }}
 
-      {# Using string list elements joined by the delimiter #}
-      {{ [title|adjust, representation.quality, hd_suffix]|select('string')|join('_') }}
+      {# Using *string* list elements joined by the delimiter #}
+      {{ [title|adjust, video_stream.quality, hd_suffix]|select('string')|join('_') }}
 
    And rendered outputs will be:
 
    .. code:: jinja
 
       {# Some representation #}
-      "Stream-title_720p"
+      "Stream-title_480p"
 
       {# Another representation #}
       "Stream-title_1080p60_HD"
+
+   However, as you may have noticed, the example will fail for audio-only
+   downloads. While you can use the inline condition, in
+   the next example we'll see another approach based on *statements*.
+
+#. `Use condition statements`
+
+   The idea would be to differentiate between audio and video template strings
+   with the help of the ``if`` statement (`link
+   <https://jinja.palletsprojects.com/en/3.0.x/templates/#if>`__): it will make
+   a template much cleaner. Here's a slightly simplified example:
+
+   .. code:: jinja
+
+      {% if video_stream %}
+          {{ title|adjust }}/{{ video_stream.quality }}/... }}
+      {% else %}
+          {{ title|adjust }}/audio/... }}
+      {% endif %}
+      "Stream-title/1080p/..." or
+      "Stream-title/auto/..."
