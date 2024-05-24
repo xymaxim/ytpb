@@ -9,13 +9,13 @@
    why
    quick
    cli
-   package/index
    reference
-   Questions <questions>
+   package/index
 
 .. toctree::
    :maxdepth: 1
 
+   Questions <questions>
    cookbook
    changelog
    contributing
