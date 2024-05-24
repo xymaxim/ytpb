@@ -5,23 +5,32 @@ from typing import Callable
 
 import click
 from cloup.constraints import constraint, mutually_exclusive
+from jinja2 import TemplateSyntaxError
+from jinja2.meta import find_undeclared_variables
 from PIL import Image
 
 from ytpb.cli import parameters
 from ytpb.cli.common import EARLIEST_DATE_TIMEDELTA
-from ytpb.cli.templating import TEMPLATE_STRING_RE
+from ytpb.cli.templating import check_is_template
 
 
 def validate_output_path(template_context_class) -> Callable[..., Path]:
     def wrapper(ctx: click.Context, param: click.Option, value: Path) -> Path:
-        if matched := set(TEMPLATE_STRING_RE.findall(str(value))):
-            known_template_vars = template_context_class.__annotations__.keys()
-            if not matched.issubset(known_template_vars):
-                unknown_vars = matched - set(known_template_vars)
-                unknown_vars_string = str(unknown_vars).strip("{}")
+        if check_is_template(str(value)):
+            try:
+                parsed = ctx.obj.jinja_environment.parse(str(value))
+            except TemplateSyntaxError as exc:
                 raise click.BadParameter(
-                    f"Unknown variable(s) found: {unknown_vars_string}. "
-                    f"Option value: '{value}'."
+                    f"Bad template syntax, line {exc.lineno}: {exc}"
+                )
+            undeclared_variables = find_undeclared_variables(parsed)
+            context_variables = set(template_context_class.__annotations__.keys())
+            if not undeclared_variables.issubset(context_variables):
+                unknown_variables = undeclared_variables - context_variables
+                raise click.BadParameter(
+                    "Unknown template variable(s) found: {}.".format(
+                        str(unknown_variables).strip("{}")
+                    )
                 )
         return value
 

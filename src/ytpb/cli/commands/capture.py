@@ -45,10 +45,10 @@ from ytpb.cli.parameters import (
     PointInStreamParamType,
 )
 from ytpb.cli.templating import (
+    check_is_template,
     expand_template,
     IntervalOutputPathContext,
     MinimalOutputPathContext,
-    TEMPLATE_STRING_RE,
     VideoStreamOutputPathContext,
 )
 from ytpb.cli.utils.date import DurationFormatPattern, format_duration
@@ -235,11 +235,10 @@ def frame_command(
 
     # Absolute output path of an image with extension.
     final_output_path: Path
-    if TEMPLATE_STRING_RE.search(str(output_path)):
+    if check_is_template(str(output_path)):
         template_context: CaptureOutputPathContext = {
             "id": playback.video_id,
             "title": sanitize_filename(playback.info.title),
-            "audio_stream": None,
             "video_stream": reference_stream,
             "moment_date": requested_moment_date,
         }
@@ -422,7 +421,7 @@ def timelapse_command(
 
     # Absolute output path of images with a numeric pattern.
     final_output_path: Path
-    if TEMPLATE_STRING_RE.search(str(output_path)):
+    if check_is_template(str(output_path)):
         input_timezone = requested_date_interval.start.tzinfo
         template_context: TimelapseOutputPathContext = {
             "id": playback.video_id,

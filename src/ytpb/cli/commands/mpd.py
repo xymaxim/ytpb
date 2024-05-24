@@ -30,10 +30,10 @@ from ytpb.cli.options import (
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
 from ytpb.cli.templating import (
+    check_is_template,
     expand_template,
     IntervalOutputPathContext,
     MinimalOutputPathContext,
-    TEMPLATE_STRING_RE,
 )
 from ytpb.cli.utils.date import express_timedelta_in_words
 from ytpb.cli.utils.path import sanitize_filename
@@ -230,7 +230,7 @@ def compose_command(
 
     # Absolute output path of a manifest with extension.
     final_output_path: Path
-    if TEMPLATE_STRING_RE.search(str(output_path)):
+    if check_is_template(str(output_path)):
         input_timezone = requested_date_interval.start.tzinfo
         template_context: MPDOutputPathContext = {
             "id": playback.video_id,

@@ -1,24 +1,14 @@
 import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import TypedDict, TypeVar
+from typing import Any, TypedDict, TypeVar
 
 import jinja2
 
 from ytpb.cli.utils import date, path
 from ytpb.types import AudioStream, VideoStream
 
-__all__ = [
-    "MinimalOutputPathContext",
-    "IntervalOutputPathContext",
-    "TEMPLATE_STRING_RE",
-    "FILTERS",
-    "expand_template",
-]
-
 T = TypeVar("T", str, Path)
-
-TEMPLATE_STRING_RE = re.compile(r"\{\{\s?([a-z_]+)\|?.*\}\}")
 
 
 class MinimalOutputPathContext(TypedDict):
@@ -49,6 +39,10 @@ class IntervalOutputPathContext(TypedDict):
     actual_end_date: datetime
     #: Actual duration.
     duration: timedelta
+
+
+def check_is_template(value: str) -> bool:
+    return any([delimiter in value for delimiter in ("{#", "{{", "{%")])
 
 
 def expand_template(

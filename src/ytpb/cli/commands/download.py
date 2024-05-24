@@ -35,10 +35,10 @@ from ytpb.cli.options import (
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewindInterval
 from ytpb.cli.templating import (
     AudioStreamOutputPathContext,
+    check_is_template,
     expand_template,
     IntervalOutputPathContext,
     MinimalOutputPathContext,
-    TEMPLATE_STRING_RE,
     VideoStreamOutputPathContext,
 )
 from ytpb.cli.utils.path import (
@@ -443,7 +443,7 @@ def download_command(
             if str(output_path) == default_output_path:
                 output_path = Path("{{ title|adjust }}_{{ id }}_preview")
 
-        if TEMPLATE_STRING_RE.search(str(output_path)):
+        if check_is_template(str(output_path)):
             input_timezone = requested_date_interval.start.tzinfo
             template_context: DownloadOutputPathContext = {
                 "id": playback.video_id,
