@@ -222,7 +222,7 @@ place them in between the ``{{ }}`` expression delimiters:
    "A variable's value"
 
 Mutliple variables can be formatted together by using: (a) several
-expressions, (b) the standard :func:`str.format()` method or the related filter
+expressions, (b) the standard :meth:`str.format` method or the related filter
 (`link
 <https://jinja.palletsprojects.com/en/3.1.x/templates/#jinja-filters.format>`__),
 or (c) the ``~`` (tilde) operator.
@@ -356,8 +356,7 @@ Let's practice with some showcase examples.
 #. `Custom format dates`
 
    While a custom :func:`ytpb.cli.templating.isodate` filter is available, dates
-   can be formatted with the standard `strftime()
-   <https://docs.python.org/3/library/datetime.html#datetime.date.strftime>`__
+   can be formatted with the standard :meth:`~datetime.date.strftime()`
    function.
 
    Let's take a date, convert to UTC with the :func:`utc` filter and then custom

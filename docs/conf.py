@@ -22,10 +22,15 @@ html_sidebars = {
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.autosectionlabel",
+    "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx_toolbox.collapse",
     "myst_parser",
 ]
+
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+}
 
 autosectionlabel_prefix_document = True
 suppress_warnings = ["autosectionlabel.*"]
