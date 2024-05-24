@@ -12,7 +12,6 @@ from rich.table import Table
 
 from ytpb import types
 from ytpb.actions.compose import compose_static_mpd, refresh_mpd
-from ytpb.cli.commands.download import DownloadOutputPathContext
 from ytpb.cli.common import (
     CONSOLE_TEXT_WIDTH,
     create_playback,
@@ -30,7 +29,12 @@ from ytpb.cli.options import (
     yt_dlp_option,
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
-from ytpb.cli.templating import expand_template, TEMPLATE_STRING_RE
+from ytpb.cli.templating import (
+    expand_template,
+    IntervalOutputPathContext,
+    MinimalOutputPathContext,
+    TEMPLATE_STRING_RE,
+)
 from ytpb.cli.utils.date import express_timedelta_in_words
 from ytpb.cli.utils.path import sanitize_filename
 from ytpb.errors import BroadcastStatusError
@@ -47,7 +51,7 @@ from ytpb.utils.url import build_video_url_from_base_url, extract_parameter_from
 logger = structlog.get_logger(__name__)
 
 
-MpdOutputPathContext = DownloadOutputPathContext
+class MPDOutputPathContext(MinimalOutputPathContext, IntervalOutputPathContext): ...
 
 
 def print_audio_table(console, streams, **table_kwargs):
@@ -107,7 +111,7 @@ def mpd_group():
     "output_path",
     type=click.Path(path_type=Path),
     help="Output path (with extension).",
-    callback=validate_output_path(MpdOutputPathContext),
+    callback=validate_output_path(MPDOutputPathContext),
 )
 @yt_dlp_option
 @cache_options
@@ -228,7 +232,7 @@ def compose_command(
     final_output_path: Path
     if TEMPLATE_STRING_RE.search(str(output_path)):
         input_timezone = requested_date_interval.start.tzinfo
-        template_context: MpdOutputPathContext = {
+        template_context: MPDOutputPathContext = {
             "id": playback.video_id,
             "title": sanitize_filename(playback.info.title),
             "input_start_date": requested_date_interval.start,

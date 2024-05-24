@@ -6,6 +6,7 @@ from typing import TypedDict, TypeVar
 import jinja2
 
 from ytpb.cli.utils import date, path
+from ytpb.types import AudioStream, VideoStream
 
 __all__ = [
     "MinimalOutputPathContext",
@@ -23,8 +24,18 @@ TEMPLATE_STRING_RE = re.compile(r"\{\{\s?([a-z_]+)\|?.*\}\}")
 class MinimalOutputPathContext(TypedDict):
     #: YouTube video ID.
     id: str
-    #: Video title.
+    #: Video's title.
     title: str
+
+
+class AudioStreamOutputPathContext(TypedDict):
+    #: Audio stream (representaiton).
+    audio_stream: AudioStream | None
+
+
+class VideoStreamOutputPathContext(TypedDict):
+    #: Video stream (representaiton).
+    video_stream: VideoStream | None
 
 
 class IntervalOutputPathContext(TypedDict):

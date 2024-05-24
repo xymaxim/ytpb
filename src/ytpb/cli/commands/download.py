@@ -34,10 +34,12 @@ from ytpb.cli.options import (
 )
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewindInterval
 from ytpb.cli.templating import (
+    AudioStreamOutputPathContext,
     expand_template,
     IntervalOutputPathContext,
     MinimalOutputPathContext,
     TEMPLATE_STRING_RE,
+    VideoStreamOutputPathContext,
 )
 from ytpb.cli.utils.path import (
     remove_directories_between,
@@ -61,7 +63,10 @@ logger = structlog.get_logger(__name__)
 
 
 class DownloadOutputPathContext(
-    MinimalOutputPathContext, IntervalOutputPathContext
+    MinimalOutputPathContext,
+    AudioStreamOutputPathContext,
+    VideoStreamOutputPathContext,
+    IntervalOutputPathContext,
 ): ...
 
 
@@ -443,6 +448,8 @@ def download_command(
             template_context: DownloadOutputPathContext = {
                 "id": playback.video_id,
                 "title": sanitize_filename(playback.info.title),
+                "audio_stream": audio_stream,
+                "video_stream": video_stream,
                 "input_start_date": requested_date_interval.start,
                 "input_end_date": requested_date_interval.end,
                 "actual_start_date": (

@@ -49,6 +49,7 @@ from ytpb.cli.templating import (
     IntervalOutputPathContext,
     MinimalOutputPathContext,
     TEMPLATE_STRING_RE,
+    VideoStreamOutputPathContext,
 )
 from ytpb.cli.utils.date import DurationFormatPattern, format_duration
 from ytpb.cli.utils.path import sanitize_filename
@@ -62,12 +63,14 @@ from ytpb.utils.remote import request_reference_sequence
 logger = structlog.get_logger(__name__)
 
 
-class CaptureOutputPathContext(MinimalOutputPathContext):
+class CaptureOutputPathContext(MinimalOutputPathContext, VideoStreamOutputPathContext):
     #: Date the frame was captured.
     moment_date: datetime
 
 
-class TimelapseOutputPathContext(MinimalOutputPathContext, IntervalOutputPathContext):
+class TimelapseOutputPathContext(
+    MinimalOutputPathContext, VideoStreamOutputPathContext, IntervalOutputPathContext
+):
     #: Interval at wich frames are captured.
     every: timedelta
 
@@ -236,6 +239,8 @@ def frame_command(
         template_context: CaptureOutputPathContext = {
             "id": playback.video_id,
             "title": sanitize_filename(playback.info.title),
+            "audio_stream": None,
+            "video_stream": reference_stream,
             "moment_date": requested_moment_date,
         }
         final_output_path = expand_template(
@@ -422,6 +427,8 @@ def timelapse_command(
         template_context: TimelapseOutputPathContext = {
             "id": playback.video_id,
             "title": sanitize_filename(playback.info.title),
+            "audio_stream": None,
+            "video_stream": reference_stream,
             "input_start_date": requested_date_interval.start,
             "input_end_date": requested_date_interval.end,
             "actual_start_date": actual_date_interval.start.astimezone(input_timezone),
