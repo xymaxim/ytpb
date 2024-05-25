@@ -18,13 +18,13 @@ import pytest
 import responses
 import toml
 
-# from platformdirs import platformdirs.user_config_path
-from conftest import TEST_DATA_PATH
 from freezegun import freeze_time
-from helpers import assert_approx_duration
 
-from ytpb.config import DEFAULT_CONFIG
+from ytpb.cli.config import DEFAULT_CONFIG
 from ytpb.playback import RewindInterval, RewindMoment
+
+from tests.conftest import TEST_DATA_PATH
+from tests.helpers import assert_approx_duration
 
 
 @pytest.mark.parametrize(

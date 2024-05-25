@@ -1,14 +1,12 @@
 import logging
 import operator
 import os
-import re
 import tomllib
 from collections import ChainMap
 from collections.abc import Hashable, Mapping
 from functools import reduce
-from itertools import product
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 import platformdirs
 import structlog
@@ -54,64 +52,6 @@ class AddressableChainMap(DeepChainMap, AddressableMixin):
 
 USER_AGENT = "Mozilla/5.0 (Android 14; Mobile; rv:68.0) Gecko/68.0 Firefox/120.0"
 
-
-# Dynamic aliases (such aliases that are expanded by functions).
-def expand_itag_aliases(format_spec: str) -> str:
-    """@<itag> = itag eq <itag>"""
-    return re.sub(r"@(\d+)\b", r"itag eq \1", format_spec)
-
-
-ALIAS_EXPAND_FUNCTIONS: tuple[Callable[[str], str]] = (expand_itag_aliases,)
-
-# Static aliases (such aliases that are explicitly defined).
-FORMAT_ALIASES = {"mp4": "format eq mp4", "webm": "format eq webm"}
-
-VIDEO_QUALITY_HEIGHTS = (144, 240, 360, 480, 720, 1080, 1440, 2160)
-
-VIDEO_QUALITY_30FPS_ALIASES = {
-    f"{height}p": f"height eq {height} and frame_rate eq 30"
-    for height in VIDEO_QUALITY_HEIGHTS
-}
-VIDEO_QUALITY_30FPS_ALIASES.update(
-    {
-        f"{height}p30": f"height eq {height} and frame_rate eq 30"
-        for height in VIDEO_QUALITY_HEIGHTS
-    }
-)
-
-VIDEO_QUALITY_60FPS_ALIASES = {
-    f"{height}p60": f"height eq {height} and frame_rate eq 60"
-    for height in [720, 1080, 1440, 2160]
-}
-
-VIDEO_QUALITY_WITH_OPERATOR_ALIASES = {
-    f"{operator}{height}p": f"height {operator_name} {height}"
-    for (operator, operator_name), height in product(
-        [("<", "lt"), ("<=", "le"), (">", "gt"), (">=", "ge")], VIDEO_QUALITY_HEIGHTS
-    )
-}
-
-NAME_QUALITY_ALIASES = {
-    "low": "height eq 144",
-    "medium": "height eq 480",
-    "high": "height eq 720",
-    "FHD": "height eq 1080",
-    "2K": "height eq 1440",
-    "4K": "height eq 2160",
-}
-
-FRAME_PER_SECOND_ALIASES = {"30fps": "frame_rate eq 30", "60fps": "frame_rate eq 60"}
-
-BUILT_IN_ALIASES = {
-    **FORMAT_ALIASES,
-    **VIDEO_QUALITY_30FPS_ALIASES,
-    **VIDEO_QUALITY_60FPS_ALIASES,
-    **VIDEO_QUALITY_WITH_OPERATOR_ALIASES,
-    **NAME_QUALITY_ALIASES,
-    **FRAME_PER_SECOND_ALIASES,
-}
-
-ALL_ALIASES = {**BUILT_IN_ALIASES}
 
 DEFAULT_OUTPUT_PATH = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}"
 

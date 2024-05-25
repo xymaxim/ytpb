@@ -4,11 +4,11 @@ from typing import NamedTuple
 
 import pytest
 
-from conftest import TEST_DATA_PATH
-
 from ytpb.locate import SegmentLocator, SequenceMetadataPair
 from ytpb.segment import Segment, SegmentMetadata
 from ytpb.types import SegmentSequence
+
+from tests.conftest import TEST_DATA_PATH
 
 
 def read_gap_case_fixture_data(path: Path) -> dict:

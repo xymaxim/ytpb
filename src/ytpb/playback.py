@@ -6,7 +6,7 @@ import tempfile
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Iterable, Self, TypeGuard
+from typing import Iterable, Self, TypedDict, TypeGuard, Unpack
 from urllib.parse import parse_qs, urlparse
 
 import requests
@@ -14,7 +14,6 @@ import structlog
 from platformdirs import user_cache_path
 
 from ytpb.cache import read_from_cache, write_to_cache
-from ytpb.config import USER_AGENT
 from ytpb.download import (
     compose_default_segment_filename,
     download_segment,
@@ -175,7 +174,6 @@ class PlaybackSession(requests.Session):
 
         self.playback = playback
         self.hooks["response"].append(self._handle_http_errors)
-        self.headers["User-Agent"] = USER_AGENT
 
     def set_playback(self, playback):
         self.playback = playback
@@ -232,6 +230,10 @@ class PlaybackSession(requests.Session):
             )
 
 
+class _PlaybackOptions(TypedDict, total=False):
+    user_agent: str
+
+
 class Playback:
     """The playback for live streams."""
 
@@ -241,7 +243,8 @@ class Playback:
         session: requests.Session | None = None,
         fetcher: InfoFetcher | None = None,
         write_to_cache: bool = False,
-    ):
+        **kwargs: Unpack[_PlaybackOptions],
+    ) -> None:
         """Constructs a playback.
 
         To work with a playback, fetch the essential information afterwards::
@@ -254,11 +257,19 @@ class Playback:
             session: An instance of :class:`requests.Session`.
             fetcher: A fetcher used to gather the video information and streams.
             write_to_cache: Whether to write to cache.
+
+        Keyword Args:
+            user_agent: The HTTP User-Agent string used for requests. Note that
+              this value has priority over the value from ``session``
+              headers.
         """
         self.video_url = video_url
-        self.session = session or PlaybackSession(self)
         self.fetcher = fetcher or YtpbInfoFetcher(video_url)
         self._need_to_cache = write_to_cache
+
+        self.session = session or PlaybackSession(self)
+        if user_agent := kwargs.get("user_agent"):
+            self.session.headers["User-Agent"] = user_agent
 
         self._info: YouTubeVideoInfo | LeftNotFetched | None = None
         self._streams: SetOfStreams | None = None
@@ -455,7 +466,7 @@ class Playback:
         """Downloads a segment.
 
         Examples:
-            Download a segment to a file, and read it::
+            Download a segment to a file and read it::
 
                 from ytpb.segment import Segment
                 downloaded_path = playback.download_segment(

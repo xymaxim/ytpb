@@ -1,9 +1,10 @@
 import re
 
-from conftest import TEST_DATA_PATH
 from lxml import etree
 
 from ytpb import representations
+
+from .conftest import TEST_DATA_PATH
 
 
 def test_representation_properties(audio_base_url):

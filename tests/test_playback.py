@@ -20,7 +20,6 @@ from urllib.parse import urljoin
 import pytest
 import responses
 
-from conftest import TEST_DATA_PATH
 from freezegun import freeze_time
 
 from ytpb.errors import (
@@ -38,6 +37,8 @@ from ytpb.types import (
     RelativeSegmentSequence,
     SegmentSequence,
 )
+
+from .conftest import TEST_DATA_PATH
 
 
 @pytest.fixture

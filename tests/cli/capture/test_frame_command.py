@@ -9,9 +9,10 @@ import av
 import click
 import pytest
 
-from conftest import TEST_DATA_PATH
 from freezegun import freeze_time
 from PIL import Image
+
+from tests.conftest import TEST_DATA_PATH
 
 IMAGE_SAVE_SETTINGS = {"format": "jpeg", "quality": 80}
 

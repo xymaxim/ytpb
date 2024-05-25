@@ -2,7 +2,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Any, Protocol, TypeAlias
 
-from ytpb.config import AddressableChainMap
 from ytpb.representations import AudioRepresentationInfo, VideoRepresentationInfo
 
 
@@ -21,8 +20,6 @@ AudioStream: TypeAlias = AudioRepresentationInfo
 VideoStream: TypeAlias = VideoRepresentationInfo
 AudioOrVideoStream: TypeAlias = AudioStream | VideoStream
 SetOfStreams: TypeAlias = "Streams[AudioOrVideoStream]"
-
-ConfigMap: TypeAlias = AddressableChainMap
 
 
 class AddressableMappingProtocol(Protocol):

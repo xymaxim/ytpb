@@ -1,5 +1,6 @@
 """Mutable set of streams."""
 
+import re
 from collections.abc import MutableSet
 from operator import attrgetter
 from typing import Any, Callable, Iterator, Self
@@ -105,19 +106,11 @@ class Streams(MutableSet):
 
                 audio_streams.query("height eq 1080")
 
-        Examples:
-            Query streams of a specific media format using aliases::
-
-                playback.streams.query(
-                    "@webm", aliases={"webm": "format eq webm"}
-                )
-
         References:
             https://ytpb.readthedocs.io/en/latest/reference.html#format-spec
 
         Args:
-            format_spec: A format spec. May contains aliases.
-            aliases: A dictionary of aliases.
+            format_spec: A format spec.
 
         Returns:
             A list of queried streams.
@@ -140,7 +133,7 @@ class Streams(MutableSet):
         else:
             raise QueryError(f"Format spec is invalid: {format_spec}")
 
-        expression_filter = make_filter_from_expression(expression, aliases)
+        expression_filter = make_filter_from_expression(expression)
         queried: list[AudioOrVideoStream] = list(
             filter(expression_filter, self._elements)
         )

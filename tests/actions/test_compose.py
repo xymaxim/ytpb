@@ -5,14 +5,14 @@ import freezegun
 import pytest
 from freezegun import freeze_time
 
-from helpers import patched_freezgun_astimezone
-
 from ytpb.actions.compose import compose_dynamic_mpd, compose_static_mpd, refresh_mpd
 from ytpb.errors import YtpbError
 from ytpb.playback import Playback
 from ytpb.segment import SegmentMetadata
 from ytpb.streams import Streams
 from ytpb.types import AudioOrVideoStream, AudioStream, VideoStream
+
+from tests.helpers import patched_freezgun_astimezone
 
 freezegun.api.FakeDatetime.astimezone = patched_freezgun_astimezone
 

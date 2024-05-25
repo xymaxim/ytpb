@@ -7,10 +7,10 @@ from urllib.parse import urljoin
 
 import responses
 
-from helpers import assert_approx_duration
-
 from ytpb import actions
 from ytpb.playback import Playback, RewindInterval
+
+from tests.helpers import assert_approx_duration
 
 
 @dataclass

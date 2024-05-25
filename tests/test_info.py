@@ -1,8 +1,8 @@
 from dataclasses import asdict
 
-from conftest import TEST_DATA_PATH
-
 from ytpb import info
+
+from tests.conftest import TEST_DATA_PATH
 
 
 def test_extract_video_info(stream_url: str, active_live_video_info):

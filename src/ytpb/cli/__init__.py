@@ -8,7 +8,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from fileinput import FileInput
 from pathlib import Path
-from typing import Any, cast, TextIO
+from typing import Any, cast, TextIO, TypeAlias
 
 import click
 import cloup
@@ -21,17 +21,19 @@ from ytpb.cli.commands.capture import capture_group
 from ytpb.cli.commands.download import download_command
 from ytpb.cli.commands.mpd import mpd_group
 from ytpb.cli.common import suppress_output
-from ytpb.cli.options import config_options, logging_options
-from ytpb.cli.templating import FILTERS as TEMPLATE_FILTERS
-from ytpb.config import (
-    ALL_ALIASES,
+from ytpb.cli.config import (
+    AddressableChainMap,
     DEFAULT_CONFIG,
     get_default_config_path,
     load_config_from_file,
     setup_logging,
     update_nested_dict,
 )
-from ytpb.types import ConfigMap
+from ytpb.cli.formats import ALIASES as FORMAT_ALIASES
+from ytpb.cli.options import config_options, logging_options
+from ytpb.cli.templating import FILTERS as TEMPLATE_FILTERS
+
+ConfigMap: TypeAlias = AddressableChainMap
 
 logger = structlog.get_logger(__name__)
 
@@ -78,7 +80,7 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
     ctx.default_map = update_nested_dict(ctx.default_map, default_map_from_config)
 
     try:
-        ALL_ALIASES.update(ctx.obj.config["general"]["aliases"])
+        FORMAT_ALIASES.update(ctx.obj.config["general"]["aliases"])
     except KeyError:
         pass
 

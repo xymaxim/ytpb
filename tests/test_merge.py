@@ -4,10 +4,10 @@ from pathlib import Path
 import av
 import pytest
 
-from conftest import TEST_DATA_PATH
-from helpers import assert_approx_duration, assert_number_of_streams
-
 from ytpb.merge import merge_segments
+
+from tests.conftest import TEST_DATA_PATH
+from tests.helpers import assert_approx_duration, assert_number_of_streams
 
 SEGMENT_BASE_PATH = Path(TEST_DATA_PATH) / "segments"
 

@@ -52,18 +52,6 @@ def test_invalid_query(format_spec: str, streams_in_list: list[AudioOrVideoStrea
     assert "Format spec is invalid" in str(exc_info.value)
 
 
-def test_query_with_alias(streams_in_list: list[AudioOrVideoStream]):
-    streams = Streams(streams_in_list)
-    assert streams.query("itag eq 244 and @webm") == [streams.get_by_itag("244")]
-
-
-def test_query_with_unknown_alias(streams_in_list: list[AudioOrVideoStream]):
-    with pytest.raises(QueryError) as exc_info:
-        streams = Streams(streams_in_list)
-        streams.query("@unknown")
-    assert "Unknown alias" in str(exc_info.value)
-
-
 def test_query_with_function(streams_in_list: list[AudioOrVideoStream]):
     streams = Streams(streams_in_list)
     assert streams.query("best(format eq webm)") == [streams.get_by_itag("271")]
