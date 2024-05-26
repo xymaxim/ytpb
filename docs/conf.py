@@ -44,6 +44,7 @@ autodoc_default_options = {
 
 autodoc_preserve_defaults = True
 autodoc_inherit_docstrings = True
+autodoc_member_order = "bysource"
 
 napoleon_google_docstring = True
 napoleon_include_init_with_doc = True
