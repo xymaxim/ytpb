@@ -685,7 +685,7 @@ def download_command(
         try:
             if need_to_remove_segments_directory:
                 logger.debug(
-                    "Remove created segments directory: %s",
+                    "Remove segments directory: %s",
                     segments_directory_to_remove,
                 )
                 remove_directories_between(
