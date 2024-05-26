@@ -1,31 +1,20 @@
 import re
 from itertools import product
-from typing import Callable, TypeAlias
 
-from ytpb.errors import QueryError
-
-ALIAS_RE = re.compile(r"@([\w<>=-]+)(?!\s)?")
-
-_AliasFunction: TypeAlias = Callable[[str], str]
+ALIAS_RE = re.compile(r"@([\w<>=-\\]+)(?!\s)?")
 
 
-def expand_aliases(
-    expression: str, aliases: dict[str, str], functions: list[_AliasFunction]
-) -> str:
-    for f in functions:
-        expression = f(expression)
-    for matched in ALIAS_RE.finditer(expression):
-        full_alias = matched.group()
-        alias_name = matched.group(1)
-        try:
-            aliased_value = aliases[alias_name]
-        except KeyError:
-            raise QueryError(f"Unknown alias in format spec: '{full_alias}'.") from None
-        expression = expression.replace(full_alias, aliased_value)
-    return expression
+def expand_aliases(expression: str, aliases: dict[str, str]) -> str:
+    output = expression
+    for name, value in aliases.items():
+        full_alias = f"@{name}"
+        if "\\" in name:
+            output = re.sub(full_alias, value, output)
+        else:
+            output = output.replace(full_alias, value)
+    assert "@" not in output, "Unexpanded aliases remain"
+    return output
 
-
-# Static aliases (such aliases that are explicitly defined).
 
 MEDIA_FORMAT_ALIASES = {"mp4": "format eq mp4", "webm": "format eq webm"}
 
@@ -64,13 +53,10 @@ NAME_QUALITY_ALIASES = {
 
 FRAME_PER_SECOND_ALIASES = {"30fps": "frame_rate eq 30", "60fps": "frame_rate eq 60"}
 
-# Dynamic aliases (such aliases that are expanded by functions).
-
-
-def do_expand_itag_aliases(format_spec: str) -> str:
-    """@<itag> = itag eq <itag>"""
-    return re.sub(r"@(\d+)\b", r"itag eq \1", format_spec)
-
+PATTERNED_ALIASES = {
+    # @123 = itag eq 123
+    r"(\d+)\b": r"itag eq \1",
+}
 
 ALIASES: dict[str, str] = {
     **MEDIA_FORMAT_ALIASES,
@@ -79,6 +65,5 @@ ALIASES: dict[str, str] = {
     **VIDEO_QUALITY_WITH_OPERATOR_ALIASES,
     **NAME_QUALITY_ALIASES,
     **FRAME_PER_SECOND_ALIASES,
+    **PATTERNED_ALIASES,
 }
-
-ALIAS_FUNCTIONS: list[_AliasFunction] = [do_expand_itag_aliases]

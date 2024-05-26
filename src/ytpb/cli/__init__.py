@@ -29,7 +29,6 @@ from ytpb.cli.config import (
     setup_logging,
     update_nested_dict,
 )
-from ytpb.cli.formats import ALIASES as FORMAT_ALIASES
 from ytpb.cli.options import config_options, logging_options
 from ytpb.cli.templating import FILTERS as TEMPLATE_FILTERS
 
@@ -78,11 +77,6 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
 
     default_map_from_config = ctx.obj.config["options"]
     ctx.default_map = update_nested_dict(ctx.default_map, default_map_from_config)
-
-    try:
-        FORMAT_ALIASES.update(ctx.obj.config["general"]["aliases"])
-    except KeyError:
-        pass
 
 
 @cloup.group(invoke_without_command=True)

@@ -7,7 +7,6 @@ import structlog
 from timedelta_isoformat import timedelta as isotimedelta
 
 from ytpb.cli.formats import (
-    ALIAS_FUNCTIONS as FORMAT_ALIAS_FUNCTIONS,
     ALIAS_RE as FORMAT_ALIAS_RE,
     ALIASES as FORMAT_ALIASES,
     expand_aliases,
@@ -221,10 +220,11 @@ class FormatSpecParamType(click.ParamType):
 
         output = value
         if FORMAT_ALIAS_RE.search(output):
-            unaliased_value = expand_aliases(
-                value, FORMAT_ALIASES, FORMAT_ALIAS_FUNCTIONS
+            alias_substitutions = ctx.obj.config.traverse("general.aliases")
+            unaliased_value = expand_aliases(output, alias_substitutions)
+            logger.debug(
+                f"Format spec expression '{value}' expanded as '{unaliased_value}'"
             )
-            logger.debug(f"Expression '{value}' expanded as '{unaliased_value}'")
             output = unaliased_value
 
         guard_condition = f"mime_type contains {self.format_spec_type.value}"

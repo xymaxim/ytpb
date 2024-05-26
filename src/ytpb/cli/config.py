@@ -11,6 +11,8 @@ from typing import Any
 import platformdirs
 import structlog
 
+from ytpb.cli.formats import ALIASES as FORMAT_ALIASES
+
 
 class AddressableMixin:
     def traverse(self, address: str, default: Any = None, delimiter: str = ".") -> Any:
@@ -93,6 +95,7 @@ DEFAULT_CONFIG = AddressableDict(
         "general": {
             "preview_duration": 10,
             "user_agent": USER_AGENT,
+            "aliases": FORMAT_ALIASES,
         },
         "output": {
             "date": {"styles": "basic,complete,hh"},
