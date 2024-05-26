@@ -4,6 +4,7 @@ from pathlib import Path
 from typing import Any, TypedDict, TypeVar
 
 import jinja2
+import pathvalidate
 
 from ytpb.cli.utils import date, path
 from ytpb.types import AudioStream, VideoStream
@@ -45,13 +46,20 @@ def check_is_template(value: str) -> bool:
     return any([delimiter in value for delimiter in ("{#", "{{", "{%")])
 
 
-def expand_template(
+def render_template(
     value: T,
     environment: jinja2.Environment,
     context: dict,
 ) -> T:
     template = environment.from_string(str(value))
     return type(value)(template.render(context))
+
+
+def render_path_template(
+    value: Path, environment: jinja2.Environment, context: dict
+) -> Path:
+    rendered = render_template(value, environment, context)
+    return sanitize_filepath(rendered)
 
 
 def do_adjust_string(
@@ -190,6 +198,10 @@ def do_format_duration(value: timedelta, style: str = "iso") -> str:
     return date.format_duration(value, pattern)
 
 
+def sanitize_filepath(value: Path) -> Path:
+    return pathvalidate.sanitize_filepath(value)
+
+
 FILTERS = {
     "adjust": do_adjust_string,
     "utc": do_convert_to_utc,
@@ -197,7 +209,6 @@ FILTERS = {
     "timestamp": do_convert_to_timestamp,
     "duration": do_format_duration,
 }
-
 
 # Aliases for Sphinx (autodoc) documentation:
 adjust = FILTERS["adjust"]

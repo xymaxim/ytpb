@@ -31,9 +31,9 @@ from ytpb.cli.options import (
 from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType
 from ytpb.cli.templating import (
     check_is_template,
-    expand_template,
     IntervalOutputPathContext,
     MinimalOutputPathContext,
+    render_template,
 )
 from ytpb.cli.utils.date import express_timedelta_in_words
 from ytpb.cli.utils.path import sanitize_filename
@@ -234,14 +234,14 @@ def compose_command(
         input_timezone = requested_date_interval.start.tzinfo
         template_context: MPDOutputPathContext = {
             "id": playback.video_id,
-            "title": sanitize_filename(playback.info.title),
+            "title": playback.info.title,
             "input_start_date": requested_date_interval.start,
             "input_end_date": requested_date_interval.end,
             "actual_start_date": actual_date_interval.start.astimezone(input_timezone),
             "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
             "duration": requested_end_date - requested_start_date,
         }
-        final_output_path = expand_template(
+        final_output_path = render_template(
             output_path,
             ctx.obj.jinja_environment,
             template_context,

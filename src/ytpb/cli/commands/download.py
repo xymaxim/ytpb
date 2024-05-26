@@ -36,9 +36,9 @@ from ytpb.cli.parameters import FormatSpecParamType, FormatSpecType, InputRewind
 from ytpb.cli.templating import (
     AudioStreamOutputPathContext,
     check_is_template,
-    expand_template,
     IntervalOutputPathContext,
     MinimalOutputPathContext,
+    render_template,
     VideoStreamOutputPathContext,
 )
 from ytpb.cli.utils.path import (
@@ -447,7 +447,7 @@ def download_command(
             input_timezone = requested_date_interval.start.tzinfo
             template_context: DownloadOutputPathContext = {
                 "id": playback.video_id,
-                "title": sanitize_filename(playback.info.title),
+                "title": playback.info.title,
                 "audio_stream": audio_stream,
                 "video_stream": video_stream,
                 "input_start_date": requested_date_interval.start,
@@ -458,7 +458,7 @@ def download_command(
                 "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
                 "duration": requested_end_date - requested_start_date,
             }
-            final_output_path = expand_template(
+            final_output_path = render_template(
                 output_path,
                 ctx.obj.jinja_environment,
                 template_context,

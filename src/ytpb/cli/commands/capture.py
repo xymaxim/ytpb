@@ -46,9 +46,9 @@ from ytpb.cli.parameters import (
 )
 from ytpb.cli.templating import (
     check_is_template,
-    expand_template,
     IntervalOutputPathContext,
     MinimalOutputPathContext,
+    render_template,
     VideoStreamOutputPathContext,
 )
 from ytpb.cli.utils.date import DurationFormatPattern, format_duration
@@ -238,11 +238,11 @@ def frame_command(
     if check_is_template(str(output_path)):
         template_context: CaptureOutputPathContext = {
             "id": playback.video_id,
-            "title": sanitize_filename(playback.info.title),
+            "title": playback.info.title,
             "video_stream": reference_stream,
             "moment_date": requested_moment_date,
         }
-        final_output_path = expand_template(
+        final_output_path = render_template(
             output_path,
             ctx.obj.jinja_environment,
             template_context,
@@ -425,7 +425,7 @@ def timelapse_command(
         input_timezone = requested_date_interval.start.tzinfo
         template_context: TimelapseOutputPathContext = {
             "id": playback.video_id,
-            "title": sanitize_filename(playback.info.title),
+            "title": playback.info.title,
             "audio_stream": None,
             "video_stream": reference_stream,
             "input_start_date": requested_date_interval.start,
@@ -435,7 +435,7 @@ def timelapse_command(
             "duration": requested_end_date - requested_start_date,
             "every": isotimedelta.isoformat(every).replace("P", "E"),
         }
-        final_output_path = expand_template(
+        final_output_path = render_template(
             output_path,
             ctx.obj.jinja_environment,
             template_context,
