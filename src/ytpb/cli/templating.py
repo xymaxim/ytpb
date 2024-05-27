@@ -65,7 +65,8 @@ def do_adjust_string(
     value: str,
     chars: str = "posix",
     length: int = 30,
-    separator: str | None = None,
+    separator: str = " ",
+    break_words: bool = False,
 ) -> str:
     """Adjusts a string for platform-independent filename.
 
@@ -107,16 +108,15 @@ def do_adjust_string(
               {{ "Vidéo en direct – 24/7"|adjust('ascii') }}
               "Vidéo en direct -- 24-7"
 
-        4. Keep original characters and length but slightly adjust a title
-           (remove excessive whitespaces):
+        4. Keep original (sanitized) characters and length:
 
            .. sourcecode:: jinja
 
-              {{ "Vidéo   en direct – 24/7"|adjust('unicode', length=255) }}
+              {{ "Vidéo en direct – 24/7"|adjust('unicode', length=255) }}
               "Vidéo en direct – 24-7"
     """
     characters = path.AllowedCharacters[chars.upper()]
-    return path.adjust_for_filename(value, characters, length, separator)
+    return path.adjust_for_filename(value, characters, length, separator, break_words)
 
 
 def do_format_iso_date(value: datetime, styles: str = "basic,complete,hh") -> str:

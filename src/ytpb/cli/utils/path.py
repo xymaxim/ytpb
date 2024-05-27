@@ -62,6 +62,7 @@ def adjust_for_filename(
     characters: AllowedCharacters = AllowedCharacters.UNICODE,
     length: int = 255,
     separator: str = " ",
+    break_words: bool = False,
 ) -> str:
     fallback_separator = "-"
     dashes_pattern = r"(?:\s+)?([{0}]+)(?:\s+)?".format("".join(DASHES))
@@ -96,7 +97,11 @@ def adjust_for_filename(
         output = output.replace(" ", actual_separator)
 
     if length and len(output) > length:
-        output = output[:length].rsplit(actual_separator, 1)[0]
+        truncated = output[:length]
+        if break_words:
+            output = truncated
+        else:
+            output = truncated.rsplit(actual_separator, 1)[0]
         output = re.sub(dashes_pattern + "$", "", output)
 
     output = output.strip(fallback_separator + " ")
