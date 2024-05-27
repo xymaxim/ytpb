@@ -25,13 +25,19 @@ class AllowedCharacters(enum.StrEnum):
     POSIX = enum.auto()
 
 
-def sanitize_filename(value: str) -> str:
+def sanitize_for_filename(value: str, replacement: str = "-") -> str:
+    chars_to_replace = ("|", "/")
+    for char in chars_to_replace:
+        value = value.replace(char, replacement)
     normalized = unicodedata.normalize("NFKC", value)
-    output = pathvalidate.sanitize_filename(normalized, replacement_text="-")
-    return output
+    return pathvalidate.sanitize_filename(normalized)
 
 
-def posixify_filename(value: str, separator: str = "-"):
+def sanitize_filepath(value: Path) -> Path:
+    return pathvalidate.sanitize_filepath(value)
+
+
+def posixify_for_filename(value: str, separator: str = "-"):
     posix_characters_re = re.compile(r"[^\w\-.]+", flags=re.ASCII)
 
     if not posix_characters_re.match(separator):
@@ -39,35 +45,39 @@ def posixify_filename(value: str, separator: str = "-"):
     else:
         actual_separator = "-"
 
-    output = unidecode.unidecode(value, "replace", " ")
+    output = unidecode.unidecode(value, "ignore")
+    output = re.sub(rf"(?:\s+)?({actual_separator}+)(?:\s+)?", r"\1", output)
     output = posix_characters_re.sub(actual_separator, output)
-    # Strip the space if a title started with a non-POSIX character.
-    output = output.lstrip(actual_separator)
+
+    if output != actual_separator:
+        output = output.strip(actual_separator)
 
     return output
 
 
-def adjust_string_for_filename(
-    s: str,
+def adjust_for_filename(
+    value: str,
     characters: AllowedCharacters = AllowedCharacters.UNICODE,
-    max_length: int | None = None,
+    length: int = 255,
     separator: str | None = None,
 ) -> str:
     fallback_separator = "-"
     dashes_pattern = r"(?:\s+)?([{0}]+)(?:\s+)?".format("".join(DASHES))
 
-    if separator:
-        # For visual appeal, replace dashes and surrounding spaces with
-        # dashes. Compare, e.g.: 'A_B_-_C_D' and 'A_B-C_D' (we prefer this one).
-        s = re.sub(dashes_pattern, r"\1", s)
+    output = sanitize_for_filename(value, fallback_separator)
 
+    is_separator_non_empty = separator is not None and separator != " "
+    if is_separator_non_empty or characters == AllowedCharacters.POSIX:
+        # For visual appeal, replace dashes and surrounding spaces with dashes
+        # to replace them afterward (in parentheses) with a separator
+        # symbol. For example: 'A B - C D' -> 'A_B-C_D' (-> 'A_B_C_D').
+        output = re.sub(dashes_pattern, r"\1", output)
+
+    actual_separator: str | None = None
     if characters == AllowedCharacters.POSIX:
-        output = posixify_filename(s, separator or fallback_separator)
+        actual_separator = posixify_for_filename(separator or fallback_separator)
+        output = posixify_for_filename(output, actual_separator)
     else:
-        output = sanitize_filename(s)
-
-        actual_separator: str | None
-
         match characters:
             case AllowedCharacters.UNICODE:
                 actual_separator = separator
@@ -75,23 +85,32 @@ def adjust_string_for_filename(
                 actual_separator = separator and unidecode.unidecode(
                     separator, "replace", fallback_separator
                 )
-                output = unidecode.unidecode(output, "replace", " ")
-                # Strip the space if a title started with a non-converted character.
-                output = output.lstrip()
+                output = unidecode.unidecode(output, "ignore")
 
-        # Replace multiple consecutive spaces with a single space. This can be
-        # in an original title, as well as after converting a title using ASCII
-        # codec (non-converted characters are replaced with a space).
-        output = re.sub(r"\s+", " ", output)
+        # Replace multiple consecutive spaces with a single space.
+        if separator is not None:
+            output = re.sub(r"\s+", " ", output)
 
-    if max_length and len(output) > max_length:
-        output = textwrap.shorten(output, max_length, placeholder="")
+    if length and len(output) > length:
+        output = textwrap.shorten(
+            output,
+            length,
+            placeholder="",
+            break_on_hyphens=True,
+            break_long_words=False,
+        )
         output = re.sub(dashes_pattern + "$", "", output)
 
-    if separator and characters != AllowedCharacters.POSIX:
-        # For the POSIX case, the output is already with spaces replaced after
-        # the posixify_filename() function.
-        output = re.sub(r"\s", actual_separator, output)
+    # For the POSIX case, the output is already with spaces replaced.
+    if is_separator_non_empty and characters != AllowedCharacters.POSIX:
+        output = re.sub(dashes_pattern, r"\1", output)
+        output = output.replace(" ", actual_separator)
+
+    is_actual_non_empty = actual_separator and actual_separator != " "
+    if is_actual_non_empty and actual_separator != fallback_separator:
+        output = output.replace(fallback_separator, actual_separator)
+
+    output = output.strip(fallback_separator + " ")
 
     return output
 

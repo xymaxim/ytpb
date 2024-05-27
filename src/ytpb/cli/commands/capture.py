@@ -52,7 +52,7 @@ from ytpb.cli.templating import (
     VideoStreamOutputPathContext,
 )
 from ytpb.cli.utils.date import DurationFormatPattern, format_duration
-from ytpb.cli.utils.path import sanitize_filename
+from ytpb.cli.utils.path import sanitize_for_filename
 from ytpb.errors import QueryError, SegmentDownloadError, SequenceLocatingError
 from ytpb.locate import SegmentLocator
 from ytpb.segment import Segment
@@ -238,7 +238,7 @@ def frame_command(
     if check_is_template(str(output_path)):
         template_context: CaptureOutputPathContext = {
             "id": playback.video_id,
-            "title": playback.info.title,
+            "title": sanitize_for_filename(playback.info.title),
             "video_stream": reference_stream,
             "moment_date": requested_moment_date,
         }
@@ -425,7 +425,7 @@ def timelapse_command(
         input_timezone = requested_date_interval.start.tzinfo
         template_context: TimelapseOutputPathContext = {
             "id": playback.video_id,
-            "title": playback.info.title,
+            "title": sanitize_for_filename(playback.info.title),
             "audio_stream": None,
             "video_stream": reference_stream,
             "input_start_date": requested_date_interval.start,

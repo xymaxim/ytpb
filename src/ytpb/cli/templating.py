@@ -4,7 +4,6 @@ from pathlib import Path
 from typing import Any, TypedDict, TypeVar
 
 import jinja2
-import pathvalidate
 
 from ytpb.cli.utils import date, path
 from ytpb.types import AudioStream, VideoStream
@@ -59,7 +58,7 @@ def render_path_template(
     value: Path, environment: jinja2.Environment, context: dict
 ) -> Path:
     rendered = render_template(value, environment, context)
-    return sanitize_filepath(rendered)
+    return path.sanitize_filepath(rendered)
 
 
 def do_adjust_string(
@@ -67,16 +66,18 @@ def do_adjust_string(
     chars: str = "posix",
     length: int = 30,
     separator: str | None = None,
-    break_words: bool = False,
 ) -> str:
     """Adjusts a string for platform-independent filename.
 
+    The default allowed character set is POSIX-compliant with '-' as a fallback
+    symbol for separator.
+
     The filter does the following:
 
-    * Sanitize a string by replacing non-valid characters with '-' for
+    * Sanitize a string by replacing non-valid characters with ``separator`` for
       multi-platform support
     * Translate characters to allowed ones (ASCII-only or POSIX-compliant [1])
-      or keep them as is
+      or keep them as is (``chars=unicode``)
     * Remove excessive whitespaces
     * Reduce the length to the provided value. By default, words are truncated
       at boundaries.
@@ -85,8 +86,7 @@ def do_adjust_string(
         1. https://www.gnu.org/software/automake/manual/html_node/Limitations-on-File-Names.html
 
     Examples:
-        1. Allow only POSIX-compliant characters and truncate to the default
-           length value:
+        1. Allow only POSIX-compliant characters:
 
            .. sourcecode:: jinja
 
@@ -97,7 +97,7 @@ def do_adjust_string(
 
            .. sourcecode:: jinja
 
-              {{ "Vidéo en direct – 24/7"|adjust(12, break_words=True) }}
+              {{ "Vidéo en direct – 24/7"|adjust(length=12, break_words=True) }}
               "Video-en-dir"
 
         3. Allow only ASCII characters:
@@ -108,7 +108,7 @@ def do_adjust_string(
               "Vidéo en direct -- 24-7"
 
         4. Keep original characters and length but slightly adjust a title
-           (sanitize characters, remove excessive whitespaces):
+           (remove excessive whitespaces):
 
            .. sourcecode:: jinja
 
@@ -116,7 +116,7 @@ def do_adjust_string(
               "Vidéo en direct – 24-7"
     """
     characters = path.AllowedCharacters[chars.upper()]
-    return path.adjust_string_for_filename(value, characters, length, separator)
+    return path.adjust_for_filename(value, characters, length, separator)
 
 
 def do_format_iso_date(value: datetime, styles: str = "basic,complete,hh") -> str:
@@ -196,10 +196,6 @@ def do_format_duration(value: timedelta, style: str = "iso") -> str:
     """
     pattern = date.DurationFormatPattern[style.upper()]
     return date.format_duration(value, pattern)
-
-
-def sanitize_filepath(value: Path) -> Path:
-    return pathvalidate.sanitize_filepath(value)
 
 
 FILTERS = {

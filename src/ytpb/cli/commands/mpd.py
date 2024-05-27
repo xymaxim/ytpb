@@ -36,7 +36,7 @@ from ytpb.cli.templating import (
     render_template,
 )
 from ytpb.cli.utils.date import express_timedelta_in_words
-from ytpb.cli.utils.path import sanitize_filename
+from ytpb.cli.utils.path import sanitize_for_filename
 from ytpb.errors import BroadcastStatusError
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
 from ytpb.info import BroadcastStatus
@@ -234,7 +234,7 @@ def compose_command(
         input_timezone = requested_date_interval.start.tzinfo
         template_context: MPDOutputPathContext = {
             "id": playback.video_id,
-            "title": playback.info.title,
+            "title": sanitize_for_filename(playback.info.title),
             "input_start_date": requested_date_interval.start,
             "input_end_date": requested_date_interval.end,
             "actual_start_date": actual_date_interval.start.astimezone(input_timezone),

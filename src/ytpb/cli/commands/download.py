@@ -43,7 +43,7 @@ from ytpb.cli.templating import (
 )
 from ytpb.cli.utils.path import (
     remove_directories_between,
-    sanitize_filename,
+    sanitize_for_filename,
     try_get_relative_path,
 )
 from ytpb.download import compose_default_segment_filename
@@ -447,7 +447,7 @@ def download_command(
             input_timezone = requested_date_interval.start.tzinfo
             template_context: DownloadOutputPathContext = {
                 "id": playback.video_id,
-                "title": playback.info.title,
+                "title": sanitize_for_filename(playback.info.title),
                 "audio_stream": audio_stream,
                 "video_stream": video_stream,
                 "input_start_date": requested_date_interval.start,

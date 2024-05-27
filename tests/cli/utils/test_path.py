@@ -1,18 +1,14 @@
 import pytest
 
-from ytpb.cli.utils.path import adjust_string_for_filename, AllowedCharacters
+from ytpb.cli.utils.path import adjust_for_filename, AllowedCharacters
 
 
 @pytest.mark.parametrize(
     "title,expected",
     [
         (
-            "FRANCE 24 — EN DIRECT — Info et actualités internationales en continu 24h/24",  # noqa: E501
-            "FRANCE 24 — EN DIRECT — Info et actualités internationales en continu 24h-24",  # noqa: E501
-        ),
-        (
-            "🛑 LE JOURNAL TÉLÉVISÉ DE 20H - VENDREDI 24 NOVEMBRE 2023",
-            "🛑 LE JOURNAL TÉLÉVISÉ DE 20H - VENDREDI 24 NOVEMBRE 2023",
+            "En direct : Titre de  la   vidéo — 24h/7 | Panorama, 360 / ? ",
+            "En direct  Titre de  la   vidéo — 24h-7 - Panorama, 360",
         ),
         (
             "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG",  # noqa: E501
@@ -21,52 +17,48 @@ from ytpb.cli.utils.path import adjust_string_for_filename, AllowedCharacters
     ],
 )
 def test_adjust_title_for_filename_as_is(title, expected):
-    assert expected == adjust_string_for_filename(
-        title, separator=None, max_length=None
-    )
+    assert expected == adjust_for_filename(title, separator=None, length=None)
 
 
 @pytest.mark.parametrize(
     "title,expected",
     [
         (
-            "FRANCE 24 — EN DIRECT — Info et actualités internationales en continu 24h/24",  # noqa: E501
-            "FRANCE-24—EN-DIRECT—Info-et-actualités-internationales-en-continu-24h-24",
-        ),
-        (
-            "🛑 LE JOURNAL TÉLÉVISÉ DE 20H - VENDREDI 24 NOVEMBRE 2023",
-            "🛑-LE-JOURNAL-TÉLÉVISÉ-DE-20H-VENDREDI-24-NOVEMBRE-2023",
+            "En direct : Titre de  la   vidéo — 24h/7 | Panorama, 360 / ? ",
+            "En-direct-Titre-de-la-vidéo—24h-7-Panorama,-360",
         ),
         (
             "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG",  # noqa: E501
-            "【LIVE】新宿駅前の様子-Shinjuku,-Tokyo-JAPAN【ライブカメラ】---TBS-NEWS-DIG",  # noqa: E501
+            "【LIVE】新宿駅前の様子-Shinjuku,-Tokyo-JAPAN【ライブカメラ】-TBS-NEWS-DIG",  # noqa: E501
         ),
     ],
 )
 def test_adjust_title_for_filename_with_separator(title, expected):
-    assert expected == adjust_string_for_filename(title, separator="-", max_length=None)
+    assert expected == adjust_for_filename(title, separator="-", length=None)
+
+
+# def test_lofi():
+#     title = "lofi hip hop radio 📚 - beats to relax/study to"
+#     assert "lofi-hip-hop-radio--beats-to" == adjust_string_for_filename(title, separator="-", length=30, characters=AllowedCharacters.POSIX)
+#     assert "lofi_hip_hop_radio_beats_to" == adjust_string_for_filename(title, separator="_", length=30, characters=AllowedCharacters.POSIX)
 
 
 @pytest.mark.parametrize(
     "title,expected",
     [
         (
-            "FRANCE 24 — EN DIRECT — Info et actualités internationales en continu 24h/24",  # noqa: E501
-            "FRANCE 24 -- EN DIRECT -- Info et actualites internationales en continu 24h-24",  # noqa: E501
-        ),
-        (
-            "🛑 LE JOURNAL TÉLÉVISÉ DE 20H - VENDREDI 24 NOVEMBRE 2023",
-            "LE JOURNAL TELEVISE DE 20H - VENDREDI 24 NOVEMBRE 2023",
+            "En direct Titre de  la   vidéo — 24h/7 | Panorama, 360 / ? ",
+            "En direct Titre de  la   video -- 24h-7 - Panorama, 360",
         ),
         (
             "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG",  # noqa: E501
-            "[(LIVE)] Xin Su Yi Qian noYang Zi Shinjuku, Tokyo JAPAN[(raibukamera)] - TBS NEWS DIG",  # noqa: E501
+            "[(LIVE)] Xin Su Yi Qian noYang Zi  Shinjuku, Tokyo JAPAN[(raibukamera)]  - TBS NEWS DIG",  # noqa: E501
         ),
     ],
 )
 def test_adjust_title_for_filename_with_ascii_and_no_separator(title, expected):
-    assert expected == adjust_string_for_filename(
-        title, separator=None, max_length=None, characters=AllowedCharacters.ASCII
+    assert expected == adjust_for_filename(
+        title, separator=None, length=None, characters=AllowedCharacters.ASCII
     )
 
 
@@ -74,22 +66,48 @@ def test_adjust_title_for_filename_with_ascii_and_no_separator(title, expected):
     "title,expected",
     [
         (
-            "FRANCE 24 — EN DIRECT — Info et actualités internationales en continu 24h/24",  # noqa: E501
-            "FRANCE-24--EN-DIRECT--Info-et-actualites-internationales-en-continu-24h-24",  # noqa: E501
-        ),
+            "En direct : Titre de  la   vidéo — 24h/7 | Panorama, 360 / ? ",
+            "EndirectTitredelavideo--24h-7-Panorama,360",
+        )
+    ],
+)
+def test_adjust_title_for_filename_with_ascii_and_empty_separator(title, expected):
+    assert expected == adjust_for_filename(
+        title, separator="", length=None, characters=AllowedCharacters.ASCII
+    )
+
+
+@pytest.mark.parametrize(
+    "title,expected",
+    [
         (
-            "🛑 LE JOURNAL TÉLÉVISÉ DE 20H - VENDREDI 24 NOVEMBRE 2023",
-            "LE-JOURNAL-TELEVISE-DE-20H-VENDREDI-24-NOVEMBRE-2023",
+            "En direct : Titre de  la   vidéo — 24h/7 | Panorama, 360 / ? ",
+            "En direct Titre de la video -- 24h-7 - Panorama, 360",
+        )
+    ],
+)
+def test_adjust_title_for_filename_with_ascii_and_whitespace_separator(title, expected):
+    assert expected == adjust_for_filename(
+        title, separator=" ", length=None, characters=AllowedCharacters.ASCII
+    )
+
+
+@pytest.mark.parametrize(
+    "title,expected",
+    [
+        (
+            "En direct : Titre de  la   vidéo — 24h/7 | Panorama, 360 / ? ",
+            "En-direct-Titre-de-la-video--24h-7-Panorama,-360",
         ),
         (
             "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN【ライブカメラ】 | TBS NEWS DIG",  # noqa: E501
-            "[(LIVE)]-Xin-Su-Yi-Qian-noYang-Zi-Shinjuku,-Tokyo-JAPAN[(raibukamera)]---TBS-NEWS-DIG",  # noqa: E501
+            "[(LIVE)]-Xin-Su-Yi-Qian-noYang-Zi-Shinjuku,-Tokyo-JAPAN[(raibukamera)]-TBS-NEWS-DIG",  # noqa: E501
         ),
     ],
 )
 def test_adjust_title_for_filename_with_ascii_and_separator(title, expected):
-    assert expected == adjust_string_for_filename(
-        title, separator="-", max_length=None, characters=AllowedCharacters.ASCII
+    assert expected == adjust_for_filename(
+        title, separator="-", length=None, characters=AllowedCharacters.ASCII
     )
 
 
@@ -113,26 +131,26 @@ def test_adjust_title_for_filename_with_ascii_and_separator(title, expected):
         ),
         (
             "Jackman Maine - Newton Field Airport - Cam Left",
-            "Jackman_Maine-Newton_Field_Airport-Cam_Left",
+            "Jackman_Maine_Newton_Field_Airport_Cam_Left",
             "_",
         ),
         (
             "Jackman Maine -  Newton Field Airport  -  Cam Left",
-            "Jackman_Maine-Newton_Field_Airport-Cam_Left",
+            "Jackman_Maine_Newton_Field_Airport_Cam_Left",
             "_",
         ),
         (
-            "Jackman Maine —  Newton Field Airport - Cam Left",
-            "Jackman_Maine--Newton_Field_Airport-Cam_Left",
+            "Jackman Maine — Newton Field Airport - Cam Left",
+            "Jackman_Maine__Newton_Field_Airport_Cam_Left",
             "_",
         ),
     ],
 )
 def test_corner_cases_of_adjust_title_for_filename(title, expected, separator):
-    assert expected == adjust_string_for_filename(
+    assert expected == adjust_for_filename(
         title, separator=separator, characters=AllowedCharacters.ASCII
     )
-    assert expected == adjust_string_for_filename(
+    assert expected == adjust_for_filename(
         title, separator=separator, characters=AllowedCharacters.POSIX
     )
 
@@ -141,23 +159,23 @@ def test_adjust_title_for_filename_with_posix():
     title = "【LIVE】新宿駅前の様子 Shinjuku, Tokyo JAPAN | TBS NEWS DIG"
 
     expected = "LIVE-Xin-Su-Yi-Qian-noYang-Zi-Shinjuku-Tokyo-JAPAN-TBS-NEWS-DIG"
-    assert expected == adjust_string_for_filename(
-        title, separator=None, max_length=None, characters=AllowedCharacters.POSIX
+    assert expected == adjust_for_filename(
+        title, separator=None, length=None, characters=AllowedCharacters.POSIX
     )
 
     expected = "LIVE_Xin_Su_Yi_Qian_noYang_Zi_Shinjuku_Tokyo_JAPAN_TBS_NEWS_DIG"
-    assert expected == adjust_string_for_filename(
-        title, separator="_", max_length=None, characters=AllowedCharacters.POSIX
+    assert expected == adjust_for_filename(
+        title, separator="_", length=None, characters=AllowedCharacters.POSIX
     )
 
     expected = "LIVE-Xin-Su-Yi-Qian-noYang-Zi-Shinjuku-Tokyo-JAPAN-TBS-NEWS-DIG"
-    assert expected == adjust_string_for_filename(
-        title, separator="*", max_length=None, characters=AllowedCharacters.POSIX
+    assert expected == adjust_for_filename(
+        title, separator="*", length=None, characters=AllowedCharacters.POSIX
     )
 
 
 @pytest.mark.parametrize(
-    "title,expected,max_length",
+    "title,expected,length",
     [
         (  # 1                                        42
             "FRANCE 24 — EN DIRECT — Info et actualités",
@@ -181,14 +199,12 @@ def test_adjust_title_for_filename_with_posix():
         ),
     ],
 )
-def test_adjust_title_for_filename_with_max_length(title, expected, max_length):
-    assert expected == adjust_string_for_filename(
-        title, separator=None, max_length=max_length
-    )
+def test_adjust_title_for_filename_with_length(title, expected, length):
+    assert expected == adjust_for_filename(title, separator=None, length=length)
 
 
 @pytest.mark.parametrize(
-    "title,expected,max_length",
+    "title,expected,length",
     [
         (
             "FRANCE 24—EN DIRECT—Info et actualités",
@@ -206,12 +222,10 @@ def test_adjust_title_for_filename_with_max_length(title, expected, max_length):
         ),
     ],
 )
-def test_adjust_title_for_filename_with_max_length_and_separator(
-    title, expected, max_length
-):
-    assert expected == adjust_string_for_filename(
+def test_adjust_title_for_filename_with_length_and_separator(title, expected, length):
+    assert expected == adjust_for_filename(
         title,
         separator="-",
-        max_length=max_length,
+        length=length,
         characters=AllowedCharacters.ASCII,
     )
