@@ -8,6 +8,7 @@ from typing import Any
 from lxml import etree
 
 from ytpb.errors import InfoExtractError
+from ytpb.utils.other import normalize_info_string
 
 
 class BroadcastStatus(StrEnum):
@@ -32,6 +33,10 @@ class YouTubeVideoInfo:
     author: str
     status: BroadcastStatus
     dash_manifest_url: str | None = None
+
+    def __post_init__(self):
+        self.title = normalize_info_string(self.title)
+        self.author = normalize_info_string(self.author)
 
 
 class LeftNotFetched:

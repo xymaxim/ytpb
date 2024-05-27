@@ -7,7 +7,7 @@ from pathlib import Path
 import pathvalidate
 import unidecode
 
-from ytpb.utils.other import normalize_string
+from ytpb.utils.other import normalize_info_string
 
 
 DASHES = [
@@ -68,7 +68,7 @@ def adjust_for_filename(
     dashes_pattern = r"(?:\s+)?([{0}]+)(?:\s+)?".format("".join(DASHES))
 
     sanitized = sanitize_for_filename(value, fallback_separator)
-    output = normalize_string(sanitized)
+    output = normalize_info_string(sanitized)
 
     is_separator_non_empty = bool(separator and not separator.isspace())
     if is_separator_non_empty or characters == AllowedCharacters.POSIX:
