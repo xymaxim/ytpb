@@ -7,6 +7,8 @@ from pathlib import Path
 import pathvalidate
 import unidecode
 
+from ytpb.utils.other import normalize_string
+
 
 DASHES = [
     "\u002D",  # HYPHEN-MINUS
@@ -46,7 +48,7 @@ def posixify_for_filename(value: str, separator: str = "-"):
         actual_separator = "-"
 
     output = unidecode.unidecode(value, "ignore")
-    output = re.sub(rf"(?:\s+)?({actual_separator}+)(?:\s+)?", r"\1", output)
+    output = re.sub(rf"(?:\s+)?(\-+)(?:\s+)?", r"\1", output)
     output = posix_characters_re.sub(actual_separator, output)
 
     if output != actual_separator:
@@ -59,21 +61,22 @@ def adjust_for_filename(
     value: str,
     characters: AllowedCharacters = AllowedCharacters.UNICODE,
     length: int = 255,
-    separator: str | None = None,
+    separator: str = " ",
 ) -> str:
     fallback_separator = "-"
     dashes_pattern = r"(?:\s+)?([{0}]+)(?:\s+)?".format("".join(DASHES))
 
-    output = sanitize_for_filename(value, fallback_separator)
+    sanitized = sanitize_for_filename(value, fallback_separator)
+    output = normalize_string(sanitized)
 
-    is_separator_non_empty = separator is not None and separator != " "
+    is_separator_non_empty = bool(separator and not separator.isspace())
     if is_separator_non_empty or characters == AllowedCharacters.POSIX:
         # For visual appeal, replace dashes and surrounding spaces with dashes
         # to replace them afterward (in parentheses) with a separator
         # symbol. For example: 'A B - C D' -> 'A_B-C_D' (-> 'A_B_C_D').
         output = re.sub(dashes_pattern, r"\1", output)
 
-    actual_separator: str | None = None
+    actual_separator: str
     if characters == AllowedCharacters.POSIX:
         actual_separator = posixify_for_filename(separator or fallback_separator)
         output = posixify_for_filename(output, actual_separator)
@@ -87,28 +90,14 @@ def adjust_for_filename(
                 )
                 output = unidecode.unidecode(output, "ignore")
 
-        # Replace multiple consecutive spaces with a single space.
-        if separator is not None:
-            output = re.sub(r"\s+", " ", output)
-
-    if length and len(output) > length:
-        output = textwrap.shorten(
-            output,
-            length,
-            placeholder="",
-            break_on_hyphens=True,
-            break_long_words=False,
-        )
-        output = re.sub(dashes_pattern + "$", "", output)
-
     # For the POSIX case, the output is already with spaces replaced.
-    if is_separator_non_empty and characters != AllowedCharacters.POSIX:
+    if separator != " " and characters != AllowedCharacters.POSIX:
         output = re.sub(dashes_pattern, r"\1", output)
         output = output.replace(" ", actual_separator)
 
-    is_actual_non_empty = actual_separator and actual_separator != " "
-    if is_actual_non_empty and actual_separator != fallback_separator:
-        output = output.replace(fallback_separator, actual_separator)
+    if length and len(output) > length:
+        output = output[:length].rsplit(actual_separator, 1)[0]
+        output = re.sub(dashes_pattern + "$", "", output)
 
     output = output.strip(fallback_separator + " ")
 
