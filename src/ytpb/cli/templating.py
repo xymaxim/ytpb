@@ -70,16 +70,15 @@ def do_adjust_string(
 ) -> str:
     """Adjusts a string for platform-independent filename.
 
-    The default allowed character set is POSIX-compliant with '-' as a fallback
-    symbol for separator.
+    The default allowed character set is POSIX-compliant (``chars='posix'``) with
+    '-' used as the fallback symbol for separator. For other character sets
+    (``'ascii'`` or ``'unicode'``), a whitespace separator will be used.
 
     The filter does the following:
 
-    * Sanitize a string by replacing non-valid characters with ``separator`` for
-      multi-platform support
+    * Sanitize a string by removing non-valid characters
     * Translate characters to allowed ones (ASCII-only or POSIX-compliant [1])
-      or keep them as is (``chars=unicode``)
-    * Remove excessive whitespaces
+      or keep them as is (``chars='unicode'``)
     * Reduce the length to the provided value. By default, words are truncated
       at boundaries.
 
@@ -87,7 +86,7 @@ def do_adjust_string(
         1. https://www.gnu.org/software/automake/manual/html_node/Limitations-on-File-Names.html
 
     Examples:
-        1. Allow only POSIX-compliant characters:
+        1. Allow only POSIX-compliant characters (default):
 
            .. sourcecode:: jinja
 
@@ -101,14 +100,21 @@ def do_adjust_string(
               {{ "Vidéo en direct – 24/7"|adjust(length=12, break_words=True) }}
               "Video-en-dir"
 
-        3. Allow only ASCII characters:
+        3. Use different separator between words:
+
+           .. sourcecode:: jinja
+
+              {{ "Vidéo en direct – 24/7"|adjust(separator='_') }}
+              "Video_en_direct--24-7"
+
+        4. Allow only ASCII characters:
 
            .. sourcecode:: jinja
 
               {{ "Vidéo en direct – 24/7"|adjust('ascii') }}
-              "Vidéo en direct -- 24-7"
+              "Video en direct -- 24-7"
 
-        4. Keep original (sanitized) characters and length:
+        5. Keep original (sanitized) characters and length:
 
            .. sourcecode:: jinja
 

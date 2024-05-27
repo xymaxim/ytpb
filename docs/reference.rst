@@ -245,12 +245,12 @@ In most cases, you will need to format values of variables. With *filters*
 (`link <https://jinja.palletsprojects.com/en/latest/templates/#filters>`__) you
 can process them and change their string representation.
 
-For example, let's strip some emoji from a title and make it titlecase:
+For example, let's change the case of a title and strip whitespace:
 
 .. code:: jinja
 
-   {{ '🔴 Stream title '|replace('🔴 ', '')|title }}
-   "Stream Title"
+   {{ 'Stream title'|title|replace(' ', '') }}
+   "StreamTitle"
 
 As you can see, filters can be combined and called without brackets (if there
 are no required arguments or no need to redefine default values).
@@ -273,7 +273,7 @@ it titlecase again with a filter:
 
 .. code:: jinja
 
-   {{ 'Stream title | Bla bla'.split(' | ')[0]|title }}
+   {{ 'Stream title - Bla bla'.split(' - ')[0]|title }}
    "Stream Title"
 
 .. _Custom filters:
@@ -353,86 +353,152 @@ Practical examples
 
 Let's practice with some showcase examples.
 
-#. `Custom format dates`
+Sanitize file paths
+-------------------
 
-   While a custom :func:`ytpb.cli.templating.isodate` filter is available, dates
-   can be formatted with the standard :meth:`~datetime.date.strftime()`
-   function.
+The default approach for working with output file paths is to render portable
+paths, e.g. with multi-platform support. The following steps can be highlighted:
 
-   Let's take a date, convert to UTC with the :func:`utc` filter and then custom
-   format it:
+- **Prepare variables**: Replace unsafe delimiter characters (``/``, ``|``) with
+  ``-``, sanitize some variables (``title``, ``author``, etc.)
+- **Render output**: Render a template string to an output file path
+- **Post-process**: Sanitize a rendered file path
 
-   .. code:: jinja
+The first and last steps are carried out automatically.
 
-      {{ (input_start_date|utc).strftime('%Y%m%d_%H%M%S') }}
-      "20240102_102030"
+Let's imagine that we have a live stream with the following title:
 
-#. `Set and reuse variables`
+.. code-block:: jinja
+   :caption: Original title
 
-   Sometimes it would be useful to set new variables. You can define a variable
-   with the ``{% set ... %}`` statement, and use new variables later:
+   "Panorama Pointe Percée | 24/7 en direct !"
 
-   .. code:: jinja
+As you see, it contains a letter with diactrical mark, but also some unsafe
+characters such as ``|`` (not portable) and ``/`` (used to separate
+directories), so we strip the latter ones by default:
 
-      {% set a_title = title|adjust %}
-      {% set destination = '{}/{}'.format(a_title, input_start_date.format('%Y/%m')) %}
-      {{ destination ~ '/' ~ a_title ~ '_' ~ input_start_date|isoformat }}
-      "Stream-title/2024/01/Stream-title_20240102T102030+00"
+.. code-block:: jinja
+   :caption: Sanitized title
 
-#. `Conditionally print variables`
+   {{ title }}
+   "Panorama Pointe Percée - 24-7 en direct !"
 
-   What if you `want
-   <https://www.reddit.com/r/youtubedl/comments/1cydndz/conditional_output_template_with_batch_download>`__
-   to include some information based on a condition? Let's try to print the 'HD'
-   suffix only for HD quality representations in this example.
+Now this variable can be effortlessly used in output file paths, but let's
+adjust it more. For example, get rid of whitespaces (to use a path without
+quoting) and accept only POSIX-compliant filename characters with the
+:func:`~ytpb.cli.templating.adjust` filter:
 
-   Set a new variable based on the result of the ``if-else`` inline expression
-   (`link
-   <https://jinja.palletsprojects.com/en/3.0.x/templates/#if-expression>`__) by
-   accessing an attribute of a video stream
-   (:class:`~ytpb.representations.VideoRepresentationInfo`) object:
+.. code:: jinja
 
-   .. code:: jinja
+   {{ title|adjust }}
+   "Panorama-Pointe-Percee-24-7-en-direct"
 
-      {% set hd_suffix = 'HD' if video_stream.height >= 720 else None %}
+And with another separator between words:
 
-   Output string can be composed in several ways:
+.. code:: jinja
 
-   .. code:: jinja
+   {{ title|adjust(separator='_') }}
+   "Panorama_Pointe_Percee_24_7_en_direct"
 
-      {# Using multiple expressions and string concatenation #}
-      {{ title|adjust }}_{{ video_stream.quality }}{{ '_' ~ hd_suffix if hd_suffix }}
+Of course, ASCII characters can be kept with:
 
-      {# Using *string* list elements joined by the delimiter #}
-      {{ [title|adjust, video_stream.quality, hd_suffix]|select('string')|join('_') }}
+.. code:: jinja
 
-   And rendered outputs will be:
+   {{ title|adjust('ascii', separator='-') }}
+   "Panorama_Pointe_Percee_24_7_en_direct_!"
 
-   .. code:: jinja
+As for an output path, any non-portable characters will be automatically
+removed, as well as ending separators:
 
-      {# Some representation #}
-      "Stream-title_480p"
+.. code-block:: jinja
+   :caption: Sanitized file path
 
-      {# Another representation #}
-      "Stream-title_1080p60_HD"
+   {{ title|adjust('ascii', separator='-')}}_?
+   "Panorama_Pointe_Percee_24_7_en_direct_!"
 
-   However, as you may have noticed, the example will fail for audio-only
-   downloads. While you can use the inline condition, in
-   the next example we'll see another approach based on *statements*.
 
-#. `Use condition statements`
+Custom format dates
+-------------------
 
-   The idea would be to differentiate between audio and video template strings
-   with the help of the ``if`` statement (`link
-   <https://jinja.palletsprojects.com/en/3.0.x/templates/#if>`__): it will make
-   a template much cleaner. Here's a slightly simplified example:
+While the custom :func:`~ytpb.cli.templating.isodate` filter is available, dates
+can be formatted with the standard :meth:`~datetime.date.strftime()` function.
 
-   .. code:: jinja
+Let's take a date, convert to UTC with the :func:`utc` filter and then custom
+format it:
 
-      {% if video_stream %}
-          {{ title|adjust }}/{{ video_stream.quality }}/... }}
-      {% else %}
-          {{ title|adjust }}/audio/... }}
-      {% endif %}
-      "Stream-title/1080p/..." or
-      "Stream-title/auto/..."
+.. code:: jinja
+
+   {{ (input_start_date|utc).strftime('%Y%m%d_%H%M%S') }}
+   "20240102_102030"
+
+Set and reuse variables
+-----------------------
+
+Sometimes it would be useful to set new variables. You can define a variable
+with the ``{% set ... %}`` statement, and use new variables later:
+
+.. code:: jinja
+
+   {% set a_title = title|adjust %}
+   {% set destination = '{}/{}'.format(a_title, input_start_date.format('%Y/%m')) %}
+   {{ destination ~ '/' ~ a_title ~ '_' ~ input_start_date|isoformat }}
+   "Stream-title/2024/01/Stream-title_20240102T102030+00"
+
+Conditionally print variables
+-----------------------------
+
+What if you `want
+<https://www.reddit.com/r/youtubedl/comments/1cydndz/conditional_output_template_with_batch_download>`__
+to include some information based on a condition? Let's try to print the 'HD'
+suffix only for HD quality representations in this example.
+
+Set a new variable based on the result of the ``if-else`` inline expression
+(`link <https://jinja.palletsprojects.com/en/3.0.x/templates/#if-expression>`__)
+by accessing an attribute of a video stream
+(:class:`~ytpb.representations.VideoRepresentationInfo`) object:
+
+.. code:: jinja
+
+   {% set hd_suffix = 'HD' if video_stream.height >= 720 else None %}
+
+Output string can be composed in several ways:
+
+.. code:: jinja
+
+   {# Using multiple expressions and string concatenation #}
+   {{ title|adjust }}_{{ video_stream.quality }}{{ '_' ~ hd_suffix if hd_suffix }}
+
+   {# Using *string* list elements joined by the delimiter #}
+   {{ [title|adjust, video_stream.quality, hd_suffix]|select('string')|join('_') }}
+
+And rendered outputs will be:
+
+.. code:: jinja
+
+   {# Some representation #}
+   "Stream-title_480p"
+
+   {# Another representation #}
+   "Stream-title_1080p60_HD"
+
+However, as you may have noticed, the example will fail for audio-only
+downloads. While you can use the inline condition, in the next example we'll see
+another approach based on *statements*.
+
+Use condition statements
+------------------------
+
+The idea would be to differentiate between audio and video template strings with
+the help of the ``if`` statement (`link
+<https://jinja.palletsprojects.com/en/3.0.x/templates/#if>`__): it will make a
+template much cleaner. Here's a slightly simplified example:
+
+.. code:: jinja
+
+   {% if video_stream %}
+       {{ title|adjust }}/{{ video_stream.quality }}/... }}
+   {% else %}
+       {{ title|adjust }}/audio/... }}
+   {% endif %}
+   "Stream-title/1080p/..." or
+   "Stream-title/auto/..."
