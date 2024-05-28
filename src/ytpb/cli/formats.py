@@ -7,29 +7,47 @@ ALIAS_RE = re.compile(r"@([\w<>=\-\\]+)(?!\s)?")
 
 
 def expand_aliases(expression: str, aliases: dict[str, str]) -> str:
-    def _resolve_alias(
-        name: str, aliases: dict[str, str], patterns: list[tuple[str, str]]
+    source_alias: str = ""
+    visited_aliases: set[str] = set()
+
+    def _resolve_aliases(
+        expression: str,
+        aliases: dict[str, str],
+        patterns: list[tuple[str, str]],
     ) -> str:
-        resolved = name
-        try:
-            resolved = aliases[name]
-        except KeyError:
-            for pattern, repl in patterns:
-                resolved = re.sub(pattern, repl, name)
-        if resolved == name:
-            raise click.UsageError(f"Unknown alias found: '{name}'")
-        if "@" in resolved:
-            raise click.UsageError(
-                f"Cannot resolve nested alias(es) in @{name}: '{resolved}'"
-            )
+        nonlocal source_alias
+        nonlocal visited_aliases
+
+        resolved = expression
+        for matched in ALIAS_RE.finditer(expression):
+            full_alias = matched.group()
+            name = matched.group(1)
+            if name in visited_aliases:
+                raise click.UsageError(
+                    f"Cannot resolve circular alias {full_alias} in {source_alias}"
+                )
+            else:
+                visited_aliases.add(name)
+                source_alias = full_alias
+            try:
+                value = aliases[name]
+            except KeyError:
+                value = name
+                for pattern, repl in patterns:
+                    value, has_subbed = re.subn(pattern, repl, value)
+                    if has_subbed:
+                        break
+                else:
+                    raise click.UsageError(f"Unknown alias found: {full_alias}")
+            resolved = resolved.replace(full_alias, value)
+
+        if ALIAS_RE.match(resolved):
+            return _resolve_aliases(resolved, aliases, patterns)
+
         return resolved
 
-    output = expression
-
-    for name in ALIAS_RE.findall(output):
-        patterns = [(k, v) for k, v in aliases.items() if "\\" in k]
-        value = _resolve_alias(name, aliases, patterns)
-        output = output.replace(f"@{name}", value)
+    patterns = [(k, v) for k, v in aliases.items() if "\\" in k]
+    output = _resolve_aliases(expression, aliases, patterns)
 
     return output
 
@@ -71,7 +89,7 @@ NAME_QUALITY_ALIASES = {
 
 FRAME_PER_SECOND_ALIASES = {"30fps": "frame_rate eq 30", "60fps": "frame_rate eq 60"}
 
-PATTERNED_ALIASES = {
+PATTERN_ALIASES = {
     # @123 = itag eq 123
     r"(\d+)\b": r"itag eq \1",
 }
@@ -83,5 +101,5 @@ ALIASES: dict[str, str] = {
     **VIDEO_QUALITY_WITH_OPERATOR_ALIASES,
     **NAME_QUALITY_ALIASES,
     **FRAME_PER_SECOND_ALIASES,
-    **PATTERNED_ALIASES,
+    **PATTERN_ALIASES,
 }
