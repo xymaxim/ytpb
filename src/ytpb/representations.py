@@ -66,19 +66,23 @@ class VideoQuality:
 class RepresentationInfo:
     """Represents common attributes of audio and video representations."""
 
+    #: itag value, e.g. '140', '247'.
     itag: str
+    #: MIME type, e.g. 'audio/mp4', 'video/webm'.
     mime_type: str
+    #: Codec name, e.g. 'mp4', 'vp9'.
     codecs: str
+    #: Segment base URL.
     base_url: str
 
     @property
     def type(self) -> str:
-        """An alias for a MIME type."""
+        """An alias for a MIME type, e.g. 'audio', 'video'."""
         return self.mime_type.split("/")[0]
 
     @property
     def format(self) -> str:
-        """An alias for a MIME subtype."""
+        """An alias for a MIME subtype, e.g. 'mp4', 'webm'."""
         return self.mime_type.split("/")[1]
 
     def __repr__(self):
@@ -89,6 +93,7 @@ class RepresentationInfo:
 class AudioRepresentationInfo(RepresentationInfo):
     """Represents attributes of audio representations."""
 
+    #: Sampling rate (in Hz).
     audio_sampling_rate: int
 
 
@@ -96,12 +101,16 @@ class AudioRepresentationInfo(RepresentationInfo):
 class VideoRepresentationInfo(RepresentationInfo):
     """Represents attributes of video representations."""
 
+    #: Width of frame.
     width: int
+    #: Height of frame.
     height: int
+    #: Frame per second (FPS).
     frame_rate: int
 
     @property
     def quality(self) -> VideoQuality:
+        """Quality string (resolution and FPS), e.g. '720p', '1080p60'."""
         return VideoQuality(self.height, self.frame_rate)
 
 
