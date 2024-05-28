@@ -1,18 +1,36 @@
 import re
 from itertools import product
 
-ALIAS_RE = re.compile(r"@([\w<>=-\\]+)(?!\s)?")
+import click
+
+ALIAS_RE = re.compile(r"@([\w<>=\-\\]+)(?!\s)?")
 
 
 def expand_aliases(expression: str, aliases: dict[str, str]) -> str:
+    def _resolve_alias(
+        name: str, aliases: dict[str, str], patterns: list[tuple[str, str]]
+    ) -> str:
+        resolved = name
+        try:
+            resolved = aliases[name]
+        except KeyError:
+            for pattern, repl in patterns:
+                resolved = re.sub(pattern, repl, name)
+        if resolved == name:
+            raise click.UsageError(f"Unknown alias found: '{name}'")
+        if "@" in resolved:
+            raise click.UsageError(
+                f"Cannot resolve nested alias(es) in @{name}: '{resolved}'"
+            )
+        return resolved
+
     output = expression
-    for name, value in aliases.items():
-        full_alias = f"@{name}"
-        if "\\" in name:
-            output = re.sub(full_alias, value, output)
-        else:
-            output = output.replace(full_alias, value)
-    assert "@" not in output, "Unexpanded aliases remain"
+
+    for name in ALIAS_RE.findall(output):
+        patterns = [(k, v) for k, v in aliases.items() if "\\" in k]
+        value = _resolve_alias(name, aliases, patterns)
+        output = output.replace(f"@{name}", value)
+
     return output
 
 
