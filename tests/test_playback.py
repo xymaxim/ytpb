@@ -31,12 +31,7 @@ from ytpb.fetchers import YtpbInfoFetcher
 from ytpb.info import YouTubeVideoInfo
 from ytpb.playback import Playback, RewindInterval, RewindMoment
 from ytpb.streams import AudioOrVideoStream
-from ytpb.types import (
-    AbsolutePointInStream,
-    RelativePointInStream,
-    RelativeSegmentSequence,
-    SegmentSequence,
-)
+from ytpb.types import RelativeSegmentSequence, SegmentSequence
 
 from .conftest import TEST_DATA_PATH
 

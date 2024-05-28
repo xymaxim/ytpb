@@ -1,11 +1,7 @@
-import os
 from dataclasses import dataclass
-from datetime import datetime
 from pathlib import Path
 from typing import Callable
 from urllib.parse import urljoin
-
-import responses
 
 from ytpb import actions
 from ytpb.playback import Playback, RewindInterval

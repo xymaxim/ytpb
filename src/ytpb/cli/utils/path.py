@@ -1,6 +1,5 @@
 import enum
 import re
-import textwrap
 import unicodedata
 from pathlib import Path
 
@@ -48,7 +47,7 @@ def posixify_for_filename(value: str, separator: str = "-"):
         actual_separator = "-"
 
     output = unidecode.unidecode(value, "ignore")
-    output = re.sub(rf"(?:\s+)?(\-+)(?:\s+)?", r"\1", output)
+    output = re.sub(r"(?:\s+)?(\-+)(?:\s+)?", r"\1", output)
     output = posix_characters_re.sub(actual_separator, output)
 
     if output != actual_separator:

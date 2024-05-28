@@ -1,7 +1,6 @@
 import os
 from pathlib import Path
 
-import av
 import pytest
 
 from ytpb.merge import merge_segments

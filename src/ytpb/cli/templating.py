@@ -1,7 +1,6 @@
-import re
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
-from typing import Any, TypedDict, TypeVar
+from typing import TypedDict, TypeVar
 
 import jinja2
 

@@ -6,11 +6,7 @@ import click
 import structlog
 from timedelta_isoformat import timedelta as isotimedelta
 
-from ytpb.cli.formats import (
-    ALIAS_RE as FORMAT_ALIAS_RE,
-    ALIASES as FORMAT_ALIASES,
-    expand_aliases,
-)
+from ytpb.cli.formats import ALIAS_RE as FORMAT_ALIAS_RE, expand_aliases
 from ytpb.cli.utils.date import ensure_date_aware
 
 from ytpb.conditional import FORMAT_SPEC_RE

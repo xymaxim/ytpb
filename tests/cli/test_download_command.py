@@ -2,7 +2,6 @@ import glob
 import os
 import pickle
 import platform
-import re
 import shutil
 from datetime import datetime, timezone
 from pathlib import Path
@@ -191,7 +190,7 @@ def test_preview_start_option(
 
     # Then:
     assert result.exit_code == 0
-    if not ".." in interval:
+    if ".." not in interval:
         assert "~ Preview mode enabled, interval end is ignored." in result.output
     assert os.path.exists(tmp_path / "Webcam-Zurich-HB_kHwmzef842g_preview.mp4")
 

@@ -1,5 +1,5 @@
 import re
-from typing import Any, Callable, TypeAlias
+from typing import Any, Callable
 
 import pycond as pc
 import structlog

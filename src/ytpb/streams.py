@@ -1,6 +1,5 @@
 """Mutable set of streams."""
 
-import re
 from collections.abc import MutableSet
 from operator import attrgetter
 from typing import Any, Callable, Iterator, Self
