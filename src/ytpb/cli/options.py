@@ -85,6 +85,7 @@ interval_option = click.option(
 
 def config_options(f):
     f = click.option(
+        "-C",
         "--config",
         "config_path",
         help="Specifies a path to a configuration file.",
@@ -123,16 +124,16 @@ def cache_options(f):
 
 def logging_options(f):
     f = click.option(
-        "--debug",
-        "debug",
-        help="Enable verbose output for debugging.",
+        "--report",
+        help="Dump all output to a file. It implies --debug.",
         is_flag=True,
         is_eager=True,
     )(f)
 
     f = click.option(
-        "--report",
-        help="Dump all output to a file. It implies --debug.",
+        "--debug",
+        "debug",
+        help="Enable verbose output for debugging.",
         is_flag=True,
         is_eager=True,
     )(f)
