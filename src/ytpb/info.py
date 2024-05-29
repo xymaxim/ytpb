@@ -28,9 +28,13 @@ class BroadcastStatus(StrEnum):
 class YouTubeVideoInfo:
     """Represents information about a video."""
 
+    #: Youtube video URL.
     url: str
+    #: Video's title.
     title: str
+    #: Video's author (channel's name).
     author: str
+    #: Video' broadcast status.
     status: BroadcastStatus
     dash_manifest_url: str | None = None
 

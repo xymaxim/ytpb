@@ -438,46 +438,6 @@ automatically determined during the merging step.
        [options.capture.frame]
        ...
 
-Writing metadata tags
-=====================
-
-*Related command:* ``ytpb download``
-
-By default, metadata tags will be added to an output excerpt file. Use the
-``--no-metadata`` option to disable it.
-
-.. table:: Metadata tags overview
-
-   +---------------------------+-------------------------------+---------------------------------------------+
-   | Tag                       | Description                   |                   Example                   |
-   +===========================+===============================+=============================================+
-   | ``title``                 | Video's title                 | Stream Title                                |
-   +---------------------------+-------------------------------+---------------------------------------------+
-   | ``author``                | Video's channel name          | Author or Channel Name                      |
-   +---------------------------+-------------------------------+---------------------------------------------+
-   | ``comment``               | YouTube video URL             | https://www.youtube.com/watch?v=abcdefgh123 |
-   +---------------------------+-------------------------------+---------------------------------------------+
-   | ``input_start_date``      | Input start date              | 2024-01-02T10:20:00.000000Z                 |
-   +---------------------------+-------------------------------+---------------------------------------------+
-   | ``input_end_date``        | Input end date                | 2024-01-02T10:20:30.000000Z                 |
-   +---------------------------+-------------------------------+---------------------------------------------+
-   | ``actual_start_date``     | Actual start date             | 2024-01-02T10:20:00.123456Z                 |
-   +---------------------------+-------------------------------+---------------------------------------------+
-   | ``actual_end_date``       | Actual end date               | 2024-01-02T10:20:30.123456Z                 |
-   +---------------------------+-------------------------------+---------------------------------------------+
-   | ``start_sequence_number`` | Start segment sequence number | 0                                           |
-   +---------------------------+-------------------------------+---------------------------------------------+
-   | ``end_sequence_number``   | End segment sequence number   | 1001                                        |
-   +---------------------------+-------------------------------+---------------------------------------------+
-
-The input and actual date values are expected to be different in only two cases:
-if the boundary (start and end) points fall in gaps or the ``--no-cut`` option
-is requested. In the opposite cases, after accurate cut, they're supposed to be
-identical.
-
-The dates can be represented as seconds since the epoch via the configuration
-value: ``output.metadata.dates = unix``.
-
 Saving segment files
 ====================
 
@@ -555,6 +515,27 @@ See `config.toml.example`_ for the available fields and their descriptions.
 
 Advanced usage
 **************
+
+Writing metadata tags
+=====================
+
+*Related command:* ``ytpb download``
+
+By default, metadata tags will be added to an output excerpt file. Use the
+``--no-metadata`` option to disable it.
+
+.. rubric:: Metadata tags overview
+
+.. autoclass:: ytpb.cli.commands.download.MetadataTagsContext
+   :no-index:
+
+The input and actual date values are expected to be different in only two cases:
+(a) if the boundary (start and end) points fall in gaps or (b) the ``--cut``
+option is not requested (default). In the opposite cases, after accurate cut,
+they're supposed to be identical.
+
+The dates can be represented as seconds since the epoch via the configuration
+value: ``output.metadata.dates = unix``.
 
 Running without downloading
 ===========================

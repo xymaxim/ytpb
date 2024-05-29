@@ -4,7 +4,7 @@ import sys
 from datetime import datetime, timedelta, timezone
 from functools import partial
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any, Callable, TypedDict
 
 import click
 import cloup
@@ -68,6 +68,27 @@ class DownloadOutputPathContext(
     VideoStreamOutputPathContext,
     IntervalOutputPathContext,
 ): ...
+
+
+class MetadataTagsContext(TypedDict):
+    #: Video's title.
+    title: str
+    #: Video's author (channel's name).
+    author: str
+    #: YouTube video URL as a comment.
+    comment: str
+    #: Input start date.
+    input_start_date: str
+    #: Input end date.
+    input_end_date: str
+    #: Actual start date.
+    actual_start_date: str
+    #: Actual end date.
+    actual_end_date: str
+    #: Start segment sequence number.
+    start_segment: str
+    #: End segment sequence number.
+    end_segment: str
 
 
 def compose_resume_filename(
@@ -621,24 +642,24 @@ def download_command(
                         )
                         metadata_date_converter = _convert_date_to_isostring
 
-                metadata_tags = {
+                metadata_context: MetadataTagsContext = {
                     "title": playback.info.title,
                     "author": playback.info.author,
                     "comment": playback.video_url,
-                    "actual_start_date": metadata_date_converter(
-                        actual_date_interval.start
-                    ),
-                    "actual_end_date": metadata_date_converter(
-                        actual_date_interval.end
-                    ),
                     "input_start_date": metadata_date_converter(
                         requested_date_interval.start
                     ),
                     "input_end_date": metadata_date_converter(
                         requested_date_interval.end
                     ),
-                    "start_sequence_number": rewind_interval.start.sequence,
-                    "end_sequence_number": rewind_interval.end.sequence,
+                    "actual_start_date": metadata_date_converter(
+                        actual_date_interval.start
+                    ),
+                    "actual_end_date": metadata_date_converter(
+                        actual_date_interval.end
+                    ),
+                    "start_segment": str(rewind_interval.start.sequence),
+                    "end_segment": str(rewind_interval.end.sequence),
                 }
 
             merged_path = merge_segments(
@@ -647,7 +668,7 @@ def download_command(
                 output_directory=final_output_path.parent,
                 output_stem=final_output_path.name,
                 temp_directory=playback.get_temp_directory(),
-                metadata_tags=metadata_tags,
+                metadata_tags=metadata_context,
                 **cut_kwargs,
             )
 

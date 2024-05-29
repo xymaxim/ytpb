@@ -1516,8 +1516,8 @@ def test_metadata_tags_without_cutting_and_iso_dates(
     assert metadata_tags["input_end_date"] == "2023-03-25T23:33:57.000000Z"
     assert metadata_tags["actual_start_date"] == "2023-03-25T23:33:54.491176Z"
     assert metadata_tags["actual_end_date"] == "2023-03-25T23:33:58.486826Z"
-    assert metadata_tags["start_sequence_number"] == "7959120"
-    assert metadata_tags["end_sequence_number"] == "7959121"
+    assert metadata_tags["start_segment"] == "7959120"
+    assert metadata_tags["end_segment"] == "7959121"
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
@@ -1569,8 +1569,8 @@ def test_metadata_tags_with_cutting_and_iso_dates(
     assert metadata_tags["input_end_date"] == "2023-03-25T23:33:57.000000Z"
     assert metadata_tags["actual_start_date"] == "2023-03-25T23:33:55.000000Z"
     assert metadata_tags["actual_end_date"] == "2023-03-25T23:33:57.000000Z"
-    assert metadata_tags["start_sequence_number"] == "7959120"
-    assert metadata_tags["end_sequence_number"] == "7959121"
+    assert metadata_tags["start_segment"] == "7959120"
+    assert metadata_tags["end_segment"] == "7959121"
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
@@ -1631,8 +1631,8 @@ def test_metadata_tags_without_cutting_and_unix_timestamps(
     assert metadata_tags["input_end_date"] == "1679787237.000000"
     assert metadata_tags["actual_start_date"] == "1679787234.491176"
     assert metadata_tags["actual_end_date"] == "1679787238.486826"
-    assert metadata_tags["start_sequence_number"] == "7959120"
-    assert metadata_tags["end_sequence_number"] == "7959121"
+    assert metadata_tags["start_segment"] == "7959120"
+    assert metadata_tags["end_segment"] == "7959121"
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")
