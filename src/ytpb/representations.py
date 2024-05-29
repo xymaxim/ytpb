@@ -20,10 +20,10 @@ class VideoQuality:
     Examples:
         The class supports comparison operations. For example: ::
 
-          >>> VideoQuality("720p") == VideoQuality("720p30")
+          >>> VideoQuality(720) == VideoQuality(720, 30)
           True
-          >>> VideoQuality("720p") > VideoQuality("720p60")
-          True
+          >>> VideoQuality(720) > VideoQuality(720, 60)
+          False
     """
 
     height: int
