@@ -24,11 +24,11 @@ format spec could refer to one or more representations.
 Grammar
 =======
 
-The parsing of conditional expressions is done using `pycond`_ package.
+The parsing of conditional expressions is done using the `pycond`_ package.
 
 .. _pycond: https://github.com/axiros/pycond
 
-The expressions have the following grammar:
+*Expressions* have the following grammar:
 
 .. code:: ANTLR
 
@@ -42,6 +42,12 @@ The expressions have the following grammar:
 
     atom : attribute operator value ;
 
+    operator : textOperator | symolicOperator ;
+
+    textOperator : 'lt' | 'le' | 'eq' | 'ne' | 'ge' | 'gt' ;
+
+    symbolicOperator : '<' | '<=' | '=' | '==' | '!=' | '>=' | '>' ;
+
     alias : '@' aliasName ;
 
 where ``condition`` is in the form:
@@ -50,14 +56,13 @@ where ``condition`` is in the form:
 
     [ < atom1 > < and | or | and not ... > <atom2 > ] ... .
 
-The *operators* are text-style operators and refer to the Python's standard
-`rich-comparison methods <https://docs.python.org/3/library/operator.html>`_,
-such as ``eq``, ``ne``, etc.
+*Operators* are or text-style or symbols operators and refer to the Python's
+standard `rich-comparison methods
+<https://docs.python.org/3/library/operator.html>`_.
 
-The functions are applied after filtering by a condition. Currently, the only
-available function is ``best``. An example: ``best(quality ge 720p and
-frame_rate eq 30)``.  It applies after the querying and should wrap the whole
-expression.
+*Functions* are applied after querying and should wrap the whole
+*expression*. Currently, the only available function is ``best()``, or
+``b()``. An example: ``best(quality <= 720p)``, or ``b(quality ge 720p)``.
 
 Attributes
 ==========
@@ -68,58 +73,31 @@ for use in conditions are listed below.
 Common
 ------
 
-.. table::
-
-   +---------------+--------+--------------------+------------+
-   | Attribute     | Type   | Description        | Example    |
-   +===============+========+====================+============+
-   | ``itag``      | Number | Value of itag      | 244        |
-   +---------------+--------+--------------------+------------+
-   | ``mime_type`` | String | MIME type          | video/webm |
-   +---------------+--------+--------------------+------------+
-   | ``type``      | String | Discrete MIME type | video      |
-   +---------------+--------+--------------------+------------+
-   | ``format``    | String | MIME subtype       | webm       |
-   +---------------+--------+--------------------+------------+
-   | ``codecs``    | String | Codec name         | vp9        |
-   +---------------+--------+--------------------+------------+
+.. autoclass:: ytpb.representations.RepresentationInfo
+   :no-index:
 
 Audio only
-----------
+-----------
 
-.. table::
-
-   +-------------------------+------------+-----------------------+---------+
-   | Attribute               | Type       | Description           | Example |
-   +=========================+============+=======================+=========+
-   | ``audio_sampling_rate`` | Number     | Sampling rate (in Hz) | 44100   |
-   +-------------------------+------------+-----------------------+---------+
+.. autoclass:: ytpb.representations.AudioRepresentationInfo
+   :no-index:
+   :exclude-members: itag, mime_type, codecs, base_url
 
 Video only
 ----------
 
-.. table::
-
-   +----------------+--------+-------------------------------------+---------------+
-   | Attribute      | Type   | Description                         | Example       |
-   +================+========+=====================================+===============+
-   | ``width``      | Number | Width of frame                      | 1920          |
-   +----------------+--------+-------------------------------------+---------------+
-   | ``height``     | Number | Height of frame                     | 1080          |
-   +----------------+--------+-------------------------------------+---------------+
-   | ``frame_rate`` | Number | Frame per second (FPS)              | 30, 60        |
-   +----------------+--------+-------------------------------------+---------------+
-   | ``quality``    | String | Quality string (resolution and FPS) | 720p, 1080p60 |
-   +----------------+--------+-------------------------------------+---------------+
+.. autoclass:: ytpb.representations.VideoRepresentationInfo
+   :no-index:
+   :exclude-members: itag, mime_type, codecs, base_url
 
 Aliases
 =======
 
-The expressions can be simplified with aliases (``@alias``). There are built-in
-aliases as well as custom, user-defined ones. The built-in aliases, in turn, can
-be divided into static (explicitly defined) and dynamic (defined by a regex
-pattern) ones.
-
+The format spec expressions can be simplified with aliases (``@alias``). There
+are built-in aliases as well as custom, user-defined ones. Also, they can be
+formally divided into (a) those that are explicitly defined and (b) those that
+are described by the Python `regular expressions
+<https://docs.python.org/3/library/re.html>`__, pattern aliases.
 
 Built-in aliases
 ----------------
@@ -127,63 +105,81 @@ Built-in aliases
 *itags*
 ^^^^^^^
 
-- ``(\d+)`` — ``itag eq \1``
-
-For example, ``@140`` expands to ``itag eq 140``.
+- ``(\d+)\b`` : ``itag eq \1``
+    Example: ``@140`` — ``itag = 140``
 
 *Formats*
 ^^^^^^^^^
 
-- ``mp4`` — ``format eq mp4``
-- ``webm`` — ``format eq webm``
+- ``mp4`` — ``format = mp4``
+- ``webm`` — ``format = webm``
+
+*Codecs*
+^^^^^^^^
+
+- ``mp4a`` — ``codecs contains mp4a``
+- ``avc1`` — ``codecs contains avc1``
+- ``vp9`` — ``codecs = vp9``
+
 
 *Qualities*
 ^^^^^^^^^^^
 
-- ``144p``, ``240p``, ``360p``, ``480p``, ``720p``, ``1080p``, ``1440p``,
-  ``2160p`` — ``height eq 144 and frame_rate 30``, ...
-- ``144p30``, ``240p30``, ``360p30``, ``480p30``, ``720p30``, ``1080p30``, ``1440p30``,
-  ``2160p30`` — ``height eq 144 and frame_rate 30``, ...
-- ``720p60``, ``1080p60``, ``1440p60``, ``2160p60`` —
-  ``height eq 720 and frame_rate eq 60``, ...
+- ``(\d+)p\b`` : ``height = \1``
+   Example: ``@720p`` — ``height = 720p``
+- ``(\d+)p(\d+)\b`` : ``[height = \1 and frame_rate \2]``
+   Example: ``@1080p60`` — ``[heigth = 1080p and frame_rate = 60]``
 
 *Qualities with operators*
 ^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Available operators: ``<``, ``<=``, ``==``, ``>``, ``>=``. Height values are the
-same as in `Qualities`\: ``144p``, ``240p``, ...
+- ``([<>=]=?)(\d+)p\b`` : ``height \1 \2``
+   Example: ``@>=720p`` — ``height >= 720p``
 
-For example, ``@<=1080p`` expands to ``height le 1080``. Note that the
+Available operators: ``<``, ``>``, ``=``, ``<=``, ``>=``. Note that the
 ``frame_rate`` part is not included.
+
+*Frame rate*
+^^^^^^^^^^^^
+
+- ``(\d+)fps\b`` : ``frame_rate = \1``
+    Example: ``@30fps`` — ``frame_rate = 30``
 
 *Named qualities*
 ^^^^^^^^^^^^^^^^^
 
-- ``low`` — ``height eq 144``
-- ``medium`` — ``height eq 480``
-- ``high`` — ``height eq 720``
-- ``FHD`` — ``height eq 1080``
-- ``2K`` — ``height eq 1440``
-- ``4K`` — ``height eq 2160``
-
-*Frame per second*
-^^^^^^^^^^^^^^^^^^
-
-``30fps``, ``60fps`` — ``frame_rate eq 30``, ``frame_rate eq 60``
+- ``low`` — ``height = 144``
+- ``medium`` — ``height = 480``
+- ``high`` — ``height = 720``
+- ``FHD`` — ``height = 1080``
+- ``2K`` — ``height = 1440``
+- ``4K`` — ``height = 2160``
 
 Custom aliases
 --------------
 
 The custom aliases could extend and update the built-in ones. The corresponding
-field in ``config.toml`` is ``general.aliases``.
+configuration field is ``general.aliases``.
 
-Here is an example of how to define (and reuse) aliases:
+Here is an example of how to define aliases in ``config.toml``:
 
 .. code:: TOML
 
-	  [general.aliases]
-	  preferred-videos = "@<=1080p and @30fps"
-          video-for-mpd = "best(@preferred-videos and @webm)"
+   [general.aliases]
+   fast = "codecs = vp9 and height = 480"
+
+Aliases can be nested, allowing them to be reused:
+
+.. code:: TOML
+
+   preferred = "@<=1080p and @30fps"
+   for-mpd = "best(@vp9 and @preferred)"
+
+To define pattern aliases, use single quotes to surround alias names and values:
+
+.. code:: TOML
+
+   '(\d+)x(\d+)\b' = 'width eq \1 and height eq \2'
 
 .. _Templating:
 

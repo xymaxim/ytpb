@@ -328,86 +328,78 @@ Specifying formats
 ==================
 
 Now let's look at the ``-af/--audio-format(s)`` and ``-vf/--video-format(s)``
-options. It accepts *format spec* string, a query expression used to select the
-desired formats (MPEG-DASH `representations
+options. They accept the *format spec* string, a query expression used to select
+the desired formats (MPEG-DASH `representations
 <https://dashif-documents.azurewebsites.net/Guidelines-TimingModel/master/Guidelines-TimingModel.html#representations/>`_,
-to be exact).
-
-Representations describe different versions of the content and are
-characterized by attributes, such as itags (format codes), resolutions, used
+to be exact), which are characterized by the itag values, qualities, used
 codecs, etc.
 
-See :ref:`reference:Format spec` for more information on format specs: their
-grammar, aliases, and functions.
+See :ref:`reference:Format spec` for the grammar, aliases, and functions.
 
-Some examples
--------------
+Conditionals and lookup attributes
+----------------------------------
 
-*Conditional expressions and lookup attributes*
-^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The itag values as format codes uniquely determine representations. For example,
+providing a format spec in the form of a conditional expression as below gives
+us a very specific audio stream:
 
-The ``itag`` values as format codes uniquely determine representations. For
-example, providing the format spec in the form of a conditional expression as
-below gives us a very specific audio stream: ::
+.. code:: sh
 
-  $ ytpb download -af 'itag eq 140' ...
+   $ ytpb download -af 'itag = 140' -vf none ...
 
-Or, with the following logical condition, one of two video streams: ::
-
-  $ ytpb download -vf 'itag eq 271 or itag eq 248' ...
-
-The specific audio and video ``itag`` values for a live stream can be seen in
-the *Stats for nerds* popup in the browser. To show all available DASH-specific
+The audio and video itag values for a playing live stream can be seen in the
+*Stats for nerds* popup in the browser. To show all available MPEG DASH-specific
 formats, running the `yt-dlp <https://github.com/yt-dlp/yt-dlp/>`_ program is
-helpful: ::
+helpful::
 
   $ yt-dlp --live-from-start -F <STREAM>
 
-Here are some other examples of format specs with lookup attributes (see
-:ref:`reference:Attributes`) and a function: ::
+Here are other examples using other lookup :ref:`attributes
+<reference:Attributes>` and logical conditions:
 
-  $ ytpb download -vf 'best(format eq mp4 and [frame_rate eq 60 or frame_rate eq 30])' ...
-  $ ytpb mpd compose -vf 'format eq webm and height le 1080 and frame_rate eq 30' ...
+.. code:: sh
 
+   $ ytpb download -vf 'best(format = mp4 and frame_rate = 30)' ...
+   $ ytpb mpd compose -vf 'codecs = vp9 and [height = 1080 or height = 720]' ...
 
-Note that the ``download`` command requires the query result to be
-non-ambiguous, with one representation per query.
+(Note that all commands except ``mpd compose`` require query results to be
+non-ambiguous, with one representation per query. This is where the ``best()``
+function can be used to limit query results.)
 
-*Using aliases*
-^^^^^^^^^^^^^^^
+*Using format spec aliases*
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-:ref:`reference:Aliases` allow defining a part or whole format spec for
-different cases and make expressions much shorter. For example: ::
+:ref:`reference:Aliases` allow defining and use of a named condition (or
+conditions) and make expressions much shorter and easier to understand. For
+example, using the built-in aliases:
 
-  $ ytpb download -vf 'best(@mp4 and @30fps)' ...
+.. code:: sh
+
+   $ ytpb download -vf 'best(@mp4 and @30fps)' ...
 
 .. _Default format values:
 
-Default values
---------------
+Default option values
+---------------------
 
-The format specs can be provided using the following ways (in order of
-increasing priority): (a) using the default, built-in option values, (b) parsing
-custom, user-defined :ref:`configuration <Configuring>` file, ``config.toml``, and (c) via ``-af/--audio-format(s)`` and
-``-vf/--video-format(s)`` options.
-
-The default option values are as follows:
+The command options can be ommited and the default, built-in values listed below
+will be used. As part of :ref:`Configuring`, they can be overriden.
 
 .. code:: TOML
 
    [options.download]
-   audio_format = "@140"
-   video_format = "best(@mp4 and <=1080p and @30fps)"
+   audio_format = "itag = 140"
+   video_format = "best(@avc1 and @<=1080p and @30fps)"
 
    [options.capture.frame]
-   video_format = "best(@mp4 and @30fps)"
+   video_format = "best(@30fps)"
 
    [options.capture.timelapse]
-   video_format = "best(@mp4 and @30fps)"
+   video_format = "best(@30fps)"
 
    [options.mpd.compose]
-   audio_formats = "@140"
-   video_formats = "@webm and [@720p or @1080p] and @30fps"
+   audio_formats = "itag = 140"
+   video_formats = "@vp9 and [@720p or @1080p] and @30fps"
 
 Specifying output name
 ======================
@@ -539,15 +531,23 @@ Configuring
 ***********
 
 The configuration provides the way to set up default values of the command
-options and change other settings via configuration files. It's optional, and
-the default, built-in settings are used.
+options and change other settings via configuration files. It's optional and the
+default, built-in settings are used otherwise.
 
 By default, the ``config.toml`` file is looked up under the ``~/.config/ytpb``
-directory (or in ``$XDG_CONFIG_HOME`` if set). Also, the ``--config`` option can
-be used to override the default file location. The priority of applying the
-settings is following: default settings < the ``config.toml`` file under the
-default directory < a file provided via the ``--config`` option < commands
-options.
+directory (or ``$XDG_CONFIG_HOME``) if you're on Unix or under platform-specific
+system directories if you're on `macOS
+<https://platformdirs.readthedocs.io/en/latest/api.html#platformdirs.macos.MacOS.site_data_dir>`__
+or `Windows
+<https://platformdirs.readthedocs.io/en/latest/api.html#platformdirs.windows.Windows.site_data_dir>`__. Also,
+the ``--config`` option can be used to override the default file location.
+
+The priority of applying settings is the following, from lowest to highest:
+
+- default, built-in settings
+- the ``config.toml`` file under the default directory
+- a file specified via the ``--config`` option
+- user provided command options.
 
 See `config.toml.example`_ for the available fields and their descriptions.
 
