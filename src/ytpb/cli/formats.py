@@ -34,7 +34,7 @@ def expand_aliases(expression: str, aliases: dict[str, str]) -> str:
             except KeyError:
                 value = name
                 for pattern, repl in patterns:
-                    value, has_subbed = re.subn(pattern, repl, value)
+                    value, has_subbed = re.subn(rf"^{pattern}", repl, value)
                     if has_subbed:
                         break
                 else:
@@ -52,54 +52,42 @@ def expand_aliases(expression: str, aliases: dict[str, str]) -> str:
     return output
 
 
-MEDIA_FORMAT_ALIASES = {"mp4": "format eq mp4", "webm": "format eq webm"}
+MEDIA_FORMAT_ALIASES = {"mp4": "format = mp4", "webm": "format = webm"}
 
-video_quality_heights = (144, 240, 360, 480, 720, 1080, 1440, 2160)
-VIDEO_QUALITY_30FPS_ALIASES = {
-    f"{height}p": f"height eq {height} and frame_rate eq 30"
-    for height in video_quality_heights
+CODECS_ALIASES = {
+    "mp4a": "codecs contains mp4a",
+    "avc1": "codecs contains avc1",
+    "vp9": "codecs = vp9",
 }
-VIDEO_QUALITY_30FPS_ALIASES.update(
-    {
-        f"{height}p30": f"height eq {height} and frame_rate eq 30"
-        for height in video_quality_heights
-    }
+
+NAMED_QUALITY_ALIASES = {
+    "low": "height = 144",
+    "medium": "height = 480",
+    "high": "height = 720",
+    "FHD": "height = 1080",
+    "2K": "height = 1440",
+    "4K": "height = 2160",
+}
+
+ITAG_PATTERN_ALIAS = (r"\b(\d+)\b", r"itag = \1")
+QUALITY_PATTERN_ALIAS = (r"(\d+)p\b", r"height = \1")
+QUALITY_FPS_PATTERN_ALIAS = (r"(\d+)p(\d+)\b", r"[height = \1 and frame_rate = \2]")
+QUALITY_OP_PATTERN_ALIAS = (r"([<>=]=?)(\d+)p\b", r"height \1 \2")
+FPS_PATTERN_ALIAS = (r"(\d+)fps\b", r"frame_rate = \1")
+
+PATTERN_ALIASES = dict(
+    (
+        ITAG_PATTERN_ALIAS,
+        QUALITY_PATTERN_ALIAS,
+        QUALITY_FPS_PATTERN_ALIAS,
+        QUALITY_OP_PATTERN_ALIAS,
+        FPS_PATTERN_ALIAS,
+    ),
 )
-
-VIDEO_QUALITY_60FPS_ALIASES = {
-    f"{height}p60": f"height eq {height} and frame_rate eq 60"
-    for height in [720, 1080, 1440, 2160]
-}
-
-VIDEO_QUALITY_WITH_OPERATOR_ALIASES = {
-    f"{operator}{height}p": f"height {operator_name} {height}"
-    for (operator, operator_name), height in product(
-        [("<", "lt"), ("<=", "le"), (">", "gt"), (">=", "ge")], video_quality_heights
-    )
-}
-
-NAME_QUALITY_ALIASES = {
-    "low": "height eq 144",
-    "medium": "height eq 480",
-    "high": "height eq 720",
-    "FHD": "height eq 1080",
-    "2K": "height eq 1440",
-    "4K": "height eq 2160",
-}
-
-FRAME_PER_SECOND_ALIASES = {"30fps": "frame_rate eq 30", "60fps": "frame_rate eq 60"}
-
-PATTERN_ALIASES = {
-    # @123 = itag eq 123
-    r"(\d+)\b": r"itag eq \1",
-}
 
 ALIASES: dict[str, str] = {
     **MEDIA_FORMAT_ALIASES,
-    **VIDEO_QUALITY_30FPS_ALIASES,
-    **VIDEO_QUALITY_60FPS_ALIASES,
-    **VIDEO_QUALITY_WITH_OPERATOR_ALIASES,
-    **NAME_QUALITY_ALIASES,
-    **FRAME_PER_SECOND_ALIASES,
+    **NAMED_QUALITY_ALIASES,
+    **CODECS_ALIASES,
     **PATTERN_ALIASES,
 }

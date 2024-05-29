@@ -1,6 +1,7 @@
 import click
 import pytest
-from ytpb.cli.formats import expand_aliases
+
+from ytpb.cli.formats import ALIASES, expand_aliases
 
 
 @pytest.mark.parametrize(
@@ -66,3 +67,38 @@ def test_expand_circular_dependent_aliases(
     with pytest.raises(click.UsageError) as exc_info:
         expand_aliases(spec, aliases)
     assert error == str(exc_info.value)
+
+
+@pytest.mark.parametrize(
+    "spec,expected",
+    [
+        # Itag value aliases:
+        ("@140", "itag = 140"),
+        # Quality aliases:
+        ("@720p", "height = 720"),
+        ("@720p30", "[height = 720 and frame_rate = 30]"),
+        # Quality with operator aliases:
+        ("@<=720p", "height <= 720"),
+        ("@>=720p", "height >= 720"),
+        ("@=720p", "height = 720"),
+        ("@==720p", "height == 720"),
+        # Format aliases:
+        ("@webm", "format = webm"),
+        ("@mp4", "format = mp4"),
+        # Codecs aliases:
+        ("@mp4a", "codecs contains mp4a"),
+        ("@avc1", "codecs contains avc1"),
+        ("@vp9", "codecs = vp9"),
+        # Named quality aliases:
+        ("@low", "height = 144"),
+        ("@medium", "height = 480"),
+        ("@high", "height = 720"),
+        ("@FHD", "height = 1080"),
+        ("@2K", "height = 1440"),
+        ("@4K", "height = 2160"),
+    ],
+)
+def test_default_alias(spec, expected):
+    assert expected == expand_aliases(spec, ALIASES)
+    assert f"({expected})" == expand_aliases(f"({spec})", ALIASES)
+    assert f"[{expected}]" == expand_aliases(f"[{spec}]", ALIASES)

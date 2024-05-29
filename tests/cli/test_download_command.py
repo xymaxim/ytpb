@@ -1191,18 +1191,8 @@ def test_download_via_invalid_stream_id(
         )
 
 
-@pytest.mark.parametrize(
-    "aliases,audio_format",
-    [
-        ({"a": "itag eq 140"}, "@a"),
-        ({"a": "itag eq 140", "b": "format eq mp4"}, "@a and @b"),
-        ({r"(\d+)\b": r"itag eq \1"}, "@140"),
-    ],
-)
 @freeze_time("2023-03-26T00:00:00+00:00")
-def test_custom_aliases(
-    aliases: dict[str, str],
-    audio_format: str,
+def test_custom_alias(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
     add_responses_callback_for_segment_urls: Callable,
@@ -1216,7 +1206,7 @@ def test_custom_aliases(
         urljoin(audio_base_url, r"sq/\w+"),
     )
 
-    custom_config = {"general": {"aliases": aliases}}
+    custom_config = {"general": {"aliases": {"custom": "itag eq 140"}}}
     config_path = platformdirs.user_config_path() / "ytpb/config.toml"
     config_path.parent.mkdir(parents=True)
     with config_path.open("w", encoding="utf-8") as f:
@@ -1237,110 +1227,13 @@ def test_custom_aliases(
                 "-vf",
                 "none",
                 "-af",
-                audio_format,
+                "@custom",
                 stream_url,
             ],
         )
 
     # Then:
     assert result.exit_code == 0
-
-
-@pytest.mark.parametrize(
-    "aliases,audio_format",
-    [
-        ({}, "@unknown"),
-        ({"a": "itag eq 140"}, "@a and @unknown"),
-    ],
-)
-@freeze_time("2023-03-26T00:00:00+00:00")
-def test_unknown_aliases(
-    aliases: dict[str, str],
-    audio_format: str,
-    ytpb_cli_invoke: Callable,
-    fake_info_fetcher: MagicMock,
-    stream_url: str,
-) -> None:
-    # Given:
-    custom_config = {"general": {"aliases": aliases}}
-    config_path = platformdirs.user_config_path() / "ytpb/config.toml"
-    config_path.parent.mkdir(parents=True)
-    with config_path.open("w", encoding="utf-8") as f:
-        toml.dump(custom_config, f)
-
-    # When:
-    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
-        mock_fetcher.return_value = fake_info_fetcher
-        with pytest.raises(click.UsageError) as exc_info:
-            ytpb_cli_invoke(
-                [
-                    "--config",
-                    config_path,
-                    "download",
-                    "--dry-run",
-                    "--no-cache",
-                    "--interval",
-                    "7959120/7959121",
-                    "-vf",
-                    "none",
-                    "-af",
-                    audio_format,
-                    stream_url,
-                ],
-                catch_exceptions=False,
-                standalone_mode=False,
-            )
-
-    # Then:
-    assert "Unknown alias found: 'unknown'" == str(exc_info.value)
-
-
-@pytest.mark.parametrize(
-    "aliases,audio_format",
-    [
-        ({"a": "@b"}, "@a"),
-    ],
-)
-@freeze_time("2023-03-26T00:00:00+00:00")
-def test_unresolved_aliases(
-    aliases: dict[str, str],
-    audio_format: str,
-    ytpb_cli_invoke: Callable,
-    fake_info_fetcher: MagicMock,
-    stream_url: str,
-) -> None:
-    # Given:
-    custom_config = {"general": {"aliases": aliases}}
-    config_path = platformdirs.user_config_path() / "ytpb/config.toml"
-    config_path.parent.mkdir(parents=True)
-    with config_path.open("w", encoding="utf-8") as f:
-        toml.dump(custom_config, f)
-
-    # When:
-    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
-        mock_fetcher.return_value = fake_info_fetcher
-        with pytest.raises(click.UsageError) as exc_info:
-            ytpb_cli_invoke(
-                [
-                    "--config",
-                    config_path,
-                    "download",
-                    "--dry-run",
-                    "--no-cache",
-                    "--interval",
-                    "7959120/7959121",
-                    "-vf",
-                    "none",
-                    "-af",
-                    audio_format,
-                    stream_url,
-                ],
-                catch_exceptions=False,
-                standalone_mode=False,
-            )
-
-    # Then:
-    assert "Cannot resolve nested alias(es) in @a" in str(exc_info.value)
 
 
 @pytest.mark.parametrize(

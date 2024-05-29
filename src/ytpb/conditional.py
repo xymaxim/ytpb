@@ -13,6 +13,8 @@ FORMAT_SPEC_RE = re.compile(
     r"^(?:(?P<function>[\w\-]+)\((?P<expr>[^\(\)]+)\)|(?P<just_expr>[^\(\)]+))$"
 )
 
+pc.ops_use_symbolic_and_txt(allow_single_eq=True)
+
 
 def treat_none_as_false(operator_function: Callable, a: Any, b: Any) -> bool:
     if a is None:
