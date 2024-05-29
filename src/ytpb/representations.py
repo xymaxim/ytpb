@@ -113,6 +113,11 @@ class VideoRepresentationInfo(RepresentationInfo):
         """Quality string (resolution and FPS), e.g. '720p', '1080p60'."""
         return VideoQuality(self.height, self.frame_rate)
 
+    @property
+    def fps(self) -> int:
+        """An alias for ``frame_rate``."""
+        return self.frame_rate
+
 
 def _eval_local_xpath(element: etree.Element, node: str) -> list[etree.Element]:
     return element.xpath(".//*[local-name() = $node]", node=node)
