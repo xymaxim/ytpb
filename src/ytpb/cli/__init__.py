@@ -3,6 +3,7 @@ import logging
 import os
 import re
 import sys
+import tomllib
 from copy import deepcopy
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -14,7 +15,6 @@ import click
 import cloup
 import jinja2.sandbox
 import structlog
-import toml
 
 from ytpb._version import __version__
 from ytpb.cli.commands.capture import capture_group
@@ -74,7 +74,7 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
             filename=path,
             hint=str(e),
         )
-    except toml.TomlDecodeError as e:
+    except tomllib.TOMLDecodeError as e:
         raise click.FileError(
             filename=path,
             hint=f"Could not load configuration file.\n{e}",
