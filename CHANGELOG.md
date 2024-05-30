@@ -3,15 +3,15 @@
 Versions follow [Calendar Versioning](https://calver.org) with the `YYYY.M.D`
 scheme.
 
-## [Unreleased]
+## [2024.5.30]
 
 - Make cutting non-default behavior and add the `-c / --cut` option
-  ([88f5578](88f5578af675e5d011b6266f9ca315bb8e47ecac))
-- Remove the `--from-playback` option from `ytpb download`
+- Start using Jinja templates for output path templates
+- Accept long option names for default option values in the config file
+- Change the format of composed MPEG-DASH MPDs from compact to full (https://github.com/xymaxim/ytpb/issues/12)
+- Remove `--from-playback` from `ytpb download`
 - Rename `-X / --dry-run` to `-x / --dry-run`
 - Rename `--segments-output-dir` to `-s / --segments-output-dir`
-- Change the format of composed MPEG-DASH MPDs from compact to full
-  ([#6](https://github.com/xymaxim/ytpb/issues/6))
 
 ## [2024.5.12]
 
