@@ -399,7 +399,7 @@ will be used. As part of :ref:`Configuring`, they can be overriden.
 
    [options.mpd.compose]
    audio_formats = "itag = 140"
-   video_formats = "@vp9 and [@720p or @1080p] and @30fps"
+   video_formats = "@vp9 and [@1080p or @720p] and @30fps"
 
 Specifying output name
 ======================
@@ -504,10 +504,10 @@ the ``--config`` option can be used to override the default file location.
 
 The priority of applying settings is the following, from lowest to highest:
 
-- default, built-in settings
-- the ``config.toml`` file under the default directory
-- a file specified via the ``--config`` option
-- user provided command options.
+1. Default, built-in settings.
+2. The ``config.toml`` file under the default directory.
+3. A file specified via the ``--config`` option.
+4. User-provided command options.
 
 See `config.toml.example`_ for the available fields and their descriptions.
 
