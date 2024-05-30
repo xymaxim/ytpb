@@ -891,7 +891,7 @@ def test_with_default_config_file(
     config = {
         "options": {
             "download": {
-                "audio_format": "NON-SENS",
+                "audio-format": "NON-SENS",
             }
         }
     }
@@ -942,7 +942,7 @@ def test_with_config_via_option(
     default_config = {
         "options": {
             "download": {
-                "audio_format": "NON-SENS",
+                "audio-format": "NON-SENS",
             }
         }
     }
@@ -954,7 +954,7 @@ def test_with_config_via_option(
     test_config = {
         "options": {
             "download": {
-                "audio_format": "itag eq 140",
+                "audio-format": "itag eq 140",
             }
         }
     }

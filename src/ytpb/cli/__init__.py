@@ -58,6 +58,14 @@ class ContextObject:
     original_stdout: TextIO = field(default_factory=lambda: sys.stdout)
 
 
+def find_option_name_by_flag(command: click.Command, flag: str) -> str:
+    for option in command.params:
+        for opt in option.opts:
+            if flag == opt.lstrip("-"):
+                return option.name
+    raise click.UsageError(f"Cannot find option with flag '--{flag}'.")
+
+
 def load_config_into_context(ctx: click.Context, path: Path) -> dict:
     try:
         config_dict = load_config_from_file(path)
@@ -75,8 +83,36 @@ def load_config_into_context(ctx: click.Context, path: Path) -> dict:
     ctx.ensure_object(ContextObject)
     ctx.obj.config = ctx.obj.config.new_child(config_dict)
 
-    default_map_from_config = ctx.obj.config["options"]
-    ctx.default_map = update_nested_dict(ctx.default_map, default_map_from_config)
+    # FIXME: This all looks like one unbeatiful hack. Really hope there's
+    # another way that doesn't require much effort. See also pallets/click#680.
+    try:
+        user_options = ctx.obj.config.maps[0]["options"]
+    except KeyError:
+        pass
+    else:
+        _invoked_subcommand = ctx.command.commands[ctx.invoked_subcommand]
+        if isinstance(_invoked_subcommand, click.Group):
+            leftover_args = sys.argv[sys.argv.index(_invoked_subcommand.name) + 1 :]
+            deepest_name = [arg for arg in leftover_args if not arg.startswith("-")][0]
+            deepest_command = _invoked_subcommand.commands[deepest_name]
+            user_defaults = user_options[_invoked_subcommand.name][deepest_name]
+        else:
+            deepest_command = _invoked_subcommand
+            user_defaults = user_options[deepest_command.name]
+
+        user_defaults_renamed: dict[str, str] = {}
+        for flag, value in user_defaults.items():
+            option_name = find_option_name_by_flag(deepest_command, flag)
+            user_defaults_renamed[option_name] = value
+
+        if isinstance(_invoked_subcommand, click.Group):
+            user_options[_invoked_subcommand.name] = {
+                deepest_command.name: user_defaults_renamed
+            }
+        else:
+            user_options[deepest_command.name] = user_defaults_renamed
+
+        ctx.default_map = update_nested_dict(ctx.default_map, user_options)
 
 
 @cloup.group(invoke_without_command=True)

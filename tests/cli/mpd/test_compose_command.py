@@ -143,7 +143,7 @@ def test_with_default_config(
         "options": {
             "mpd": {
                 "compose": {
-                    "audio_formats": "NON-SENS",
+                    "audio-formats": "NON-SENS",
                 }
             }
         }
@@ -172,6 +172,7 @@ def test_with_default_config(
         )
 
     # Then:
+    print(result.output)
     assert result.exit_code == 0
 
 

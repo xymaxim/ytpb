@@ -3,7 +3,8 @@ import operator
 import os
 import tomllib
 from collections import ChainMap
-from collections.abc import Hashable, Mapping
+from collections.abc import Hashable, Mapping, MutableMapping
+from copy import deepcopy
 from functools import reduce
 from pathlib import Path
 from typing import Any
@@ -59,7 +60,7 @@ DEFAULT_OUTPUT_PATH = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }
 
 DEFAULT_CONFIG = AddressableDict(
     {
-        "version": 1,
+        "version": 2,
         "options": {
             "download": {
                 "audio_format": "itag eq 140",
@@ -70,14 +71,14 @@ DEFAULT_CONFIG = AddressableDict(
             },
             "capture": {
                 "frame": {
-                    "video_format": "best(format eq mp4 and frame_rate eq 30)",
+                    "video_format": "best(frame_rate eq 30)",
                     "output_path": "{{ title|adjust }}_{{ id }}_{{ moment_date|isodate }}.jpg",
                 },
                 "timelapse": {
-                    "video_format": "best(format eq mp4 and frame_rate eq 30)",
+                    "video_format": "best(frame_rate eq 30)",
                     "output_path": (
-                        "{{ title|adjust }}_{{ id }}/{{ input_start_date|isodate }}/{{ every }}/"
-                        "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}_{{ every }}_%04d.jpg"
+                        "{{ title|adjust }}_{{ id }}/{{ input_start_date|isodate }}/{{ every.replace('PT', 'ET') }}/"
+                        "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}_{{ every.replace('PT', 'ET') }}_%04d.jpg"
                     ),
                 },
             },
@@ -85,8 +86,7 @@ DEFAULT_CONFIG = AddressableDict(
                 "compose": {
                     "audio_formats": "itag eq 140",
                     "video_formats": (
-                        "format eq webm and [height eq 720 or height eq 1080] and "
-                        "frame_rate eq 30"
+                        "codes eq vp9 and [height eq 1080 or height eq 720] and frame_rate eq 30"
                     ),
                     "output_path": f"{DEFAULT_OUTPUT_PATH}.mpd",
                 }
@@ -98,16 +98,6 @@ DEFAULT_CONFIG = AddressableDict(
             "aliases": FORMAT_ALIASES,
         },
         "output": {
-            "date": {"styles": "basic,complete,hh"},
-            "title": {
-                "style": "custom",
-                "custom": {
-                    "characters": "posix",
-                    "separator": "-",
-                    "max_length": 30,
-                    "lowercase": False,
-                },
-            },
             "metadata": {
                 "dates": "iso",
             },
@@ -148,13 +138,13 @@ def load_config_from_file(path: Path) -> dict:
         return tomllib.load(f)
 
 
-def update_nested_dict(base: dict, updates: dict) -> dict:
+def update_nested_dict(base: MutableMapping, updates: MutableMapping) -> MutableMapping:
     """Update a base nested dict with values from updates. The new, update
     dictionary will be returned.
     """
-    updated_dict = base.copy()
+    updated_dict = deepcopy(base)
     for key, value in updates.items():
-        if isinstance(value, dict) and isinstance(base.get(key), dict):
+        if isinstance(value, Mapping) and isinstance(base.get(key), Mapping):
             updated_dict[key] = update_nested_dict(base[key], value)
         else:
             updated_dict[key] = value
