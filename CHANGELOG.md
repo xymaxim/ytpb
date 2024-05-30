@@ -106,12 +106,12 @@ scheme.
 - Change the first segment locating step: don\'t limit it to two jumps
   ([#8](https://github.com/xymaxim/ytpb/pull/8))
 
-[Unreleased]: https://github.com/xymaxim/ytpb/compare/v2024.5.12..HEAD
-[2024.5.12]: https://github.com/xymaxim/ytpb/compare/v2024.5.3..v2024.5.12
-[2024.5.3]: https://github.com/xymaxim/ytpb/compare/v2024.4.20..v2024.5.3
-[2024.4.20]: https://github.com/xymaxim/ytpb/compare/v2024.4.12..v2024.4.20
-[2024.4.12]: https://github.com/xymaxim/ytpb/compare/v2024.3.27..v2024.4.12
-[2024.3.27]: https://github.com/xymaxim/ytpb/compare/v2024.3.16..v2024.3.27
-[2024.3.16]: https://github.com/xymaxim/ytpb/compare/v2024.3.13..v2024.3.16
-[2024.3.13]: https://github.com/xymaxim/ytpb/compare/v2024.3.9..v2024.3.13
-[2024.3.9]: https://github.com/xymaxim/ytpb/compare/v2024.3.7..v2024.3.9
+[2024.5.30]: https://github.com/xymaxim/ytpb/compare/v2024.5.12...v2024.5.
+[2024.5.12]: https://github.com/xymaxim/ytpb/compare/v2024.5.3...v2024.5.12
+[2024.5.3]: https://github.com/xymaxim/ytpb/compare/v2024.4.20...v2024.5.3
+[2024.4.20]: https://github.com/xymaxim/ytpb/compare/v2024.4.12...v2024.4.20
+[2024.4.12]: https://github.com/xymaxim/ytpb/compare/v2024.3.27...v2024.4.12
+[2024.3.27]: https://github.com/xymaxim/ytpb/compare/v2024.3.16...v2024.3.27
+[2024.3.16]: https://github.com/xymaxim/ytpb/compare/v2024.3.13...v2024.3.16
+[2024.3.13]: https://github.com/xymaxim/ytpb/compare/v2024.3.9...v2024.3.13
+[2024.3.9]: https://github.com/xymaxim/ytpb/compare/v2024.3.7...v2024.3.9
