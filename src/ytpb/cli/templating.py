@@ -50,7 +50,8 @@ def render_template(
     context: dict,
 ) -> T:
     template = environment.from_string(str(value))
-    return type(value)(template.render(context))
+    output = template.render(context).strip()
+    return type(value)(output)
 
 
 def render_path_template(
