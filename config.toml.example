@@ -9,29 +9,38 @@
 # See https://ytpb.readthedocs.io/en/latest/cli.html#configuring for more
 # information on configuring.
 
-# Default values for the CLI options. Each section corresponds to its own
-# command or sub-command. See help of a command for all options. Note that
-# values provided here can be overriden by the corresponding CLI option.
+version = 2
+
+# Default values for the CLI options. Each section corresponds to command (or
+# sub-command). See help of a command for all options, and use long names only.
 [options]
 
+# Defaults for global options, for example:
+#   debug = true
+
 [options.download]
-audio_format = "itag eq 140"
-video_format = "best(@mp4 and <=1080p and @30fps)"
-output_path = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}"
-output_path = "@default"
+audio-format = "itag = 140"
+video-format = "best(@avc1 and @<=1080p and @30fps)"
+output = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}"
 
 [options.capture.frame]
-video_format = "best(@mp4 and @30fps)"
-output_path = "{{ title|adjust }}_{{ id }}_{{ moment_date|isodate }}.jpg"
+video-format = "best(@30fps)"
+output-path = "{{ title|adjust }}_{{ id }}_{{ moment_date|isodate }}.jpg"
 
 [options.capture.timelapse]
-video_format = "best(@mp4 and @30fps)"
-output_path = "{{ title|adjust }}_{{ id }}/{{ input_start_date|isodate }}/{{ every }}/{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}_{{ every }}_%04d.jpg"
+video-format = "best(@30fps)"
+# An example of multi-line string template:
+output-path = """
+{% set title_and_id = title|adjust ~ '_' ~ id %}
+{% set every_label = (every|duration).replace('PT', 'ET' %}
+{% set where = '{}/{}/{}'.format(title_and_id, input_start_date|isodate, every_label) %}
+{% set filename = '{}_{}_{}'.format(title_and_id, input_start_date|isodate, every_label) %}
+{{ where }}/{{ filename }}_%04d.jpg"""
 
 [options.mpd.compose]
-audio_formats = "itag eq 140"
-video_formats = "@webm and [@720p or @1080p] and @30fps"
-output_path = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}.mpd"
+audio-formats = "itag = 140"
+video-formats = "@vp9 and [@720p or @1080p] and @30fps"
+output = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}.mpd"
 
 # General settings.
 [general]
@@ -39,11 +48,11 @@ output_path = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}.mpd"
 # Preview duration for the preview start (--preview-start) and end
 # (--preview-end) modes (in seconds).
 preview_duration = 10
-# The User-Agent header.
+# The User-Agent HTTP header.
 user_agent = "Mozilla/5.0 (Android 14; Mobile; rv:68.0) Gecko/68.0 Firefox/120.0"
 
 # Custom aliases used in format specs. See
-# https://ytpb.readthedocs.io/en/latest/reference.html#format-spec.
+# https://ytpb.readthedocs.io/en/latest/reference.html#aliases.
 [general.aliases]
-custom-alias = "[@720p or @1080p] and @webm"
-another-alias = "@custom-alias and @30fps"
+custom = "@vp9 and [@720p or @1080p]"
+another = "@custom-alias and @30fps"
