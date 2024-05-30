@@ -433,7 +433,7 @@ def timelapse_command(
             "actual_start_date": actual_date_interval.start.astimezone(input_timezone),
             "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
             "duration": requested_end_date - requested_start_date,
-            "every": isotimedelta.isoformat(every).replace("P", "E"),
+            "every": every,
         }
         final_output_path = render_template(
             output_path,
