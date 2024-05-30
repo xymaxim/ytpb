@@ -503,8 +503,9 @@ def download_command(
 
         if resume_run:
             click.echo(
-                f"~ Found unfinished download, continue from {resume_file_path.name}\n"
+                f"~ Found unfinished download, continue from {resume_file_path.name}"
             )
+            click.echo()
             if segments_output_directory != previous_segments_output_directory:
                 click.echo(
                     "fatal: The previous segments output directory is not "

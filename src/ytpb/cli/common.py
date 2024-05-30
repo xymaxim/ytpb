@@ -116,6 +116,11 @@ def print_summary_info(
         )
     )
 
+    if rewind_interval.start.falls_in_gap:
+        echo_notice("Start point is shifted right due to a stream gap!")
+    if rewind_interval.end.falls_in_gap:
+        echo_notice("End point is shifted left due to a stream gap!")
+
 
 def create_playback(ctx: click.Context) -> Playback:
     stream_url = ctx.params["stream_url"]
