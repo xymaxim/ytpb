@@ -12,7 +12,7 @@ from typing import Any, cast, TextIO, TypeAlias
 
 import click
 import cloup
-import jinja2
+import jinja2.sandbox
 import structlog
 import toml
 
@@ -183,7 +183,7 @@ def base_cli(
         if config_path:
             raise click.UsageError("Conflicting --config and --no-config options given")
 
-    ctx.obj.jinja_environment = jinja2.Environment()
+    ctx.obj.jinja_environment = jinja2.sandbox.SandboxedEnvironment()
     ctx.obj.jinja_environment.filters.update(TEMPLATE_FILTERS)
 
 
