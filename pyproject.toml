@@ -44,7 +44,7 @@ test = [
     "pytest>=8.2.1",
     "pytest-matcher==2.0.1",
     "pytest-socket>=0.7.0",
-    "responses>=0.25.1"
+    "responses>=0.25.0"
 ]
 dev = [
     "ytpb[test]",
