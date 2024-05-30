@@ -6,8 +6,7 @@
 # content (or part of the content) of this file to
 # $XDG_CONFIG_HOME/ytpb/config.toml.
 #
-# See https://ytpb.readthedocs.io/en/latest/cli.html#configuring for more
-# information on configuring.
+# See also https://ytpb.readthedocs.io/en/latest/cli.html#configuring.
 
 version = 2
 
