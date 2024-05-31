@@ -14,6 +14,11 @@ from ytpb.cli.formats import ALIASES, expand_aliases
             "itag eq 140 and format eq mp4",
         ),
         ({r"(\d+)\b": r"itag eq \1"}, "@140", "itag eq 140"),
+        (
+            {"a": "format eq mp4", "b": "frame_rate eq 60"},
+            "[@a and @b] or [@a]",
+            "[format eq mp4 and frame_rate eq 60] or [format eq mp4]",
+        ),
     ],
 )
 def test_expand_non_nested_aliases(aliases: dict[str, str], spec: str, expected: str):
@@ -28,6 +33,16 @@ def test_expand_non_nested_aliases(aliases: dict[str, str], spec: str, expected:
             {"a": "@aa and @bb", "aa": "itag eq 140", "bb": "format eq mp4"},
             "@a",
             "itag eq 140 and format eq mp4",
+        ),
+        (
+            {"full": "height eq 2160", "f": "@full"},
+            "@f",
+            "height eq 2160",
+        ),
+        (
+            {"full": "height eq 2160", "f": "@full"},
+            "[@full and frame_rate eq 60] or [@f]",
+            "[height eq 2160 and frame_rate eq 60] or [height eq 2160]",
         ),
     ],
 )

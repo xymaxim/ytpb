@@ -8,7 +8,7 @@ ALIAS_RE = re.compile(r"@([\w<>=\-\\]+)(?!\s)?")
 
 def expand_aliases(expression: str, aliases: dict[str, str]) -> str:
     source_alias: str = ""
-    visited_aliases: set[str] = set()
+    expanding_branch: set[str] = set()
 
     def _resolve_aliases(
         expression: str,
@@ -16,32 +16,34 @@ def expand_aliases(expression: str, aliases: dict[str, str]) -> str:
         patterns: list[tuple[str, str]],
     ) -> str:
         nonlocal source_alias
-        nonlocal visited_aliases
+        nonlocal expanding_branch
 
         resolved = expression
         for matched in ALIAS_RE.finditer(expression):
-            full_alias = matched.group()
-            name = matched.group(1)
-            if name in visited_aliases:
+            current_alias = matched.group()
+            current_name = matched.group(1)
+            if current_name in expanding_branch:
                 raise click.UsageError(
-                    f"Cannot resolve circular alias {full_alias} in {source_alias}"
+                    f"Cannot resolve circular alias {current_alias} in {source_alias}"
                 )
             else:
-                visited_aliases.add(name)
-                source_alias = full_alias
+                expanding_branch.add(current_name)
+                source_alias = current_alias
             try:
-                value = aliases[name]
+                value = aliases[current_name]
+                if not ALIAS_RE.search(value):
+                    expanding_branch = set()
             except KeyError:
-                value = name
+                value = current_name
                 for pattern, repl in patterns:
                     value, has_subbed = re.subn(rf"^{pattern}", repl, value)
                     if has_subbed:
                         break
                 else:
-                    raise click.UsageError(f"Unknown alias found: {full_alias}")
-            resolved = resolved.replace(full_alias, value)
+                    raise click.UsageError(f"Unknown alias found: {current_alias}")
+            resolved = resolved.replace(current_alias, value)
 
-        if ALIAS_RE.match(resolved):
+        if ALIAS_RE.search(resolved):
             return _resolve_aliases(resolved, aliases, patterns)
 
         return resolved
