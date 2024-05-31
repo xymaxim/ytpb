@@ -218,9 +218,7 @@ class FormatSpecParamType(click.ParamType):
         if FORMAT_ALIAS_RE.search(output):
             alias_substitutions = ctx.obj.config.traverse("general.aliases")
             unaliased_value = expand_aliases(output, alias_substitutions)
-            logger.debug(
-                f"Format spec expression '{value}' expanded as '{unaliased_value}'"
-            )
+            logger.debug(f"Format spec '{value}' expanded as '{unaliased_value}'")
             output = unaliased_value
 
         guard_condition = f"mime_type contains {self.format_spec_type.value}"
