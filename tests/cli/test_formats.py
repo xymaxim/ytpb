@@ -8,6 +8,10 @@ from ytpb.cli.formats import ALIASES, expand_aliases
     "aliases,spec,expected",
     [
         ({"a": "itag eq 140"}, "@a", "itag eq 140"),
+        ({"a1": "itag eq 140"}, "@a1", "itag eq 140"),
+        ({"a!": "itag eq 140"}, "@a!", "itag eq 140"),
+        ({"a?": "itag eq 140"}, "@a?", "itag eq 140"),
+        ({"a-a": "itag eq 140"}, "@a-a", "itag eq 140"),
         (
             {"a": "itag eq 140", "b": "format eq mp4"},
             "@a and @b",

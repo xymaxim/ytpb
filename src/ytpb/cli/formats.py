@@ -3,7 +3,7 @@ from itertools import product
 
 import click
 
-ALIAS_RE = re.compile(r"@([\w<>=\-\\]+)(?!\s)?")
+ALIAS_RE = re.compile(r"@([\w<>=\-\\]+[\?!]?)")
 
 
 def expand_aliases(expression: str, aliases: dict[str, str]) -> str:
