@@ -191,8 +191,8 @@ def compose_resume_filename(
 @click.option(
     "-x",
     "--dry-run",
-    is_flag=True,
-    help="Run without downloading.",
+    count=True,
+    help="Run until locating (-xx) or downloading (-x).",
 )
 @yt_dlp_option
 @click.option(
@@ -280,6 +280,10 @@ def download_command(
             click.echo(audio_stream.base_url, ctx.obj.original_stdout)
         if video_format:
             click.echo(video_stream.base_url, ctx.obj.original_stdout)
+        sys.exit()
+
+    if dry_run == 2:
+        echo_notice("This is a dry run, just exit.")
         sys.exit()
 
     click.echo()

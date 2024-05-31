@@ -659,6 +659,40 @@ def test_dry_run_option(
 
 @pytest.mark.expect_suffix(platform.system())
 @freeze_time("2023-03-26T00:00:00+00:00")
+def test_double_dry_run_option(
+    ytpb_cli_invoke: Callable,
+    add_responses_callback_for_reference_base_url: Callable,
+    add_responses_callback_for_segment_urls: Callable,
+    fake_info_fetcher: MagicMock,
+    stream_url: str,
+    expected_out,
+) -> None:
+    # When:
+    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+        mock_fetcher.return_value = fake_info_fetcher
+        result = ytpb_cli_invoke(
+            [
+                "--no-config",
+                "download",
+                "--no-cache",
+                "--interval",
+                "7959120/7959121",
+                "-af",
+                "itag eq 140",
+                "-vf",
+                "none",
+                "-xx",
+                stream_url,
+            ],
+        )
+
+    # Then:
+    assert result.exit_code == 0
+    assert result.output == expected_out
+
+
+@pytest.mark.expect_suffix(platform.system())
+@freeze_time("2023-03-26T00:00:00+00:00")
 def test_cut_option(
     ytpb_cli_invoke: Callable,
     add_responses_callback_for_reference_base_url: Callable,
