@@ -543,7 +543,7 @@ Running without downloading
 There is a dry run mode (``-x / --dry-run``) to run without downloading. It
 could be useful if you are not interested in having an output excerpt file: for
 example, you want to locate the rewind interval or debug just the first steps
-(by combining a dry run mode with the ``--debug`` global option).
+(by combining a dry run with the ``--debug`` global option).
 
 For example, just to locate start and end moments, use::
 
@@ -559,6 +559,18 @@ It can be combined with the ``--keep-temp`` option to keep temporary
 files::
 
   $ ytpb download ... --dry-run --keep-temp <STREAM>
+
+This option can also be also used twice (``-xx``) to run and exit before
+locating, for example, to check available audio and/or video streams matching
+format specs::
+
+  $ ytpb download ... -xx <STREAM>
+  ...
+  These representations will be downloaded:
+     - Audio: itag 140, mp4 (mp4a.40.2), 44100 Hz
+     - Video: itag 248, webm (vp9), 1920x1080, 30 fps
+
+  ~ This is a dry run, just exit.
 
 Using cache
 ===========
