@@ -3,12 +3,19 @@
 Versions follow [Calendar Versioning](https://calver.org) with the `YYYY.M.D`
 scheme.
 
+## [2024.6.13]
+
+- Implement the format spec mini-language
+- Add the `-xx` option to dry run until segment locating
+- Add the short `-C` option for `--config`
+- Print a notice message if input point hits a stream gap
+
 ## [2024.5.30]
 
 - Make cutting non-default behavior and add the `-c / --cut` option
 - Start using Jinja templates for output path templates
 - Accept long option names for default option values in the config file
-- Change the format of composed MPEG-DASH MPDs from compact to full (https://github.com/xymaxim/ytpb/issues/12)
+- Change the format of composed MPEG-DASH MPDs from compact to full ([#12] (https://github.com/xymaxim/ytpb/issues/12))
 - Remove `--from-playback` from `ytpb download`
 - Rename `-X / --dry-run` to `-x / --dry-run`
 - Rename `--segments-output-dir` to `-s / --segments-output-dir`
@@ -106,7 +113,8 @@ scheme.
 - Change the first segment locating step: don\'t limit it to two jumps
   ([#8](https://github.com/xymaxim/ytpb/pull/8))
 
-[2024.5.30]: https://github.com/xymaxim/ytpb/compare/v2024.5.12...v2024.5.
+[2024.6.13]: https://github.com/xymaxim/ytpb/compare/v2024.5.30...v2024.6.13
+[2024.5.30]: https://github.com/xymaxim/ytpb/compare/v2024.5.12...v2024.5.30
 [2024.5.12]: https://github.com/xymaxim/ytpb/compare/v2024.5.3...v2024.5.12
 [2024.5.3]: https://github.com/xymaxim/ytpb/compare/v2024.4.20...v2024.5.3
 [2024.4.20]: https://github.com/xymaxim/ytpb/compare/v2024.4.12...v2024.4.20
