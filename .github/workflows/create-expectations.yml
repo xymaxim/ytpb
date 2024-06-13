@@ -10,7 +10,7 @@ on:
         required: true
 
 env:
-  python-version: 3.11
+  python-version: 3.12
 
 jobs:
   create:
