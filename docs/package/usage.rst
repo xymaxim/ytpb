@@ -148,7 +148,7 @@ or ambiguously by using a predicate function or :ref:`format spec<format-spec>`.
 
    >>> # Filtering streams by a predicate function:
    >>> video_streams: SetOfStreams = playback.streams.filter(
-   ...     lambda x: isinstance(x, VideoStream)
+   ...     lambda x: x.type == "video"
    ... )
 
    >>> # Querying streams by a format spec:
@@ -190,7 +190,7 @@ download progress:
        rewind_interval,
        audio_stream=playback.streams.get_by_itag("140"),
        video_stream=playback.streams.query(
-           "best(format eq webm and quality eq 720p)"
+           "format eq webm and quality eq 720p | best"
        ),
        output_stem=Path("path/to/output"),
        segments_directory=Path("path/to/segments"),

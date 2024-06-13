@@ -334,10 +334,9 @@ the desired formats (MPEG-DASH `representations
 to be exact), which are characterized by the itag values, qualities, used
 codecs, etc.
 
-See :ref:`reference:Format spec` for the grammar, aliases, and functions.
+See :ref:`reference:Format spec` for the grammar, aliases, and default option values.
 
-Conditionals and lookup attributes
-----------------------------------
+.. rubric:: Conditionals and lookup attributes
 
 The itag values as format codes uniquely determine representations. For example,
 providing a format spec in the form of a conditional expression as below gives
@@ -359,47 +358,22 @@ Here are other examples using other lookup :ref:`attributes
 
 .. code:: sh
 
-   $ ytpb download -vf 'best(format = mp4 and frame_rate = 30)' ...
+   $ ytpb download -vf 'format = mp4 and frame_rate = 30 | best' ...
    $ ytpb mpd compose -vf 'codecs = vp9 and [height = 1080 or height = 720]' ...
 
 (Note that all commands except ``mpd compose`` require query results to be
-non-ambiguous, with one representation per query. This is where the ``best()``
+non-ambiguous, with one representation per query. This is where the ``best``
 function can be used to limit query results.)
 
-*Using format spec aliases*
-^^^^^^^^^^^^^^^^^^^^^^^^^^^
+.. rubric:: Using format spec aliases
 
 :ref:`reference:Aliases` allow defining and use of a named condition (or
-conditions) and make expressions much shorter and easier to understand. For
-example, using the built-in aliases:
+conditions) and make expressions much shorter and easier to understand. There
+are plenty of the built-in aliases. For example, rewriting the example above:
 
 .. code:: sh
 
-   $ ytpb download -vf 'best(@mp4 and @30fps)' ...
-
-.. _Default format values:
-
-Default option values
----------------------
-
-The command options can be ommited and the default, built-in values listed below
-will be used. As part of :ref:`Configuring`, they can be overriden.
-
-.. code:: TOML
-
-   [options.download]
-   audio_format = "itag = 140"
-   video_format = "best(@avc1 and @<=1080p and @30fps)"
-
-   [options.capture.frame]
-   video_format = "best(@30fps)"
-
-   [options.capture.timelapse]
-   video_format = "best(@30fps)"
-
-   [options.mpd.compose]
-   audio_formats = "itag = 140"
-   video_formats = "@vp9 and [@1080p or @720p] and @30fps"
+   $ ytpb download -vf '@mp4 and @30fps | best' ...
 
 Specifying output name
 ======================

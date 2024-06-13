@@ -17,6 +17,11 @@ This document explains some general aspects and terms.
 Format spec
 ***********
 
+.. contents::
+   :depth: 1
+   :backlinks: none
+   :local:
+
 The desired MPEG-DASH representations, referred to media segments of specific
 format, could be selected by conditional expressions (or *format spec*). One
 format spec could refer to one or more representations.
@@ -24,45 +29,73 @@ format spec could refer to one or more representations.
 Grammar
 =======
 
+Format specs have the following top-level grammar (defined in `Lark`_ syntax):
+
+.. code-block::
+
+     query: expression
+
+     ?expression: ALL -> all
+                | NONE -> none
+                | conditional_expression
+                | fallback_expression
+                | piped_expression
+                | "(" expression ")" -> group
+
+     conditional_expression: condition
+     piped_expression: expression ("|" (expression | function))+ -> pipe
+     fallback_expression: expression ("?:" expression)+
+
+     condition: CONDITION_STRING
+
+     function.2: FUNCTION_NAME
+
+     ALL: "all"
+     NONE: "none" | "''" | "\"\""
+     CONDITION_STRING: /[@a-z0-9_\.,<>=!:\[\]'"\s]+/i
+     FUNCTION_NAME: /[a-z0-9_\-]+/i
+
 The parsing of conditional expressions is done using the `pycond`_ package.
 
+.. _Lark: https://lark-parser.readthedocs.io/en/stable/
 .. _pycond: https://github.com/axiros/pycond
 
-*Expressions* have the following grammar:
+.. glossary::
 
-.. code:: ANTLR
+   Queries
+     Used to filter audio and/or video streams (MPEG-DASH representations).
 
-    expression : condition
-               | function '(' condition ')'
-	       | 'none' ;
+   Expressions
+     The simplest expressions are conditional ones. They can be stacked, along
+     with query functions, with the pipe operator (``|``) to form a piped
+     expression. To group expressions, use parantheses (``()``).
 
-    condition : atom (('and' | 'or' | ...) (atom | condition))*
-              | '[' condition ']'
-	      | alias ;
+   Conditions
+     Composed of atomic conditions (atoms) and can be placed in a row with
+     combine boolean operators (``and``, ``or``,...). Atoms, in turn, lookup and compare
+     attributes (MPEG-DASH representation :ref:`attributes <Lookup attributes>`)
+     with conditional operators. Conditions can be structured by bracketing to
+     create complex queries, e.g., ``codecs eq vp9 and [height eq 720 or height
+     eq 1080]``.
 
-    atom : attribute operator value ;
+   Operators
+     Text or symbolic operators that refer to the Python's standard
+     `rich-comparison methods
+     <https://docs.python.org/3/library/operator.html>`_.
 
-    operator : textOperator | symolicOperator ;
+   Functions
+     Applies to the result of a query and therefore should be placed after a
+     query expression. The available functions are ``best`` and ``worst``. For
+     example, ``quality >= 720p | best``.
 
-    textOperator : 'lt' | 'le' | 'eq' | 'ne' | 'ge' | 'gt' ;
+   Fallback expressions
+     Several expressions can be placed in a row with the help of the ``?:``
+     operator. Each expression is qualified separately and the first (the most
+     left) truthy expression is used. It can be useful to provide fallback
+     expression(s) in addition to the main one. For example, ``(quality >= 720p
+     and format = mp4 ?: quality >= 720p and format = webm) | best``.
 
-    symbolicOperator : '<' | '<=' | '=' | '==' | '!=' | '>=' | '>' ;
-
-    alias : '@' aliasName ;
-
-where ``condition`` is in the form:
-
-.. code:: text
-
-    [ < atom1 > < and | or | and not ... > <atom2 > ] ... .
-
-*Operators* are or text-style or symbols operators and refer to the Python's
-standard `rich-comparison methods
-<https://docs.python.org/3/library/operator.html>`_.
-
-*Functions* are applied after querying and should wrap the whole
-*expression*. Currently, the only available function is ``best()``, or
-``b()``. An example: ``best(quality <= 720p)``, or ``b(quality ge 720p)``.
+.. _Lookup attributes:
 
 Attributes
 ==========
@@ -95,9 +128,9 @@ Aliases
 
 The format spec expressions can be simplified with aliases (``@alias``). There
 are built-in aliases as well as custom, user-defined ones. Also, they can be
-formally divided into (a) those that are explicitly defined and (b) those that
-are described by the Python `regular expressions
-<https://docs.python.org/3/library/re.html>`__, pattern aliases.
+formally divided into (a) those that are explicitly defined and (b) pattern
+aliases, those that are described by the Python `regular expressions
+<https://docs.python.org/3/library/re.html>`__.
 
 Built-in aliases
 ----------------
@@ -173,13 +206,100 @@ Aliases can be nested, allowing them to be reused:
 .. code:: TOML
 
    preferred = "@<=1080p and @30fps"
-   for-mpd = "best(@vp9 and @preferred)"
+   for-mpd = "@vp9 and @preferred | best"
 
 To define pattern aliases, use single quotes to surround alias names and values:
 
 .. code:: TOML
 
    '(\d+)x(\d+)\b' = 'width eq \1 and height eq \2'
+
+Practical examples
+==================
+
+Defining fallback conditions
+----------------------------
+
+Let's assume that we, as users, prefer videos based on the following
+criteria: (a) MP4 format in 1080p or 720p quality and 30 fps, ``@mp4 and [@720p
+or 1080p] and @30fps | best``, and (b) if the condition is not met, try another,
+broader one: ``@mp4 and @<=1080p | best``.
+
+To demonstrate the exampe, we'll look at two live streams named Stream I and
+Stream II and outputs from the ``yt-dlp --live-from-start -F`` command
+(highlighted is a representation that satisfies the first criterion).
+
+For Stream I, the first format spec will match ``itag = 136``, the best available
+stream, since there are no streams in higher quality:
+
+.. code-block::
+   :caption: Stream I
+   :emphasize-lines: 5
+
+   ID  EXT  RESOLUTION FPS │   TBR PROTO  │ VCODEC        VBR ACODEC     ABR ASR MORE INFO
+   ...
+   135 mp4  854x480     30 │ 1350k dashG  │ avc1.4d401f 1350k video only         DASH video, mp4_dash
+   244 webm 854x480     30 │  528k dashG  │ vp9          528k video only         DASH video, webm_dash
+   136 mp4  1280x720    30 │ 2684k dashG  │ avc1.4d401f 2684k video only         DASH video, mp4_dash
+   247 webm 1280x720    30 │  733k dashG  │ vp9          733k video only         DASH video, webm_dash
+
+For Stream II, the first condition will not be fulfilled because there are no
+such streams of 30 fps in MP4 format:
+
+.. code-block::
+   :caption: Stream II
+
+   ...
+   135 mp4  854x480     30 │ 1350k dashG │ avc1.4d401f 1350k video only          DASH video, mp4_dash
+   244 webm 854x480     30 │  528k dashG │ vp9          528k video only          DASH video, webm_dash
+   298 mp4  1280x720    60 │ 4018k dashG │ avc1.4d4020 4018k video only          DASH video, mp4_dash
+   302 webm 1280x720    60 │ 1276k dashG │ vp9         1276k video only          DASH video, webm_dash
+   299 mp4  1920x1080   60 │ 6686k dashG │ avc1.64002a 6686k video only          DASH video, mp4_dash
+   303 webm 1920x1080   60 │ 4816k dashG │ vp9         4816k video only          DASH video, webm_dash
+   308 webm 2560x1440   60 │ 9016k dashG │ vp9         9016k video only          DASH video, webm_dash
+
+To match the second condition (``itag = 299``), we can make an addition to our
+first query by combining two conditions with the fallback operator:
+
+.. code-block::
+
+   (@mp4 and [@720p or @1080p] and @30fps ?: @mp4 and @<=1080p) | best
+
+This allows us to have one query expression that works for different cases.
+
+.. _Default format values:
+
+Default option values
+=====================
+
+The choice of the default ``--audio-format(s)`` and ``--video-format(s)`` option
+values depends on user's preferences (formats, qualities, etc.), needs (fast
+skimming or high-quality archiving), and formats availability. Here below are
+below the default, built-in values. As part of :ref:`cli:Configuring`, they can
+be overriden.
+
+*Please note that these values don't correspond to the best quality videos and
+are focused on a smooth experience balancing between video quality and download
+speed.*
+
+.. code:: TOML
+
+   [options.download]
+   audio_format = "itag = 140"
+   video_format = """\
+   (@avc1 and [@720p or @1080p] and @30fps ?: \
+    @avc1 and @<=1080p ?: \
+    @<=1080p) | best"""
+
+   [options.capture.frame]
+   video_format = "(@>=1080p and @30fps ?: all) | best"
+
+   [options.capture.timelapse]
+   video_format = "(@>=1080p and @30fps ?: all) | best"
+
+   [options.mpd.compose]
+   audio_formats = "itag = 140"
+   video_formats = "@vp9 and [@720p or @1080p] and @30fps"
 
 .. _Templating:
 
