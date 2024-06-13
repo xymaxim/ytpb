@@ -1,11 +1,9 @@
 """Mutable set of streams."""
 
 from collections.abc import MutableSet
-from operator import attrgetter
 from typing import Any, Callable, Iterator, Self
 
-from ytpb.conditional import FORMAT_SPEC_RE, make_filter_from_expression
-from ytpb.errors import QueryError
+from ytpb.format_spec import query_items, QueryFunction
 from ytpb.types import AudioOrVideoStream, AudioStream, SetOfStreams, VideoStream
 
 __all__ = ("Streams",)
@@ -94,7 +92,9 @@ class Streams(MutableSet):
         return self.__class__(list(filter(predicate, self._elements)))
 
     def query(
-        self, format_spec: str, aliases: dict[str, str] | None = None
+        self,
+        format_spec: str,
+        functions: dict[str, QueryFunction] | None = None,
     ) -> list[AudioOrVideoStream]:
         """Queries streams by a format spec.
 
@@ -110,6 +110,9 @@ class Streams(MutableSet):
 
         Args:
             format_spec: A format spec.
+            functions: Additional query functions to be used in a format
+                spec. For built-in functions, see
+                :const:`ytpb.format_spec.FUNCTIONS`.
 
         Returns:
             A list of queried streams.
@@ -117,30 +120,4 @@ class Streams(MutableSet):
         Raises:
             QueryError: If failed to query streams with the given format spec.
         """
-        if not format_spec:
-            return []
-
-        functions_map = {
-            "best": lambda streams: sorted(streams, key=attrgetter("quality"))[-1],
-        }
-
-        if matched := FORMAT_SPEC_RE.search(format_spec):
-            if function_name := matched.group("function"):
-                expression = matched.group("expr")
-            else:
-                expression = matched.group("just_expr")
-        else:
-            raise QueryError(f"Format spec is invalid: {format_spec}")
-
-        expression_filter = make_filter_from_expression(expression)
-        queried: list[AudioOrVideoStream] = list(
-            filter(expression_filter, self._elements)
-        )
-        if queried:
-            if function_name:
-                try:
-                    queried = [functions_map[function_name](queried)]
-                except KeyError:
-                    raise QueryError(f"Unknown function: {function_name}")
-
-        return queried
+        return query_items(format_spec, self._elements, functions)

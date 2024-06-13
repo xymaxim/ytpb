@@ -1,7 +1,14 @@
 import re
-from itertools import product
+from operator import attrgetter
+from typing import Any, Callable, Protocol, Sequence
 
 import click
+import lark
+import pycond as pc
+import structlog
+
+logger = structlog.get_logger(__name__)
+
 
 ALIAS_RE = re.compile(r"@([\w<>=\-\\]+[\?!]?)")
 
@@ -53,6 +60,8 @@ def expand_aliases(expression: str, aliases: dict[str, str]) -> str:
 
     return output
 
+
+# Built-in aliases
 
 MEDIA_FORMAT_ALIASES = {"mp4": "format = mp4", "webm": "format = webm"}
 

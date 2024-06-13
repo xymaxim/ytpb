@@ -44,6 +44,7 @@ from ytpb.cli.parameters import (
     InputRewindInterval,
     PointInStreamParamType,
 )
+
 from ytpb.cli.templating import (
     check_is_template,
     IntervalOutputPathContext,
@@ -54,6 +55,7 @@ from ytpb.cli.templating import (
 from ytpb.cli.utils.date import DurationFormatPattern, format_duration
 from ytpb.cli.utils.path import sanitize_for_filename
 from ytpb.errors import QueryError, SegmentDownloadError, SequenceLocatingError
+from ytpb.format_spec import query_items
 from ytpb.locate import SegmentLocator
 from ytpb.segment import Segment
 from ytpb.types import AbsolutePointInStream, DateInterval, SegmentSequence
@@ -165,17 +167,18 @@ def frame_command(
     if video_format:
         logger.debug("Query video stream by format spec", spec=video_format)
         try:
-            queried_video_streams = playback.streams.query(video_format)
+            video_streams = playback.streams.filter(lambda x: x.type == "video")
+            queried_streams = query_items(video_format, video_streams)
         except QueryError as exc:
             click.echo(f"\nerror: Failed to query video streams. {exc}", err=True)
             sys.exit(1)
     else:
-        queried_video_streams = []
+        queried_streams = []
 
     click.echo()
     click.echo("(<<) Locating a moment in the stream... ", nl=False)
 
-    reference_stream = queried_video_streams[0]
+    reference_stream = queried_streams[0]
     reference_base_url = reference_stream.base_url
 
     head_sequence = request_reference_sequence(reference_base_url, playback.session)
@@ -330,17 +333,18 @@ def timelapse_command(
     if video_format:
         logger.debug("Query video stream by format spec", spec=video_format)
         try:
-            queried_video_streams = playback.streams.query(video_format)
+            video_streams = playback.streams.filter(lambda x: x.type == "video")
+            queried_streams = query_items(video_format, video_streams)
         except QueryError as exc:
             click.echo(f"\nerror: Failed to query video streams. {exc}", err=True)
             sys.exit(1)
     else:
-        queried_video_streams = []
+        queried_streams = []
 
     click.echo()
     click.echo("(<<) Locating interval start (S) and end (E)... ", nl=False)
 
-    reference_stream = queried_video_streams[0]
+    reference_stream = queried_streams[0]
     reference_base_url = reference_stream.base_url
 
     head_sequence = request_reference_sequence(reference_base_url, playback.session)

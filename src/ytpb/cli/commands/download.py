@@ -239,15 +239,17 @@ def download_command(
     queried_audio_streams = []
     if audio_format:
         logger.debug("Query audio stream by format spec", spec=audio_format)
+        streams_to_query = playback.streams.filter(lambda x: x.type == "audio")
         queried_audio_streams = query_streams_or_exit(
-            playback.streams, audio_format, "--audio-format", allow_many=False
+            streams_to_query, audio_format, "--audio-format", allow_many=False
         )
 
     queried_video_streams = []
     if video_format:
         logger.debug("Query video stream by format spec", spec=video_format)
+        streams_to_query = playback.streams.filter(lambda x: x.type == "video")
         queried_video_streams = query_streams_or_exit(
-            playback.streams, video_format, "--video-format", allow_many=False
+            streams_to_query, video_format, "--video-format", allow_many=False
         )
 
     if queried_audio_streams and queried_video_streams:
@@ -626,7 +628,6 @@ def download_command(
             else:
                 click.echo("2. Merging segments (may take a while)... ", nl=False)
 
-            metadata_tags: dict[str, Any] = {}
             if not no_metadata:
 
                 def _convert_date_to_isostring(date: datetime) -> str:

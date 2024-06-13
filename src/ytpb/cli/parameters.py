@@ -8,16 +8,13 @@ from timedelta_isoformat import timedelta as isotimedelta
 
 from ytpb.cli.formats import ALIAS_RE as FORMAT_ALIAS_RE, expand_aliases
 from ytpb.cli.utils.date import ensure_date_aware
-
-from ytpb.conditional import FORMAT_SPEC_RE
-
 from ytpb.types import AbsolutePointInStream, SegmentSequence
 
 logger = structlog.get_logger(__name__)
 
 
 class PointInStreamParamType(click.ParamType):
-    def __init__(self, allowed_literals: list[str] = None):
+    def __init__(self, allowed_literals: list[str] | None = None):
         if allowed_literals:
             self.allowed_literals = allowed_literals
         else:
@@ -211,22 +208,13 @@ class FormatSpecParamType(click.ParamType):
     def convert(
         self, value: str, param: click.Parameter, ctx: click.Context
     ) -> str | None:
-        if value == "" or value == "none":
-            return None
-
-        output = value
-        if FORMAT_ALIAS_RE.search(output):
+        if not value.strip() or value == "none":
+            output = None
+        elif FORMAT_ALIAS_RE.search(value):
             alias_substitutions = ctx.obj.config.traverse("general.aliases")
-            unaliased_value = expand_aliases(output, alias_substitutions)
+            unaliased_value = expand_aliases(value, alias_substitutions)
             logger.debug(f"Format spec '{value}' expanded as '{unaliased_value}'")
             output = unaliased_value
-
-        guard_condition = f"mime_type contains {self.format_spec_type.value}"
-        if matched := FORMAT_SPEC_RE.match(output):
-            if matched.group("function"):
-                replace_with = f"{guard_condition} and [{matched.group('expr')}]"
-                output = output.replace(matched.group("expr"), replace_with)
-            else:
-                output = f"{guard_condition} and [{output}]"
-
+        else:
+            output = value
         return output

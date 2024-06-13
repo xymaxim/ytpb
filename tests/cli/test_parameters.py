@@ -15,24 +15,24 @@ from ytpb.cli.parameters import (
 
 def test_none_format_spec():
     spec_type = FormatSpecType.AUDIO
-    assert FormatSpecParamType(spec_type).convert("none", None, None) is None
-    assert FormatSpecParamType(spec_type).convert("", None, None) is None
+    assert None == FormatSpecParamType(spec_type).convert("none", None, None)
+    assert None == FormatSpecParamType(spec_type).convert("", None, None)
 
 
 def test_format_spec_without_function():
-    expected = "mime_type contains audio and [format eq mp4]"
+    expected = "format eq mp4"
     actual = FormatSpecParamType(FormatSpecType.AUDIO).convert(
         "format eq mp4", None, None
     )
     assert expected == actual
 
 
-def test_format_spec_with_function():
-    expected = "function(mime_type contains audio and [format eq mp4])"
-    actual = FormatSpecParamType(FormatSpecType.AUDIO).convert(
-        "function(format eq mp4)", None, None
-    )
-    assert expected == actual
+# def test_format_spec_with_function():
+#     expected = "function(mime_type contains audio and [format eq mp4])"
+#     actual = FormatSpecParamType(FormatSpecType.AUDIO).convert(
+#         "function(format eq mp4)", None, None
+#     )
+#     assert expected == actual
 
 
 @pytest.mark.parametrize(

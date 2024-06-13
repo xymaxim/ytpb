@@ -52,7 +52,7 @@ def capture_frames(
     target_dates: list[datetime],
     stream: AudioOrVideoStream,
     reference_sequence: SegmentSequence | None = None,
-) -> Iterator[Image.Image, Segment]:
+) -> Iterator[tuple[Image.Image, Segment]]:
     """Captures frames as images.
 
     Examples:

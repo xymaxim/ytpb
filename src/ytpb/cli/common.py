@@ -19,6 +19,8 @@ from ytpb.errors import (
     SegmentDownloadError,
 )
 from ytpb.fetchers import YoutubeDLInfoFetcher, YtpbInfoFetcher
+
+from ytpb.format_spec import query_items
 from ytpb.info import BroadcastStatus
 from ytpb.playback import Playback, RewindInterval
 from ytpb.types import DateInterval, SegmentSequence, SetOfStreams
@@ -169,7 +171,7 @@ def query_streams_or_exit(
     allow_many: bool = True,
 ) -> SetOfStreams:
     try:
-        queried_streams = streams.query(format_spec)
+        queried_streams = query_items(format_spec, streams)
     except QueryError as exc:
         message = f"error: Invalid value for '{param}'. {exc}: '{format_spec}'"
         click.echo(message, err=True)
@@ -182,7 +184,7 @@ def query_streams_or_exit(
             )
             click.echo(
                 (
-                    "error: Format spec is ambiguous: '{format_spec}'.\n\n"
+                    f"error: Format spec is ambiguous: '{format_spec}'.\n\n"
                     "Found more than one stream matched a format spec. Please be more "
                     "explicit, or try 'yt-dlp --live-from-start -F ...' first."
                 )
@@ -190,7 +192,7 @@ def query_streams_or_exit(
             sys.exit(1)
     elif not allow_empty:
         message = (
-            f"error: No streams found matching '{param}' format spec: '{format_spec}'"
+            f"error: No streams found matching {param} format spec: '{format_spec}'"
         )
         click.echo(message, err=True)
         sys.exit(1)
