@@ -23,6 +23,7 @@ dependencies = [
     "click>=8.1.7",
     "cloup>=3.0.5",
     "Jinja2>=3.1.4",
+    "lark>=1.1.9",
     "lxml>=5.2.2",
     "pathvalidate>=3.2.0",
     "pillow>=10.3.0",
