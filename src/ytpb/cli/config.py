@@ -65,17 +65,22 @@ DEFAULT_CONFIG = AddressableDict(
             "download": {
                 "audio_format": "itag eq 140",
                 "video_format": (
-                    "(format eq mp4 and [height eq 720 or height eq 1080] and frame_rate eq 30 ?: format eq mp4 and height le 1080 ?: height le 1080) | best"
+                    "("
+                    "format eq mp4 and [height eq 720 or height eq 1080] and frame_rate eq 30 "
+                    "?: format eq mp4 and height le 1080"
+                    "?: height le 1080"
+                    ")"
+                    " | best"
                 ),
                 "output_path": DEFAULT_OUTPUT_PATH,
             },
             "capture": {
                 "frame": {
-                    "video_format": "(height ge 1080 and frame_rate eq 30 ?: all | best",
+                    "video_format": "(height ge 1080 and frame_rate eq 30 ?: all) | best",
                     "output_path": "{{ title|adjust }}_{{ id }}_{{ moment_date|isodate }}.jpg",
                 },
                 "timelapse": {
-                    "video_format": "(height ge 1080 and frame_rate eq 30 ?: all | best",
+                    "video_format": "(height ge 1080 and frame_rate eq 30 ?: all) | best",
                     "output_path": (
                         "{{ title|adjust }}_{{ id }}/{{ input_start_date|isodate }}/{{ every.replace('PT', 'ET') }}/"
                         "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}_{{ every.replace('PT', 'ET') }}_%04d.jpg"
