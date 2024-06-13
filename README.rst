@@ -62,7 +62,7 @@ Demos
 Installation
 ************
 
-Ytpb requires Python 3.11 or higher and has been `tested
+Ytpb requires Python 3.12 or higher and has been `tested
 <https://github.com/xymaxim/ytpb/actions/workflows/ci.yml>`__ on Linux, macOS,
 and Windows. Also, it needs the recent version of `FFmpeg
 <https://ffmpeg.org/download.html>`__ to be installed.
