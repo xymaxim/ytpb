@@ -19,17 +19,20 @@ version = 2
 
 [options.download]
 audio-format = "itag = 140"
-video-format = "best(@avc1 and @<=1080p and @30fps)"
+video-format = """\
+(@avc1 and [@720p or @1080p] and @30fps ?: \
+ @avc1 and @<=1080p ?: \
+ @<=1080p) | best"""
 output = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}"
 
 [options.capture.frame]
-video-format = "best(@30fps)"
+video-format = "(@>=1080p and @30fps ?: all) | best"
 output-path = "{{ title|adjust }}_{{ id }}_{{ moment_date|isodate }}.jpg"
 
 [options.capture.timelapse]
-video-format = "best(@30fps)"
+video-format = "(@>=1080p and @30fps ?: all) | best"
 # An example of multi-line string template:
-output-path = """
+output-path = """\
 {% set title_and_id = title|adjust ~ '_' ~ id %}
 {% set every_label = (every|duration).replace('PT', 'ET' %}
 {% set where = '{}/{}/{}'.format(title_and_id, input_start_date|isodate, every_label) %}
@@ -38,7 +41,9 @@ output-path = """
 
 [options.mpd.compose]
 audio-formats = "itag = 140"
-video-formats = "@vp9 and [@720p or @1080p] and @30fps"
+video-formats = """\
+@vp9 and [@720p or @1080p] and @30fps ?: \
+@vp9 and [@720p or @1080p]"""
 output = "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}.mpd"
 
 # General settings.
@@ -54,4 +59,4 @@ user_agent = "Mozilla/5.0 (Android 14; Mobile; rv:68.0) Gecko/68.0 Firefox/120.0
 # https://ytpb.readthedocs.io/en/latest/reference.html#aliases.
 [general.aliases]
 custom = "@vp9 and [@720p or @1080p]"
-another = "@custom-alias and @30fps"
+another = "@custom and @30fps"

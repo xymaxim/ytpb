@@ -299,7 +299,9 @@ speed.*
 
    [options.mpd.compose]
    audio_formats = "itag = 140"
-   video_formats = "@vp9 and [@720p or @1080p] and @30fps"
+   video_formats = """\
+   @vp9 and [@720p or @1080p] and @30fps ?: \
+   @vp9 and [@720p or @1080p]"""
 
 .. _Templating:
 

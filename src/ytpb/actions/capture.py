@@ -61,7 +61,7 @@ def capture_frames(
           from datetime import datetime, timedelta, timezone
 
           best_stream, = playback.streams.query(
-              "best(type eq video and format eq mp4 and frame_rate eq 30)"
+              "type eq video and format eq mp4 and frame_rate eq 30 | best"
           )
           start_date = datetime(2024, 1, 2, 0, tzinfo=timezone.utc)
           dates_to_capture = [start_date + timedelta(hours=h) for h in range(25)]
