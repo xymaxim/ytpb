@@ -91,7 +91,8 @@ DEFAULT_CONFIG = AddressableDict(
                 "compose": {
                     "audio_formats": "itag eq 140",
                     "video_formats": (
-                        "codecs eq vp9 and [height eq 1080 or height eq 720] and frame_rate eq 30"
+                        "codecs eq vp9 and [height eq 1080 or height eq 720] and frame_rate eq 30 ?:"
+                        "codecs eq vp9 and [height eq 1080 or height eq 720]"
                     ),
                     "output_path": f"{DEFAULT_OUTPUT_PATH}.mpd",
                 }
