@@ -15,7 +15,7 @@ scheme.
 - Make cutting non-default behavior and add the `-c / --cut` option
 - Start using Jinja templates for output path templates
 - Accept long option names for default option values in the config file
-- Change the format of composed MPEG-DASH MPDs from compact to full ([#12] (https://github.com/xymaxim/ytpb/issues/12))
+- Change the format of composed MPEG-DASH MPDs from compact to full ([#12](https://github.com/xymaxim/ytpb/issues/12))
 - Remove `--from-playback` from `ytpb download`
 - Rename `-X / --dry-run` to `-x / --dry-run`
 - Rename `--segments-output-dir` to `-s / --segments-output-dir`
