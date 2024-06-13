@@ -82,8 +82,8 @@ DEFAULT_CONFIG = AddressableDict(
                 "timelapse": {
                     "video_format": "(height ge 1080 and frame_rate eq 30 ?: all) | best",
                     "output_path": (
-                        "{{ title|adjust }}_{{ id }}/{{ input_start_date|isodate }}/{{ every.replace('PT', 'ET') }}/"
-                        "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}_{{ every.replace('PT', 'ET') }}_%04d.jpg"
+                        "{{ title|adjust }}_{{ id }}/{{ input_start_date|isodate }}/{{ (every | duration).replace('PT', 'ET') }}/"
+                        "{{ title|adjust }}_{{ id }}_{{ input_start_date|isodate }}_{{ (every | duration).replace('PT', 'ET') }}_%04d.jpg"
                     ),
                 },
             },
