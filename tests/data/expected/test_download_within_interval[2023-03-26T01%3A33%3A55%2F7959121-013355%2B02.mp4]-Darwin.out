@@ -1,0 +1,16 @@
+Run playback for https://www.youtube.com/watch?v=kHwmzef842g
+(<<) Collecting info about the video...
+Stream 'Webcam Zürich HB' is alive!
+This representation will be downloaded:
+   - Audio: itag 140, mp4 (mp4a.40.2), 44100 Hz
+
+(<<) Locating start and end in the stream... done.
+Actual start: 26 Mar 2023 01:33:54 +0200 (-00:01), seq. 7959120
+  Actual end: 26 Mar 2023 01:33:58 +0200, seq. 7959121
+
+(<<) Preparing and saving the excerpt...
+1. Downloading segments 7959120-7959121:
+   - Audio ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 2/2 100% eta 0:00:00
+2. Merging segments (may take a while)... done.
+
+Success! Saved to 'Webcam-Zurich-HB_kHwmzef842g_20230326T013355+02.mp4'.
