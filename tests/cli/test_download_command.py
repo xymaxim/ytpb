@@ -861,7 +861,6 @@ def test_ambiguous_format_specs(
         )
 
     assert result.exit_code == 1
-    # assert result.output == expected_out
 
 
 @freeze_time("2023-03-26T00:00:00+00:00")

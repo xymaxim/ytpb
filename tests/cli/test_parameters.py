@@ -33,14 +33,6 @@ def test_format_spec_without_function():
     assert expected == actual
 
 
-# def test_format_spec_with_function():
-#     expected = "function(mime_type contains audio and [format eq mp4])"
-#     actual = FormatSpecParamType(FormatSpecType.AUDIO).convert(
-#         "function(format eq mp4)", None, None
-#     )
-#     assert expected == actual
-
-
 @freeze_time(tz_offset=2)
 @pytest.mark.parametrize(
     "value,expected",
