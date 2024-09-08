@@ -222,7 +222,7 @@ class PlaybackSession(requests.Session):
                         logger.debug("Unhandleable error encountered, do nothing")
                         return response
             request.retries_count = retries_count + 1
-            return self.send(request, verify=False)
+            return self.send(request)
         else:
             raise MaxRetryError(
                 f"Maximum number of retries exceeded with URL: {request.url}",
