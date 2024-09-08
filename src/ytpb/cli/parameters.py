@@ -109,7 +109,7 @@ class RewindIntervalParamType(click.ParamType):
                 output = output.astimezone(parsed_time.tzinfo)
             # Date and time
             case x if "T" in x:
-                output = datetime.fromisoformat(x)
+                output = ensure_date_aware(datetime.fromisoformat(x))
             # Unix timestamp
             case x if x.startswith("@"):
                 timestamp = float(x.lstrip("@"))

@@ -41,6 +41,7 @@ from ytpb.cli.templating import (
     render_template,
     VideoStreamOutputPathContext,
 )
+from ytpb.cli.utils.date import ensure_date_aware
 from ytpb.cli.utils.path import (
     remove_directories_between,
     sanitize_for_filename,
@@ -483,7 +484,7 @@ def download_command(
                     actual_date_interval.start.astimezone(input_timezone)
                 ),
                 "actual_end_date": actual_date_interval.end.astimezone(input_timezone),
-                "duration": requested_end_date - requested_start_date,
+                "duration": requested_date_interval.duration,
             }
             final_output_path = render_template(
                 output_path,
