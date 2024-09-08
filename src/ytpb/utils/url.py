@@ -2,7 +2,7 @@ import re
 import time
 from urllib.parse import parse_qs, urlparse
 
-from ytpb.errors import BadCommandArgument
+from ytpb.errors import BadCommandArgument, YtpbError
 from ytpb.types import SegmentSequence
 
 
@@ -31,9 +31,9 @@ def extract_parameter_from_url(parameter: str, url: str) -> str:
         value_index = url_path_parts.index(parameter)
         value = url_path_parts[value_index + 1]
     except ValueError:
-        raise Exception(f"parameter '{parameter}' is not in URL")
+        raise YtpbError(f"parameter '{parameter}' is not in URL")
     except IndexError:
-        raise Exception(f"value of '{parameter}' is not in URL")
+        raise YtpbError(f"value of '{parameter}' is not in URL")
     return value
 
 

@@ -3,6 +3,8 @@
 import operator
 import re
 import tempfile
+
+import time
 from dataclasses import asdict, dataclass
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -24,6 +26,7 @@ from ytpb.errors import (
     CachedItemNotFoundError,
     MaxRetryError,
     SequenceLocatingError,
+    YtpbError,
 )
 from ytpb.fetchers import InfoFetcher, YtpbInfoFetcher
 from ytpb.info import LEFT_NOT_FETCHED, LeftNotFetched, YouTubeVideoInfo
@@ -42,6 +45,7 @@ from ytpb.types import (
 )
 from ytpb.utils.other import resolve_relativity_in_interval
 from ytpb.utils.url import (
+    build_segment_url,
     build_video_url_from_base_url,
     check_base_url_is_expired,
     extract_id_from_video_url,
@@ -168,6 +172,8 @@ class PlaybackSession(requests.Session):
     """
 
     max_retries: int = 3
+    initial_delay: float = 3.0
+    backoff_multiplier: float = 1.5
 
     def __init__(self, playback: "Playback" = None, **kwargs):
         super().__init__(**kwargs)
@@ -179,22 +185,15 @@ class PlaybackSession(requests.Session):
         self.playback = playback
 
     def _handle_403_error(self, request: requests.Request) -> None:
-        old_corresponding_stream = next(
-            iter(
-                self.playback.streams.filter(
-                    lambda x: request.url.startswith(x.base_url)
-                )
-            )
-        )
-        old_base_url = old_corresponding_stream.base_url
-
         self.playback.fetch_and_set_essential()
-        new_corresponding_stream = self.playback.streams.get_by_itag(
-            old_corresponding_stream.itag
+        new_stream = self.playback.streams.get_by_itag(
+            extract_parameter_from_url("itag", request.url)
         )
-        new_base_url = new_corresponding_stream.base_url
-
-        request.url = request.url.replace(old_base_url, new_base_url)
+        try:
+            sequence_number = extract_parameter_from_url("sq", request.url)
+            request.url = build_segment_url(new_stream.base_url, sequence_number)
+        except YtpbError:
+            request.url = new_stream.base_url
 
     def _handle_http_errors(
         self, response: requests.Response, *args, **kwargs
@@ -206,13 +205,14 @@ class PlaybackSession(requests.Session):
         retries_count = getattr(request, "retries_count", 0)
 
         if retries_count < self.max_retries:
+            logger.warning("Received %s for %s", response.status_code, request.url)
+            logger.warning(
+                "Handle error and make another try (%s of %s)",
+                retries_count + 1,
+                self.max_retries,
+            )
+            time.sleep(self.initial_delay + self.backoff_multiplier * retries_count)
             if re.match(SEGMENT_URL_PATTERN, request.url):
-                logger.debug("Received %s for %s", response.status_code, request.url)
-                logger.debug(
-                    "Handle error, and make another try (%s of %s)",
-                    retries_count + 1,
-                    self.max_retries,
-                )
                 match response.status_code:
                     case 403:
                         self._handle_403_error(request)
@@ -221,8 +221,8 @@ class PlaybackSession(requests.Session):
                     case _:
                         logger.debug("Unhandleable error encountered, do nothing")
                         return response
-                request.retries_count = retries_count + 1
-                return self.send(request, verify=False)
+            request.retries_count = retries_count + 1
+            return self.send(request, verify=False)
         else:
             raise MaxRetryError(
                 f"Maximum number of retries exceeded with URL: {request.url}",
@@ -644,13 +644,19 @@ class Playback:
 
         stream = stream or next(iter(self.streams))
         if type(start_point) is type(end_point) is SegmentSequence:
-            start_moment = self.locate_moment(start_point, stream=stream)
-            end_moment = self.locate_moment(end_point, stream=stream, is_end=True)
+            start_moment = self.locate_moment(
+                start_point, stream=self.streams.get_by_itag(stream.itag)
+            )
+            end_moment = self.locate_moment(
+                end_point, stream=self.streams.get_by_itag(stream.itag), is_end=True
+            )
             return RewindInterval(start_moment, end_moment)
 
         # Then, locate end if start is relative:
         if isinstance(start_point, RelativePointInStream):
-            end_moment = self.locate_moment(end_point, stream=stream, is_end=True)
+            end_moment = self.locate_moment(
+                end_point, stream=self.streams.get_by_itag(stream.itag), is_end=True
+            )
         else:
             end_moment = None
 
@@ -674,14 +680,22 @@ class Playback:
                 match point:
                     case RelativeSegmentSequence() as sequence_delta:
                         sequence = contrary_op(contrary_moment.sequence, sequence_delta)
-                        moment = self.locate_moment(sequence, stream, not is_start)
+                        moment = self.locate_moment(
+                            sequence,
+                            self.streams.get_by_itag(stream.itag),
+                            not is_start,
+                        )
                     case timedelta() as time_delta:
                         date = contrary_op(contrary_moment.date, time_delta)
-                        moment = self.locate_moment(date, stream, not is_start)
+                        moment = self.locate_moment(
+                            date, self.streams.get_by_itag(stream.itag), not is_start
+                        )
             else:
                 if end_moment:
                     continue
-                moment = self.locate_moment(point, stream, not is_start)
+                moment = self.locate_moment(
+                    point, self.streams.get_by_itag(stream.itag), not is_start
+                )
 
             start_and_end_moments[index] = moment
 
