@@ -28,5 +28,5 @@ def patched_freezgun_astimezone(self, tz=None):
     from freezegun.api import datetime_to_fakedatetime, real_datetime
 
     return datetime_to_fakedatetime(
-        real_datetime.astimezone(self, timezone(self._tz_offset()))
+        real_datetime.astimezone(self, tz or timezone(self._tz_offset()))
     )

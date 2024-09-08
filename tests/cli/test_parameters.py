@@ -1,7 +1,9 @@
 from datetime import datetime, timedelta, timezone
 
 import click
+import freezegun
 import pytest
+
 from dateutil.tz import tzlocal
 from freezegun import freeze_time
 from freezegun.api import FakeDatetime
@@ -11,6 +13,10 @@ from ytpb.cli.parameters import (
     FormatSpecType,
     RewindIntervalParamType,
 )
+
+from tests.helpers import patched_freezgun_astimezone
+
+freezegun.api.FakeDatetime.astimezone = patched_freezgun_astimezone
 
 
 def test_none_format_spec():
@@ -35,6 +41,7 @@ def test_format_spec_without_function():
 #     assert expected == actual
 
 
+@freeze_time(tz_offset=2)
 @pytest.mark.parametrize(
     "value,expected",
     [
@@ -59,8 +66,10 @@ def test_format_spec_without_function():
         (
             "20240102T102000/20240102T102030",
             (
-                datetime(2024, 1, 2, 10, 20),
-                datetime(2024, 1, 2, 10, 20, 30),
+                FakeDatetime(2024, 1, 2, 10, 20, tzinfo=timezone(timedelta(hours=2))),
+                FakeDatetime(
+                    2024, 1, 2, 10, 20, 30, tzinfo=timezone(timedelta(hours=2))
+                ),
             ),
         ),
         (
@@ -105,12 +114,16 @@ def test_rewind_interval(value: str, expected):
     assert expected == RewindIntervalParamType().convert(value, None, None)
 
 
+@freeze_time(tz_offset=2)
 @pytest.mark.parametrize(
     "value,expected",
     [
         (
             "20240102T102000/T25M",
-            (datetime(2024, 1, 2, 10, 20), (datetime(2024, 1, 2, 10, 25))),
+            (
+                FakeDatetime(2024, 1, 2, 10, 20, tzinfo=timezone(timedelta(hours=2))),
+                FakeDatetime(2024, 1, 2, 10, 25, tzinfo=timezone(timedelta(hours=2))),
+            ),
         ),
         (
             "20240102T102000+00/T25M",
@@ -121,7 +134,14 @@ def test_rewind_interval(value: str, expected):
         ),
         (
             "2023Y12M31DT25M/20240102T102030",
-            (datetime(2023, 12, 31, 10, 25, 30), (datetime(2024, 1, 2, 10, 20, 30))),
+            (
+                FakeDatetime(
+                    2023, 12, 31, 10, 25, 30, tzinfo=timezone(timedelta(hours=2))
+                ),
+                FakeDatetime(
+                    2024, 1, 2, 10, 20, 30, tzinfo=timezone(timedelta(hours=2))
+                ),
+            ),
         ),
     ],
 )
