@@ -3,6 +3,12 @@
 Versions follow [Calendar Versioning](https://calver.org) with the `YYYY.M.D`
 scheme.
 
+## [2024.9.8]
+
+- Fix incorrect base URLs handling after redirects while retrying
+- Make sure fresh base URLs are used after retry everywhere
+- Wait between retries and use simple backoff strategy
+
 ## [2024.6.13]
 
 - Implement the format spec mini-language
@@ -113,6 +119,7 @@ scheme.
 - Change the first segment locating step: don\'t limit it to two jumps
   ([#8](https://github.com/xymaxim/ytpb/pull/8))
 
+[2024.9.8]: https://github.com/xymaxim/ytpb/compare/v2024.6.13...v2024.9.8
 [2024.6.13]: https://github.com/xymaxim/ytpb/compare/v2024.5.30...v2024.6.13
 [2024.5.30]: https://github.com/xymaxim/ytpb/compare/v2024.5.12...v2024.5.30
 [2024.5.12]: https://github.com/xymaxim/ytpb/compare/v2024.5.3...v2024.5.12
