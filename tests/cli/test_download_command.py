@@ -3,6 +3,7 @@ import os
 import pickle
 import platform
 import shutil
+
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Callable
@@ -11,7 +12,7 @@ from urllib.parse import urljoin
 
 import av
 import click
-
+import freezegun
 import platformdirs
 import pytest
 import responses
@@ -23,7 +24,10 @@ from ytpb.cli.config import DEFAULT_CONFIG
 from ytpb.playback import RewindInterval, RewindMoment
 
 from tests.conftest import TEST_DATA_PATH
-from tests.helpers import assert_approx_duration
+
+from tests.helpers import assert_approx_duration, patched_freezgun_astimezone
+
+freezegun.api.FakeDatetime.astimezone = patched_freezgun_astimezone
 
 
 @pytest.mark.parametrize(
@@ -41,10 +45,11 @@ from tests.helpers import assert_approx_duration
         ("2023-03-25T23:33:55+00/7959121", "233355+00.mp4"),
         ("PT3S/7959121", "233355+00.mp4"),
         ("PT3S/2023-03-25T23:33:58+00", "233355+00.mp4"),
+        ("2023-03-26T01:33:55/7959121", "013355+02.mp4"),
     ],
 )
 @pytest.mark.expect_suffix(platform.system())
-@freeze_time("2023-03-26T00:00:00+00:00")
+@freeze_time("2023-03-26T02:00:00", tz_offset=2)
 def test_download_within_interval(
     interval: str,
     output_subpath: str,
