@@ -85,7 +85,6 @@ def format_iso_datetime(
     match style.precision:
         case "reduced":
             if date.microsecond != 0:
-                # output_time_format = "%H:%M:%S.%f"
                 output_time_format = "%H:%M:%S"
             elif date.second != 0:
                 output_time_format = "%H:%M:%S"
@@ -96,8 +95,6 @@ def format_iso_datetime(
             output_format = f"%Y-%m-%dT{output_time_format}"
         case "complete":
             output_format = "%Y-%m-%dT%H:%M:%S"
-            # if date.microsecond != 0:
-            #    output_format += ".%f"
         case _:
             raise ValueError(
                 "'precision' value should be either 'reduced' or 'complete'"
@@ -125,7 +122,6 @@ def format_iso_datetime(
 
     date_string = date.strftime(output_format)
     if date.microsecond != 0:
-        # output = f"{date_string[:-3]}{offset}"
         output = f"{date_string}{offset}"
     else:
         output = f"{date_string}{offset}"
