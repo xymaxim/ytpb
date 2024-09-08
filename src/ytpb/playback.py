@@ -205,11 +205,12 @@ class PlaybackSession(requests.Session):
         retries_count = getattr(request, "retries_count", 0)
 
         if retries_count < self.max_retries:
-            logger.warning("Received %s for %s", response.status_code, request.url)
             logger.warning(
-                "Handle error and make another try (%s of %s)",
+                "Got %s error, retrying (%s of %s)",
+                response.status_code,
                 retries_count + 1,
                 self.max_retries,
+                url=request.url,
             )
             time.sleep(self.initial_delay + self.backoff_multiplier * retries_count)
             if re.match(SEGMENT_URL_PATTERN, request.url):
