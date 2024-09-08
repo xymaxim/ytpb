@@ -41,8 +41,9 @@ def fake_stream(audio_base_url: str) -> "FakeStream":
     @dataclass
     class FakeStream:
         base_url: str
+        itag: str
 
-    return FakeStream(audio_base_url)
+    return FakeStream(audio_base_url, "140")
 
 
 class TestLocateMoment:

@@ -55,13 +55,12 @@ class SequenceMetadataPair:
         self, sequence: SegmentSequence
     ) -> SegmentMetadata:
         """Download a partial segment and parse metadata."""
-        segment_filename = compose_default_segment_filename(
-            sequence, self.locator.base_url
-        )
+        base_url = self.locator._get_fresh_base_url()
+        segment_filename = compose_default_segment_filename(sequence, base_url)
         output_filename = segment_filename + ".part"
         downloaded_path = download_segment(
             sequence,
-            self.locator.base_url,
+            base_url,
             output_directory=self.locator.get_temp_directory(),
             output_filename=output_filename,
             size=PARTIAL_SEGMENT_SIZE_BYTES,
@@ -136,10 +135,19 @@ class SegmentLocator:
             self._temp_directory = tempfile.mkdtemp()
         return self._temp_directory
 
+    def _get_fresh_base_url(self):
+        # TODO: This shouldn't be here by any means.
+        if hasattr(self.session, "playback"):
+            self.base_url = self.session.playback.streams.get_by_itag(
+                extract_parameter_from_url("itag", self.base_url)
+            ).base_url
+        return self.base_url
+
     def _download_full_segment(self, sequence: SegmentSequence) -> Path:
+        base_url = self._get_fresh_base_url()
         downloaded_path = download_segment(
             sequence,
-            self.base_url,
+            base_url,
             output_directory=self.get_temp_directory(),
             session=self.session,
         )

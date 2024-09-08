@@ -25,6 +25,7 @@ class FakeRewindInterval:
 @dataclass
 class FakeStream:
     base_url: str
+    itag: str
 
 
 def test_download_audio_segments(
@@ -45,7 +46,7 @@ def test_download_audio_segments(
     output_paths = actions.download.download_segments(
         playback,
         sequence_numbers=range(7959120, 7959122),
-        streams=[FakeStream(audio_base_url)],
+        streams=[FakeStream(audio_base_url, itag="140")],
         output_directory=tmp_path,
     )
 
@@ -78,7 +79,10 @@ def test_download_audio_and_video_segments(
     output_paths = actions.download.download_segments(
         playback,
         sequence_numbers=range(7959120, 7959122),
-        streams=[FakeStream(audio_base_url), FakeStream(video_base_url)],
+        streams=[
+            FakeStream(audio_base_url, itag="140"),
+            FakeStream(video_base_url, itag="244"),
+        ],
         output_directory=tmp_path,
     )
 
@@ -115,7 +119,7 @@ def test_download_audio_excerpt_with_cutting(
             FakeRewindMoment(7959120, cut_at=0.5), FakeRewindMoment(7959121, cut_at=1.5)
         ),
         output_stem=tmp_path / "output",
-        audio_stream=FakeStream(audio_base_url),
+        audio_stream=FakeStream(audio_base_url, itag="140"),
         segments_directory=tmp_path / "segments",
     )
 
@@ -156,8 +160,8 @@ def test_download_audio_and_video_excerpt_without_cutting(
             FakeRewindMoment(7959121, cut_at=1.5),
         ),
         output_stem=tmp_path / "output",
-        audio_stream=FakeStream(audio_base_url),
-        video_stream=FakeStream(video_base_url),
+        audio_stream=FakeStream(audio_base_url, itag="140"),
+        video_stream=FakeStream(video_base_url, itag="244"),
         segments_directory=tmp_path / "segments",
         need_cut=False,
     )

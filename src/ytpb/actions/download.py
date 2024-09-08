@@ -142,18 +142,17 @@ def download_segments(
         output_directory = playback.locations["segments"]
         output_directory.mkdir(parents=True, exist_ok=True)
 
-    base_urls: list[str] = [s.base_url for s in streams]
     download_generator = chained_zip(
         *[
             zip(
-                iter_segments(sequence_numbers, base_url, session=playback.session),
+                iter_segments(sequence_numbers, stream, session=playback.session),
                 repeat(task, len(sequence_numbers)),
             )
-            for task, base_url in enumerate(base_urls)
+            for task, stream in enumerate(streams)
         ]
     )
 
-    downloaded_paths: list[list[Path]] = [[] for _ in base_urls]
+    downloaded_paths: list[list[Path]] = [[] for _ in streams]
     with progress_reporter:
         for (response, sequence, base_url), task in download_generator:
             downloaded_path = save_segment_to_file(

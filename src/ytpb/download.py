@@ -138,7 +138,7 @@ def download_segment_to_buffer(
 
 def iter_segments(
     sequences: list[SegmentSequence],
-    base_url: str,
+    stream: str,
     size: int | None = None,
     session: requests.Session | None = None,
 ) -> Generator[tuple[requests.Response, SegmentSequence, str], None, None]:
@@ -155,5 +155,7 @@ def iter_segments(
         and base URL.
     """
     for sequence in sequences:
+        # TODO: Nasty, this shouldn't be here.
+        base_url = session.playback.streams.get_by_itag(stream.itag).base_url
         with _request_segment(sequence, base_url, size, session) as response:
             yield response, sequence, base_url
