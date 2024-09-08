@@ -35,8 +35,8 @@ GRAMMAR = r"""
 
     function.2: FUNCTION_NAME
 
-    ALL: "all"
-    NONE: "none" | "''" | "\"\""
+    ALL.3: "all"
+    NONE.4: "none" | "''" | "\"\""
     CONDITION_STRING: /[@a-z0-9_\.,<>=!:\[\]'"\s]+/i
     FUNCTION_NAME: /[a-z0-9_\-]+/i
 
@@ -108,11 +108,8 @@ def execute_query[
             case "conditional_expression":
                 (condition_node,) = tree.children[0].children
                 condition_value = condition_node.value.strip()
-                if condition_value == "all":
-                    queried = items
-                else:
-                    condition_filter = make_filter_from_expression(condition_value)
-                    queried = list(filter(condition_filter, items))
+                condition_filter = make_filter_from_expression(condition_value)
+                queried = list(filter(condition_filter, items))
             case "function":
                 assert functions, "No query functions are provided"
                 if not items:
