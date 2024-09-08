@@ -337,7 +337,9 @@ def download_command(
                 )
             elif isinstance(requested_start, timedelta):
                 located_moment = playback.locate_moment(
-                    requested_end, reference_stream, is_end=True
+                    requested_end,
+                    playback.streams.get_by_itag(reference_stream.itag),
+                    is_end=True,
                 )
                 requested_start = located_moment.date - requested_start
             requested_end = RelativeSegmentSequence(preview_segments)
@@ -349,7 +351,8 @@ def download_command(
                 )
             elif isinstance(requested_end, timedelta):
                 located_moment = playback.locate_moment(
-                    requested_start, reference_stream
+                    requested_start,
+                    playback.streams.get_by_itag(reference_stream.itag),
                 )
                 requested_end = located_moment.date + requested_end
             requested_start = RelativeSegmentSequence(preview_segments)
@@ -375,7 +378,7 @@ def download_command(
             rewind_interval = playback.locate_interval(
                 requested_start,
                 requested_end,
-                reference_stream,
+                playback.streams.get_by_itag(reference_stream.itag),
             )
         except SequenceLocatingError:
             message = "\nerror: An error occured during segment locating, exit."
@@ -413,9 +416,13 @@ def download_command(
         )
 
     start_segment = playback.get_segment(
-        rewind_interval.start.sequence, reference_stream
+        rewind_interval.start.sequence,
+        playback.streams.get_by_itag(reference_stream.itag),
     )
-    end_segment = playback.get_segment(rewind_interval.end.sequence, reference_stream)
+    end_segment = playback.get_segment(
+        rewind_interval.end.sequence,
+        playback.streams.get_by_itag(reference_stream.itag),
+    )
 
     requested_start_date: datetime
     match requested_start:
