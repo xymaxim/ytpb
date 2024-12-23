@@ -191,11 +191,36 @@ to change are supplied: ::
 
 * ``--interval <timestamp>/<timestamp>``
 
-where ``<timestamp> = "@"<epoch-seconds>``:
+where ``<timestamp> = "@"<epoch-seconds>``.
 
 The date and time interval can also be specified with Unix timestamps as: ::
 
    $ ytpb download -i @1704190800/@1704190830 ...
+
+*Date and time arithmetic*
+^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+* ``--interval <expression>/<expression>``
+
+where ``<expression> = <operand> "±" <duration>`` or ``<expression> = <duration>
+"+" <operand>``, and ``<operand> = <date-time> or <time>``.
+
+Input dates can be represented as arithmetic expressions between dates (or
+times) and (positive) durations. Such temporal arithmetic supports addition and
+substitution. For example, this expression ``2024-12-13T10:20:30 - P1DT30S``
+results in ``2024-12-12T10:20:00``. Note that the option value needs to be quoted
+to handle whitespaces.
+
+Some examples: ::
+
+  # Subtraction between date and duration
+  $ ytpb download -i "2024-12-13T10:20:30 - P1DT30S/PT30S" ...
+
+  # Download an excerpt around some specific time
+  $ ytpb download -i "12:00 - PT1M/12:00 + PT5M"
+
+  # Download an excerpt between 23:00 and 01:00
+  $ ytpb download -i "23:00 - P1D/01:00" ...
 
 B. Using duration
 -----------------
