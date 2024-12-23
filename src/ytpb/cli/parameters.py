@@ -1,3 +1,4 @@
+import re
 from datetime import datetime, time, timedelta, timezone
 from enum import auto, StrEnum
 from typing import Literal, NamedTuple
@@ -82,6 +83,70 @@ class RewindIntervalParamType(click.ParamType):
 
         return date.replace(**components_to_replace)
 
+    def _is_time(self, x: str) -> bool:
+        return x[0] == "T" or x[2] == ":"
+
+    def _parse_time(self, x: str) -> time:
+        parsed_time = time.fromisoformat(x)
+        output = datetime.now().replace(
+            hour=parsed_time.hour,
+            minute=parsed_time.minute,
+            second=parsed_time.second,
+            microsecond=parsed_time.microsecond,
+        )
+        return output.astimezone(parsed_time.tzinfo)
+
+    def _parse_arithmetic_expression(self, part: str) -> datetime:
+        def parse_date_or_time(operand: str) -> datetime:
+            if self._is_time(operand):
+                output = self._parse_time(operand)
+            else:
+                output = ensure_date_aware(datetime.fromisoformat(operand))
+            return output
+
+        try:
+            lhs, operator, rhs = re.split(r"\s+", part)
+        except ValueError:
+            raise click.BadParameter(
+                f"Incorrectly formatted part: {part}. If you meant to use "
+                "an arithmetic expression, the format is 'a +/- b'."
+            )
+
+        if operator == "-":
+            try:
+                parsed_date = parse_date_or_time(lhs)
+            except ValueError:
+                raise click.BadParameter(
+                    f"Incorrectly formatted part: {part}. "
+                    "Date expected, but got '{lhs}'"
+                )
+            try:
+                parsed_change = isotimedelta.fromisoformat(rhs)
+            except ValueError:
+                raise click.BadParameter(
+                    f"Incorrectly formatted part: {part}. "
+                    f"Duration expected, but got '{rhs}'"
+                )
+            output = parsed_date - parsed_change
+        elif operator == "+":
+            try:
+                parsed_date = parse_date_or_time(lhs)
+                parsed_change = isotimedelta.fromisoformat(rhs)
+            except ValueError:
+                try:
+                    parsed_change = isotimedelta.fromisoformat(lhs)
+                    parsed_date = parse_date_or_time(rhs)
+                except ValueError:
+                    raise click.BadParameter(
+                        f"Incorrectly formatted part: {part}. "
+                        f"Only date and duration operands are allowed"
+                    )
+            output = parsed_date + parsed_change
+        else:
+            raise click.BadParameter("Only addition and substitution are allowed")
+
+        return output
+
     def _parse_interval_part(
         self,
         part: str,
@@ -90,6 +155,8 @@ class RewindIntervalParamType(click.ParamType):
             # Sequence number
             case x if x.isdecimal():
                 output = int(x)
+            case x if " " in x:
+                output = self._parse_arithmetic_expression(x)
             # Duration
             case x if x[0] == "P":
                 output = isotimedelta.fromisoformat(x)
