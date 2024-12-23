@@ -4,6 +4,11 @@ Versions follow [Calendar Versioning](https://calver.org) with the `YYYY.M.D`
 scheme.
 
 
+## [2024.12.23]
+
+- Allow date and time arithmetic for dates in `--interval`
+  ([#30](https://github.com/xymaxim/ytpb/issues/30))
+
 ## [2024.9.9]
 
 - Build Windows binary without `--noconsole` that caused no output in console
@@ -124,6 +129,7 @@ scheme.
 - Change the first segment locating step: don\'t limit it to two jumps
   ([#8](https://github.com/xymaxim/ytpb/pull/8))
 
+[2024.12.23]: https://github.com/xymaxim/ytpb/compare/v2024.9.9...v2024.12.23
 [2024.9.9]: https://github.com/xymaxim/ytpb/compare/v2024.9.8...v2024.9.9
 [2024.9.8]: https://github.com/xymaxim/ytpb/compare/v2024.6.13...v2024.9.8
 [2024.6.13]: https://github.com/xymaxim/ytpb/compare/v2024.5.30...v2024.6.13
