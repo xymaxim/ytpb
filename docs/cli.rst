@@ -121,7 +121,9 @@ where ``<date-time> = <date>"T"<time>"±"<shift>``:
 
 The extended (I) and basic (II) formats are supported.
 
-For example, an interval with two complete date and time representations: ::
+For example, an interval with two complete date and time representations:
+
+.. code:: sh
 
   # Complete representations in extended format
   $ ytpb download -i 2024-01-02T10:20:00+00/2024-01-02T10:20:30+00 ...
@@ -130,7 +132,9 @@ For example, an interval with two complete date and time representations: ::
   $ ytpb download -i 20240102T102000+00/20240102T102030+00 ...
 
 The time part can be also provided with a reduced precision, with some low-order
-components omitted (the date part should be always complete): ::
+components omitted (the date part should be always complete):
+
+.. code:: sh
 
   # Representations with reduced precision in extended format
   $ ytpb download -i 2024-01-02T1020+00/2024-01-02T10:20:30+00 ...
@@ -211,16 +215,18 @@ substitution. For example, this expression ``2024-12-13T10:20:30 - P1DT30S``
 results in ``2024-12-12T10:20:00``. Note that the option value needs to be quoted
 to handle whitespaces.
 
-Some examples: ::
+Some examples:
+
+.. code:: sh
 
   # Subtraction between date and duration
-  $ ytpb download -i "2024-12-13T10:20:30 - P1DT30S/PT30S" ...
+  $ ytpb download -i '2024-12-13T10:20:30 - P1DT30S/PT30S' ...
 
   # Download an excerpt around some specific time
-  $ ytpb download -i "12:00 - PT1M/12:00 + PT5M"
+  $ ytpb download -i '12:00 - PT1M/12:00 + PT5M'
 
   # Download an excerpt between 23:00 and 01:00
-  $ ytpb download -i "23:00 - P1D/01:00" ...
+  $ ytpb download -i '23:00 - P1D/01:00' ...
 
 B. Using duration
 -----------------
@@ -238,7 +244,9 @@ The duration string is prepended with "P" symbol and used one-letter date and
 time component designators. The highest order of date components is days ("D").
 
 For example, here are below two examples representing the same 30-second
-interval: ::
+interval:
+
+.. code:: sh
 
   # Specified by a start and a duration
   $ ytpb download -i 2024-01-02T10:20:00+00/PT30S ...
@@ -276,7 +284,7 @@ D. Using keywords
 * ``-i/--interval earliest/<end>``
 
 To refer to the earliest available moment, the start part accepts the ``earliest``
-keyword::
+keyword: ::
 
   $ ytpb download -i earliest/PT30S ...
 
