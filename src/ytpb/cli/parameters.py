@@ -84,7 +84,10 @@ class RewindIntervalParamType(click.ParamType):
         return date.replace(**components_to_replace)
 
     def _is_time(self, x: str) -> bool:
-        return x[0] == "T" or x[2] == ":"
+        try:
+            return x[0] == "T" or x[2] == ":"
+        except IndexError:
+            return False
 
     def _parse_time(self, x: str) -> time:
         parsed_time = time.fromisoformat(x)
@@ -155,6 +158,7 @@ class RewindIntervalParamType(click.ParamType):
             # Sequence number
             case x if x.isdecimal():
                 output = int(x)
+            # Date and time arithmetic expression
             case x if " " in x:
                 output = self._parse_arithmetic_expression(x)
             # Duration
@@ -164,16 +168,8 @@ class RewindIntervalParamType(click.ParamType):
             case x if set(x) & set("YMDHS"):
                 output = x
             # Time of today
-            case x if x[0] == "T" or (":" in x and "-" not in x):
-                parsed_time = time.fromisoformat(x)
-                today = datetime.now()
-                output = today.replace(
-                    hour=parsed_time.hour,
-                    minute=parsed_time.minute,
-                    second=parsed_time.second,
-                    microsecond=parsed_time.microsecond,
-                )
-                output = output.astimezone(parsed_time.tzinfo)
+            case x if self._is_time(x):
+                output = self._parse_time(x)
             # Date and time
             case x if "T" in x:
                 output = ensure_date_aware(datetime.fromisoformat(x))
