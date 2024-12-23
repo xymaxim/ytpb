@@ -100,6 +100,27 @@ def test_format_spec_without_function():
         ),
         ("earliest/100", ("earliest", 100)),
         ("earliest/..", ("earliest", "..")),
+        (
+            "20240102T102030+00 - P1DT1H20M30S/..",
+            (
+                datetime(2024, 1, 1, 9, 0, 0, tzinfo=timezone.utc),
+                "..",
+            ),
+        ),
+        (
+            "20240102T102030+00 + P1DT1H20M30S/..",
+            (
+                datetime(2024, 1, 3, 11, 41, 0, tzinfo=timezone.utc),
+                "..",
+            ),
+        ),
+        (
+            "P1DT1H20M30S + 20240102T102030+00/..",
+            (
+                datetime(2024, 1, 3, 11, 41, 0, tzinfo=timezone.utc),
+                "..",
+            ),
+        ),
     ],
 )
 def test_rewind_interval(value: str, expected):
@@ -149,6 +170,13 @@ def test_rewind_interval_with_replacing_components(value: str, expected):
             (
                 FakeDatetime(2024, 1, 2, 10, 25, tzinfo=tzlocal()),
                 FakeDatetime(2024, 1, 2, 10, 35, tzinfo=tzlocal()),
+            ),
+        ),
+        (
+            "10:25 + PT1M/T1035 - PT1M",
+            (
+                FakeDatetime(2024, 1, 2, 10, 26, 0, tzinfo=tzlocal()),
+                FakeDatetime(2024, 1, 2, 10, 34, 0, tzinfo=tzlocal()),
             ),
         ),
     ],

@@ -46,6 +46,7 @@ freezegun.api.FakeDatetime.astimezone = patched_freezgun_astimezone
         ("PT3S/7959121", "233355+00.mp4"),
         ("PT3S/2023-03-25T23:33:58+00", "233355+00.mp4"),
         ("2023-03-26T01:33:55/7959121", "013355+02.mp4"),
+        ("2023-03-25T23:33:50+00 + PT5S/7959121", "233355+00.mp4"),
     ],
 )
 @pytest.mark.expect_suffix(platform.system())
