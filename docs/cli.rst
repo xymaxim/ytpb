@@ -220,13 +220,13 @@ Some examples:
 .. code:: sh
 
   # Subtraction between date and duration
-  $ ytpb download -i '2024-12-13T10:20:30 - P1DT30S/PT30S' ...
+  $ ytpb download -i "2024-12-13T10:20:30 - P1DT30S/PT30S" ...
 
   # Download an excerpt around some specific time
-  $ ytpb download -i '12:00 - PT1M/12:00 + PT5M'
+  $ ytpb download -i "12:00 - PT1M/12:00 + PT5M" ...
 
   # Download an excerpt between 23:00 and 01:00
-  $ ytpb download -i '23:00 - P1D/01:00' ...
+  $ ytpb download -i "23:00 - P1D/01:00" ...
 
 B. Using duration
 -----------------
