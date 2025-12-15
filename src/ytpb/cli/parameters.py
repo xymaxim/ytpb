@@ -99,7 +99,9 @@ class RewindIntervalParamType(click.ParamType):
         )
         return output.astimezone(parsed_time.tzinfo)
 
-    def _parse_arithmetic_expression(self, part: str) -> datetime:
+    def _parse_arithmetic_expression(
+        self, part: str, context: dict[Literal["now"], str] | None = None
+    ) -> datetime:
         def parse_date_or_time(operand: str) -> datetime:
             if self._is_time(operand):
                 output = self._parse_time(operand)
@@ -115,13 +117,17 @@ class RewindIntervalParamType(click.ParamType):
                 "an arithmetic expression, the format is 'a +/- b'."
             )
 
+        original_lhs = lhs
+        if lhs == "now":
+            lhs = lhs.replace("now", context["now"])
+
         if operator == "-":
             try:
                 parsed_date = parse_date_or_time(lhs)
             except ValueError:
                 raise click.BadParameter(
                     f"Incorrectly formatted part: {part}. "
-                    "Date expected, but got '{lhs}'"
+                    "Date or 'now' expected, but got '{lhs}'"
                 )
             try:
                 parsed_change = isotimedelta.fromisoformat(rhs)
@@ -133,6 +139,8 @@ class RewindIntervalParamType(click.ParamType):
             output = parsed_date - parsed_change
         elif operator == "+":
             try:
+                if original_lhs == "now":
+                    raise click.BadParameter("'now' cannot be used in addition")
                 parsed_date = parse_date_or_time(lhs)
                 parsed_change = isotimedelta.fromisoformat(rhs)
             except ValueError:
@@ -151,8 +159,7 @@ class RewindIntervalParamType(click.ParamType):
         return output
 
     def _parse_interval_part(
-        self,
-        part: str,
+        self, part: str, parse_context: dict[Literal["now"], str] | None = None
     ) -> int | str | Literal["now", ".."] | datetime | timedelta | isotimedelta:
         match part:
             # Sequence number
@@ -160,7 +167,7 @@ class RewindIntervalParamType(click.ParamType):
                 output = int(x)
             # Date and time arithmetic expression
             case x if " " in x:
-                output = self._parse_arithmetic_expression(x)
+                output = self._parse_arithmetic_expression(x, parse_context)
             # Duration
             case x if x[0] == "P":
                 output = isotimedelta.fromisoformat(x)
@@ -193,13 +200,20 @@ class RewindIntervalParamType(click.ParamType):
 
         start_part, end_part = parts
 
+        # Make sure to refer to the same value of the 'now' keyword in both parts
+        if "now " in start_part or "now " in end_part:
+            current_date = datetime.now(timezone.utc).astimezone()
+            parse_context = {"now": current_date.isoformat(timespec="seconds")}
+        else:
+            parse_context = None
+
         try:
-            parsed_start = self._parse_interval_part(start_part)
+            parsed_start = self._parse_interval_part(start_part, parse_context)
         except ValueError as exc:
             raise click.BadParameter(f"'{start_part}', {exc}.")
 
         try:
-            parsed_end = self._parse_interval_part(end_part)
+            parsed_end = self._parse_interval_part(end_part, parse_context)
         except ValueError as exc:
             raise click.BadParameter(f"'{end_part}', {exc}.")
 

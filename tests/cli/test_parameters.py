@@ -184,8 +184,8 @@ def test_rewind_interval_with_replacing_components(value: str, expected):
 @freeze_time("2024-01-02T10:20:30-01")
 def test_rewind_interval_with_time_of_today(value: str, expected):
     assert expected == RewindIntervalParamType().convert(value, None, None)
-
-
+    
+    
 @pytest.mark.parametrize(
     "value,invalid_part",
     [
@@ -217,3 +217,39 @@ def test_non_compatible_interval_parts(interval: str, error: str):
     with pytest.raises(click.BadParameter) as exc_info:
         RewindIntervalParamType().convert(interval, None, None)
     assert error in str(exc_info.value)
+
+    
+@pytest.mark.parametrize(
+    "value,expected",
+    [
+        (
+            "now - PT10M/PT1M",
+            (
+                FakeDatetime(2024, 1, 2, 10, 10, 30, tzinfo=timezone(timedelta(hours=2))),
+                timedelta(minutes=1)
+            ),
+        ),
+        (
+            "now - PT10M/now - PT5M",
+            (
+                FakeDatetime(2024, 1, 2, 10, 10, 30, tzinfo=timezone(timedelta(hours=2))),
+                FakeDatetime(2024, 1, 2, 10, 15, 30, tzinfo=timezone(timedelta(hours=2))),
+            ),
+        ),
+    ],
+)    
+@freeze_time("2024-01-02T10:20:30+02")    
+def test_rewind_interval_with_arithmetic_and_now(value: str, expected):
+    assert expected == RewindIntervalParamType().convert(value, None, None)
+
+    
+@pytest.mark.parametrize(
+    "value",
+    ["now + PT10M/PT1M", "PT10M/now + PT1M"],
+)    
+@freeze_time("2024-01-02T10:20:30+02")    
+def test_rewind_interval_with_addition_arithmetic_and_now(value: str):
+    with pytest.raises(click.BadParameter) as exc_info:
+        RewindIntervalParamType().convert(value, None, None)
+    assert "'now' cannot be used in addition" == str(exc_info.value)
+    
