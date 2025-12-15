@@ -206,27 +206,33 @@ The date and time interval can also be specified with Unix timestamps as: ::
 
 * ``--interval <expression>/<expression>``
 
-where ``<expression> = <operand> "±" <duration>`` or ``<expression> = <duration>
-"+" <operand>``, and ``<operand> = <date-time> or <time>``.
+where ``<expression> = <operand> "±" <duration>`` or ``<duration> "+"
+<operand>`` and ``<operand> = <date-time> or <time>``. Also, the expression
+accepts the ``now`` keyword as: ``<expression> = "now" "-" <duration>``.
 
 Input dates can be represented as arithmetic expressions between dates (or
 times) and (positive) durations. Such temporal arithmetic supports addition and
 substitution. For example, this expression ``2024-12-13T10:20:30 - P1DT30S``
-results in ``2024-12-12T10:20:00``. Note that the option value needs to be quoted
-to handle whitespaces.
+results in ``2024-12-12T10:20:00``. In addition, it is possible to refer to the
+current time using the ``now`` keyword.
+
+Note that the option value needs to be quoted to handle whitespaces.
 
 Some examples:
 
 .. code:: sh
 
   # Subtraction between date and duration
-  $ ytpb download -i "2024-12-13T10:20:30 - P1DT30S/PT30S" ...
+  $ ytpb download -i '2024-12-13T10:20:30 - P1DT30S/PT30S' ...
 
-  # Download an excerpt around some specific time
-  $ ytpb download -i "12:00 - PT1M/12:00 + PT5M" ...
+  # Download an excerpt around some specific today's time
+  $ ytpb download -i '12:00 - PT1M/12:00 + PT5M' ...
 
-  # Download an excerpt between 23:00 and 01:00
-  $ ytpb download -i "23:00 - P1D/01:00" ...
+  # Download an excerpt between 23:00 (yesterday) and 01:00 (today)
+  $ ytpb download -i '23:00 - P1D/01:00' ...
+
+  # Download a 30-second excerpt starting from one minute ago
+  $ ytpb download -i 'now - PT60S/PT30S' ...
 
 B. Using duration
 -----------------
