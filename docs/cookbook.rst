@@ -12,8 +12,8 @@ Download segments with cURL
 Initially, and currently, Ytpb was not focused on long stream archiving. While
 the basic retry mechanism exists for failed requests (see
 :class:`~ytpb.playback.PlaybackSession`), there is no support for resumable
-downloading at this time. As an alternative, we can use the `cURL`_ program to
-download segments.
+downloading at this time. (*Note added*: See :ref:`resuming-downloads`.) As an
+alternative, we can use the `cURL`_ program to download segments.
 
 .. _cURL: https://curl.se/
 

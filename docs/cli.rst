@@ -477,6 +477,8 @@ segments (will be deleted after merging) to another drive.
   ...
   Success! Segments saved to 'Stream-Title_abcdefgh123_20240102T102030+00'.
 
+.. _resuming-downloads:
+
 Resuming unfinished downloads
 =============================
 
