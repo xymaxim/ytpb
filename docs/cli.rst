@@ -105,8 +105,8 @@ special literals. The absolute points are date and times (indirect) and sequence
 numbers of media segments (direct). One of interval parts can be relative to
 another one by a time duration or date and time replacing components.
 
-A. Using dates
---------------
+Using dates
+-----------
 
 *Date and time of a day*
 ^^^^^^^^^^^^^^^^^^^^^^^^
@@ -201,41 +201,8 @@ The date and time interval can also be specified with Unix timestamps as: ::
 
    $ ytpb download -i @1704190800/@1704190830 ...
 
-*Date and time arithmetic*
-^^^^^^^^^^^^^^^^^^^^^^^^^^
-
-* ``--interval <expression>/<expression>``
-
-where ``<expression> = <operand> "±" <duration>`` or ``<duration> "+"
-<operand>`` and ``<operand> = <date-time> or <time>``. Also, the expression
-accepts the ``now`` keyword as: ``<expression> = "now" "-" <duration>``.
-
-Input dates can be represented as arithmetic expressions between dates (or
-times) and (positive) durations. Such temporal arithmetic supports addition and
-substitution. For example, this expression ``2024-12-13T10:20:30 - P1DT30S``
-results in ``2024-12-12T10:20:00``. In addition, it is possible to refer to the
-current time using the ``now`` keyword.
-
-Note that the option value needs to be quoted to handle whitespaces.
-
-Some examples:
-
-.. code:: sh
-
-  # Subtraction between date and duration
-  $ ytpb download -i '2024-12-13T10:20:30 - P1DT30S/PT30S' ...
-
-  # Download an excerpt around some specific today's time
-  $ ytpb download -i '12:00 - PT1M/12:00 + PT5M' ...
-
-  # Download an excerpt between 23:00 (yesterday) and 01:00 (today)
-  $ ytpb download -i '23:00 - P1D/01:00' ...
-
-  # Download a 30-second excerpt starting from one minute ago
-  $ ytpb download -i 'now - PT60S/PT30S' ...
-
-B. Using duration
------------------
+Using duration
+--------------
 
 * ``-i/--interval <start>/<duration>`` or
 
@@ -260,8 +227,39 @@ interval:
   # Specified by a duration and an end
   $ ytpb download -i PT30S/2024-01-02T10:20:30+00 ...
 
-C. Using sequence numbers
--------------------------
+Using date and time arithmetic
+------------------------------
+
+* ``--interval <expression>/<expression>``
+
+where ``<expression> = <operand> "±" <duration>`` or ``<duration> "+"
+<operand>`` and ``<operand> = <date-time> or <time>``. Also, the expression
+accepts the ``now`` keyword as: ``<expression> = "now" "-" <duration>``.
+
+Input dates can be represented as arithmetic expressions between dates (or
+times) and (positive) durations. Such temporal arithmetic supports addition and
+substitution. For example, this expression ``2024-12-13T10:20:30 - P1DT30S``
+results in ``2024-12-12T10:20:00``. To refer to the current time, use the
+``now`` keyword.
+
+Note that the option value needs to be quoted to handle whitespaces.
+
+.. code:: sh
+
+  # Subtraction between date and duration
+  $ ytpb download -i '2024-12-13T10:20:30 - P1DT30S/PT30S' ...
+
+  # Download an excerpt around some specific today's time
+  $ ytpb download -i '12:00 - PT1M/12:00 + PT5M' ...
+
+  # Download an excerpt between 23:00 (yesterday) and 01:00 (today)
+  $ ytpb download -i '23:00 - P1D/01:00' ...
+
+  # Download a 30-second excerpt starting from one minute ago
+  $ ytpb download -i 'now - PT60S/PT30S' ...
+
+Using sequence numbers
+----------------------
 
 * ``-i/--interval <sequence-number>/<sequence-number>``
 
@@ -281,8 +279,8 @@ Sequence numbers can also be combined with other types: ::
   $ ytpb download -i 0/PT30S ...
   $ ytpb download -i 0/now ...
 
-D. Using keywords
------------------
+Using keywords
+--------------
 
 *'Earliest' keyword*
 ^^^^^^^^^^^^^^^^^^^^
@@ -311,8 +309,8 @@ To be exact, it refers to the last available media segment.
 
 .. _Preview mode:
 
-E. Preview mode
----------------
+Preview mode
+------------
 
 * ``--interval <start>/<end> --preview-start``
 * ``--interval <start>/<end> --preview-end``
