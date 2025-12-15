@@ -3,6 +3,9 @@
 Versions follow [Calendar Versioning](https://calver.org) with the `YYYY.M.D`
 scheme.
 
+## [2025.12.15]
+
+- Allow `now` in date and time arithmetic ([#34](https://github.com/xymaxim/ytpb/issues/34))
 
 ## [2024.12.23]
 
@@ -129,6 +132,7 @@ scheme.
 - Change the first segment locating step: don\'t limit it to two jumps
   ([#8](https://github.com/xymaxim/ytpb/pull/8))
 
+[2025.12.15]: https://github.com/xymaxim/ytpb/compare/v2024.12.23...v2025.12.15
 [2024.12.23]: https://github.com/xymaxim/ytpb/compare/v2024.9.9...v2024.12.23
 [2024.9.9]: https://github.com/xymaxim/ytpb/compare/v2024.9.8...v2024.9.9
 [2024.9.8]: https://github.com/xymaxim/ytpb/compare/v2024.6.13...v2024.9.8
