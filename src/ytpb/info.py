@@ -106,8 +106,7 @@ def extract_video_info(url: str, index_page_text: str) -> YouTubeVideoInfo:
             './/*[@itemtype="http://schema.org/BroadcastEvent"]'
         )
     ) is not None:
-        is_completed = bool(broadcast_event_element.find('./meta[@itemprop="endDate"]'))
-        if is_completed:
+        if broadcast_event_element.find('./meta[@itemprop="endDate"]') is not None:
             status = BroadcastStatus.COMPLETED
             dash_manifest_url = None
         else:
