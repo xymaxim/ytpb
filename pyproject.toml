@@ -34,7 +34,7 @@ dependencies = [
     "structlog>=24.2.0",
     "timedelta_isoformat>=0.6.2.11",
     "unidecode>=1.3.8",
-    "yt_dlp>=2024.05.27",
+    "yt_dlp>=2025.12.8",
 ]
 
 [project.optional-dependencies]
