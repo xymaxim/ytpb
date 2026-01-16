@@ -3,6 +3,10 @@
 Versions follow [Calendar Versioning](https://calver.org) with the `YYYY.M.D`
 scheme.
 
+## [2026.1.16]
+
+- Build Windows binary with the recent yt-dlp version
+
 ## [2026.1.2]
 
 - Fix incorrect live stream end detection ([#36](https://github.com/xymaxim/ytpb/issues/36))
@@ -136,6 +140,7 @@ scheme.
 - Change the first segment locating step: don\'t limit it to two jumps
   ([#8](https://github.com/xymaxim/ytpb/pull/8))
 
+[2026.1.16]: https://github.com/xymaxim/ytpb/compare/v2026.1.2...v2026.1.16
 [2026.1.2]: https://github.com/xymaxim/ytpb/compare/v2025.12.15...v2026.1.2
 [2025.12.15]: https://github.com/xymaxim/ytpb/compare/v2024.12.23...v2025.12.15
 [2024.12.23]: https://github.com/xymaxim/ytpb/compare/v2024.9.9...v2024.12.23
