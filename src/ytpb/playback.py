@@ -11,9 +11,9 @@ from pathlib import Path
 from typing import Iterable, Self, TypedDict, TypeGuard, Unpack
 from urllib.parse import parse_qs, urlparse
 
+import platformdirs
 import requests
 import structlog
-from platformdirs import user_cache_path
 
 from ytpb.cache import read_from_cache, write_to_cache
 from ytpb.download import (
@@ -356,7 +356,7 @@ class Playback:
     @staticmethod
     def get_cache_directory():
         """Gets the cache directory."""
-        return user_cache_path("ytpb")
+        return platformdirs.user_cache_path() / "ytpb"
 
     def get_temp_directory(self) -> Path:
         """Gets the run temporary directory."""
