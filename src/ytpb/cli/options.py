@@ -142,7 +142,11 @@ def logging_options(f):
 
 
 yt_dlp_option = click.option(
-    "-Y", "--yt-dlp", is_flag=True, default=True, help="Use yt-dlp to extract info."
+    "-Y",
+    "--yt-dlp",
+    is_flag=True,
+    default=True,
+    help="Use yt-dlp to extract info (default).",
 )
 
 
