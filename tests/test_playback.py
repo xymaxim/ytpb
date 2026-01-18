@@ -281,7 +281,9 @@ def test_create_playback_from_cache(
     stream_url: str,
     active_live_video_info: YouTubeVideoInfo,
     streams_in_list: list[AudioOrVideoStream],
+    tmp_path: Path,
 ):
+    # print(tmp_path / "cache"), "********")
     playback = Playback.from_cache(stream_url)
     assert playback.info == active_live_video_info
     assert len(playback.streams) == len(streams_in_list)

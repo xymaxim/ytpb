@@ -35,7 +35,7 @@ def test_compose_mpd(
     add_responses_callback_for_segment_urls(
         r"https://.+\.googlevideo\.com/videoplayback/.+/sq/\w+"
     )
-    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YoutubeDLInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -67,7 +67,7 @@ def test_compose_mpd_with_no_streams(
     tmp_path: Path,
     expected_out,
 ) -> None:
-    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YoutubeDLInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -154,7 +154,7 @@ def test_with_default_config(
         toml.dump(config, f)
 
     # When:
-    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YoutubeDLInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -188,7 +188,7 @@ def test_compose_to_user_output_path(
     add_responses_callback_for_segment_urls(
         r"https://.+\.googlevideo\.com/videoplayback/.+/sq/\w+"
     )
-    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YoutubeDLInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [
@@ -224,7 +224,7 @@ def test_compose_to_user_template_output_path(
     add_responses_callback_for_segment_urls(
         r"https://.+\.googlevideo\.com/videoplayback/.+/sq/\w+"
     )
-    with patch("ytpb.cli.common.YtpbInfoFetcher") as mock_fetcher:
+    with patch("ytpb.cli.common.YoutubeDLInfoFetcher") as mock_fetcher:
         mock_fetcher.return_value = fake_info_fetcher
         result = ytpb_cli_invoke(
             [

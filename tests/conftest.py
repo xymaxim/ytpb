@@ -121,7 +121,7 @@ def fake_info_fetcher(
 
 @pytest.fixture()
 def mock_playback_info_fetcher(fake_info_fetcher):
-    with patch("ytpb.playback.YtpbInfoFetcher") as mock:
+    with patch("ytpb.playback.YoutubeDLInfoFetcher") as mock:
         mock.return_value = fake_info_fetcher
         yield mock
 
