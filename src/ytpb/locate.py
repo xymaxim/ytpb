@@ -136,7 +136,6 @@ class SegmentLocator:
         return self._temp_directory
 
     def _get_fresh_base_url(self):
-        # TODO: This shouldn't be here by any means.
         if hasattr(self.session, "playback"):
             self.base_url = self.session.playback.streams.get_by_itag(
                 extract_parameter_from_url("itag", self.base_url)

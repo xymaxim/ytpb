@@ -155,7 +155,6 @@ def iter_segments(
         and base URL.
     """
     for sequence in sequences:
-        # TODO: Nasty, this shouldn't be here.
         base_url = session.playback.streams.get_by_itag(stream.itag).base_url
         with _request_segment(sequence, base_url, size, session) as response:
             yield response, sequence, base_url
