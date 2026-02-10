@@ -3,6 +3,8 @@ Ytpb
 
 A playback for YouTube live streams.
 
+*(This project will be deprecated. Use https://github.com/xymaxim/ypb instead.)*
+
 |PyPI| |Tests|
 
 .. |PyPI| image:: https://img.shields.io/pypi/v/ytpb
